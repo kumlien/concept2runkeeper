@@ -1,5 +1,6 @@
 package se.kumliens.concept2runkeeper.vaadin.views.login;
 
+import com.vaadin.data.validator.EmailValidator;
 import com.vaadin.server.FontAwesome;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.themes.ValoTheme;
@@ -18,7 +19,7 @@ import static com.vaadin.server.FontAwesome.USER;
  */
 public class LoginForm extends AbstractForm<LoginCredentials> {
 
-    private EmailField username = new EmailField("Email");
+    private EmailField username = (EmailField) new EmailField("Email").withValidator(new EmailValidator("That is not a valid email address"));
     private MPasswordField password = new MPasswordField("Password");
 
     public LoginForm() {

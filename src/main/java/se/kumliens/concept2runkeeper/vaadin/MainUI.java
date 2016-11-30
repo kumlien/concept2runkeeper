@@ -30,13 +30,15 @@ import sun.reflect.generics.reflectiveObjects.LazyReflectiveObjectGenerator;
 @SpringUI(path = "test")
 @Theme("valo")
 @Slf4j
-public class VaadinApp extends UI {
+public class MainUI extends UI {
+
+    public static final String SESSION_ATTR_USER = "theUserObject";
 
     private final RunkeeperProps runkeeperProps;
 
     private final MainViewDisplay mainViewDisplay;
 
-    public VaadinApp( MainViewDisplay mainContent, SpringNavigator navigator, RunkeeperProps runkeeperProps) {
+    public MainUI( MainViewDisplay mainContent, SpringNavigator navigator, RunkeeperProps runkeeperProps) {
         this.mainViewDisplay = mainContent;
         navigator.setErrorView(ErrorView.class);
         this.runkeeperProps = runkeeperProps;

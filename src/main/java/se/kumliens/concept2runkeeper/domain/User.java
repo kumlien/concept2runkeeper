@@ -9,9 +9,13 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.util.StringUtils;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+
+import static org.springframework.util.StringUtils.isEmpty;
 
 /**
  * Created by svante2 on 2016-11-29.
@@ -77,5 +81,12 @@ public class User implements UserDetails {
 
     public void addAuthority(GrantedAuthority authority) {
         authorities.add(authority);
+    }
+
+    /**
+     * @return true if either the concept2 token or the runkeeper token is missing
+     */
+    public boolean lacksPermissions() {
+        return isEmpty(concept2AccessToken) || isEmpty(runkeeperAccessToken);
     }
 }

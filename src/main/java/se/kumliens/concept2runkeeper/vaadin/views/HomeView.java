@@ -6,6 +6,8 @@ import com.vaadin.spring.annotation.SpringView;
 import com.vaadin.ui.VerticalLayout;
 
 /**
+ * The home view for a logged in user
+ *
  * Created by svante2 on 2016-11-30.
  */
 @SpringView

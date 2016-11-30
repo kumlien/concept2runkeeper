@@ -85,7 +85,7 @@ public class LoginView extends VerticalLayout implements View {
             userDetailsService.createUser(user);
             Notification.show("Welcome!", "Great, welcome to concept2runkeeper!", WARNING_MESSAGE);
             eventBus.publish(SESSION, this, new UserRegisteredEvent(user));
-            getUI().getSession().setAttribute(MainUI.SESSION_ATTR_USER, user);
+            getSession().setAttribute(MainUI.SESSION_ATTR_USER, user);
         } catch (Exception e) {
             Notification.show(":-(", "Sorry, something went wrong...(" + e.getMessage() + ")", ERROR_MESSAGE);
         }

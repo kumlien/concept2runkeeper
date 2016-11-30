@@ -19,12 +19,10 @@ import org.vaadin.viritin.button.MButton;
 import org.vaadin.viritin.label.Header;
 import org.vaadin.viritin.layouts.MHorizontalLayout;
 import org.vaadin.viritin.layouts.MVerticalLayout;
+import se.kumliens.concept2runkeeper.domain.User;
 import se.kumliens.concept2runkeeper.runkeeper.RunkeeperProps;
 import se.kumliens.concept2runkeeper.vaadin.events.UserLoggedInEvent;
-import se.kumliens.concept2runkeeper.vaadin.views.ErrorView;
-import se.kumliens.concept2runkeeper.vaadin.views.IndexView;
-import se.kumliens.concept2runkeeper.vaadin.views.MainViewDisplay;
-import se.kumliens.concept2runkeeper.vaadin.views.HomeView;
+import se.kumliens.concept2runkeeper.vaadin.views.*;
 import se.kumliens.concept2runkeeper.vaadin.views.login.LoginView;
 
 import javax.annotation.PreDestroy;
@@ -71,17 +69,6 @@ public class MainUI extends UI implements EventBusListener<Object> {
     @Override
     protected void init(VaadinRequest vaadinRequest) {
         eventBus.subscribe(this);
-
-        MVerticalLayout layout = new MVerticalLayout();
-        ExternalResource externalResource = new ExternalResource(runkeeperProps.getOauth2UrlAuthorize().toString()+"?user=svante");
-        MButton login = new MButton("Authorize this app to add activities to Runkeeper");
-
-        BrowserWindowOpener extension = new BrowserWindowOpener(externalResource);
-        //https://developer.mozilla.org/en-US/docs/Web/API/Window/open#Position_and_size_features
-        extension.setFeatures("width=480,height=650,resizable,scrollbars=yes,status=0,chrome=1,centerscreen=1");
-        extension.extend(login);
-
-
         setContent(
                 new MVerticalLayout().add(
                         new Header("Welcome to concept2runkeeper").withStyleName(ValoTheme.TEXTFIELD_ALIGN_CENTER),
@@ -115,16 +102,21 @@ public class MainUI extends UI implements EventBusListener<Object> {
         return button;
     }
 
+
     @Override
     public void onEvent(org.vaadin.spring.events.Event<Object> event) {
-        log.info("Got an event: {}", event);
         Object payload = event.getPayload();
         if(payload instanceof UserLoggedInEvent) {
+            UserLoggedInEvent userLoggedInEvent = (UserLoggedInEvent) payload;
             log.info("User logged in...");
             loginLink.setVisible(false);
             homeLink.setVisible(true);
             logoutLink.setVisible(true);
-            getNavigator().navigateTo(getNavigatorViewNameBasedOnView(HomeView.class));
+            if(userLoggedInEvent.user.lacksPermissions()) {
+                getNavigator().navigateTo(getNavigatorViewNameBasedOnView(ConnectView.class));
+            } else {
+                getNavigator().navigateTo(getNavigatorViewNameBasedOnView(HomeView.class));
+            }
         }
     }
 

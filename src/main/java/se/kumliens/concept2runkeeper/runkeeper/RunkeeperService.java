@@ -24,8 +24,8 @@ public class RunkeeperService {
         log.info("hej: {}", props);
     }
 
-    public void startAuth() throws URISyntaxException {
+    public String askForToken(String code) throws URISyntaxException {
         RestTemplate restTemplate = new RestTemplate();
-        restTemplate.getForObject(props.getOauth2UrlAuthorize().toURI(), String.class);
+        restTemplate.postForEntity(props.getOauth2UrlToken().toURI(), String.class);
     }
 }

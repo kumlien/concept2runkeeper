@@ -5,12 +5,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.vaadin.spring.events.EventBus;
+import org.vaadin.spring.events.annotation.EnableEventBus;
 import org.vaadin.spring.events.support.ApplicationContextEventBroker;
 
 /**
  * Created by svante2 on 2016-11-30.
  */
 @Configuration
+@EnableEventBus
 public class EventConfiguration {
 
     @Autowired

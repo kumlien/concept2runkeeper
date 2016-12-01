@@ -13,8 +13,12 @@ import com.vaadin.spring.navigator.SpringNavigator;
 import com.vaadin.ui.*;
 import com.vaadin.ui.themes.ValoTheme;
 import lombok.extern.slf4j.Slf4j;
+
+import org.vaadin.spring.events.Event;
 import org.vaadin.spring.events.EventBus;
 import org.vaadin.spring.events.EventBusListener;
+import org.vaadin.spring.events.annotation.EventBusListenerMethod;
+import org.vaadin.spring.events.annotation.EventBusListenerTopic;
 import org.vaadin.viritin.button.MButton;
 import org.vaadin.viritin.label.Header;
 import org.vaadin.viritin.layouts.MHorizontalLayout;
@@ -22,6 +26,7 @@ import org.vaadin.viritin.layouts.MVerticalLayout;
 import se.kumliens.concept2runkeeper.domain.User;
 import se.kumliens.concept2runkeeper.runkeeper.RunkeeperProps;
 import se.kumliens.concept2runkeeper.vaadin.events.UserLoggedInEvent;
+import se.kumliens.concept2runkeeper.vaadin.events.UserRegisteredEvent;
 import se.kumliens.concept2runkeeper.vaadin.views.*;
 import se.kumliens.concept2runkeeper.vaadin.views.login.LoginView;
 
@@ -34,11 +39,11 @@ import static com.vaadin.ui.themes.ValoTheme.BUTTON_LINK;
  * Created by svante2 on 2016-11-28.
  */
 @Title("C2R")
-@SpringUI(path = "test")
+@SpringUI(path = "c2r")
 @Theme("valo")
 @Push(transport = Transport.WEBSOCKET)
 @Slf4j
-public class MainUI extends UI implements EventBusListener<Object> {
+public class MainUI extends UI {
 
     public static final String SESSION_ATTR_USER = "theUserObject";
 
@@ -78,7 +83,6 @@ public class MainUI extends UI implements EventBusListener<Object> {
                         .withFullHeight().space()
                 )
         );
-
     }
 
     private Component createNavigationBar() {
@@ -102,25 +106,37 @@ public class MainUI extends UI implements EventBusListener<Object> {
         return button;
     }
 
-
-    @Override
-    public void onEvent(org.vaadin.spring.events.Event<Object> event) {
-        Object payload = event.getPayload();
-        if(payload instanceof UserLoggedInEvent) {
-            UserLoggedInEvent userLoggedInEvent = (UserLoggedInEvent) payload;
-            log.info("User logged in...");
-            loginLink.setVisible(false);
-            homeLink.setVisible(true);
-            logoutLink.setVisible(true);
-            if(userLoggedInEvent.user.lacksPermissions()) {
-                getNavigator().navigateTo(getNavigatorViewNameBasedOnView(ConnectView.class));
-            } else {
-                getNavigator().navigateTo(getNavigatorViewNameBasedOnView(HomeView.class));
-            }
+    @EventBusListenerMethod
+    private void onLoggedInEvent(org.vaadin.spring.events.Event<UserLoggedInEvent> event) {
+        UserLoggedInEvent userLoggedInEvent = event.getPayload();
+        log.info("User logged in...");
+        loginLink.setVisible(false);
+        homeLink.setVisible(true);
+        logoutLink.setVisible(true);
+        if(userLoggedInEvent.user.lacksPermissions()) {
+            getNavigator().navigateTo(getNavigatorViewNameBasedOnView(ConnectView.class));
+        } else {
+            getNavigator().navigateTo(getNavigatorViewNameBasedOnView(HomeView.class));
         }
     }
+
+    @EventBusListenerMethod
+    private void onRegistredUserEvent(org.vaadin.spring.events.Event<UserRegisteredEvent> event) {
+        UserRegisteredEvent userRegisteredEvent = event.getPayload();
+        log.info("User registered ");
+        loginLink.setVisible(false);
+        homeLink.setVisible(true);
+        logoutLink.setVisible(true);
+        getNavigator().navigateTo(getNavigatorViewNameBasedOnView(ConnectView.class));
+    }
+
+
+
+
+
 
     public static final String getNavigatorViewNameBasedOnView(Class<? extends View> theView) {
         return theView.getSimpleName().replaceAll("View", "").toLowerCase();
     }
+
 }

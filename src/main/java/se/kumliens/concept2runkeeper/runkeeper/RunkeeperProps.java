@@ -5,6 +5,7 @@ import lombok.ToString;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+import java.net.URI;
 import java.net.URL;
 
 /**
@@ -18,7 +19,7 @@ public class RunkeeperProps {
 
     private String oauth2ClientId;
     private String oauth2ClientSecret;
-    private URL oauth2UrlAuthorize;
-    private URL oauth2UrlToken;
+    private URI oauth2UrlAuthorize;
+    private URI oauth2UrlToken;
 
 }

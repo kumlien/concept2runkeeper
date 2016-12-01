@@ -53,7 +53,7 @@ public class ConnectView extends VerticalLayout implements View {
     private boolean checkUser(User user) {
         if(user == null) {
             log.warn("Something is weird, the connectview was created without a user in the sesssion...");
-            getUI().getNavigator().navigateTo("error");
+            UI.getCurrent().getNavigator().navigateTo("error");
             return false;
         }
         return true;

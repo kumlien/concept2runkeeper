@@ -1,26 +1,20 @@
 package se.kumliens.concept2runkeeper.runkeeper;
 
-import lombok.Builder;
-import lombok.Data;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 
-import com.google.api.client.util.Lists;
-import org.springframework.boot.autoconfigure.security.SecurityProperties;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.FormHttpMessageConverter;
-import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PostConstruct;
-import java.net.URISyntaxException;
 import java.util.Arrays;
-import java.util.List;
+import java.util.Map;
 
 /**
  * Created by svante2 on 2016-11-28.
@@ -45,23 +39,39 @@ public class RunkeeperService {
 
 
     public String askForToken(String code) {
-                RunkeeperTokenRequest request = RunkeeperTokenRequest.builder().code(code).client_id(props.getOauth2ClientId())
-                .client_secret(props.getOauth2ClientSecret()).redirect_uri("oops...").build();
+        MultiValueMap<String, String> request = RunkeeperTokenRequest.builder().code(code).client_id(props.getOauth2ClientId())
+                .client_secret(props.getOauth2ClientSecret()).redirect_uri(props.getOauth2CallbackUrl().toString()).build().toMap();
 
-        HttpEntity<RunkeeperTokenRequest> body = new HttpEntity(request, headersForTokenRequest);
-        ResponseEntity<RunkeeperTokenResponse> responseEntity = restTemplate.postForEntity(props.getOauth2UrlToken(), body, RunkeeperTokenResponse.class);
+        log.info("Sending request to {} accessToken: {}", props.getOauth2UrlToken(), request);
+        HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(request, headersForTokenRequest);
+        ResponseEntity<RunkeeperTokenResponse> responseEntity = restTemplate.postForEntity(props.getOauth2UrlToken(), requestEntity, RunkeeperTokenResponse.class);
+        log.info("Got a response back: {}", responseEntity);
 
         return responseEntity.getBody().getAccess_token();
     }
 
+    public void disconnectUser(String accessToken) {
+        //TODO
+    }
+
     @Builder
-    @Getter
+    @ToString
     public static class RunkeeperTokenRequest {
         private final String grant_type = "authorization_code";
         private String code;
         private String client_id;
         private String client_secret;
         private String redirect_uri;
+
+        MultiValueMap<String, String> toMap() {
+            MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
+            map.add("grant_type", grant_type);
+            map.add("code", code);
+            map.add("client_id", client_id);
+            map.add("client_secret", client_secret);
+            map.add("redirect_uri", redirect_uri);
+            return map;
+        }
     }
 
     @Data

@@ -1,5 +1,6 @@
 package se.kumliens.concept2runkeeper.vaadin.events;
 
+import com.vaadin.spring.annotation.VaadinSessionScope;
 import org.atmosphere.cpr.SessionSupport;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;

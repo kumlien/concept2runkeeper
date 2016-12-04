@@ -3,6 +3,7 @@ package se.kumliens.concept2runkeeper.vaadin.views.login;
 import com.vaadin.data.util.filter.Not;
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener;
+import com.vaadin.server.FontAwesome;
 import com.vaadin.spring.annotation.SpringView;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.TabSheet;
@@ -66,8 +67,8 @@ public class LoginView extends VerticalLayout implements View {
         TabSheet tabSheet = new TabSheet();
         tabSheet.addStyleName(ValoTheme.TABSHEET_FRAMED);
         tabSheet.addStyleName(ValoTheme.TABSHEET_PADDED_TABBAR);
-        tabSheet.addTab(registerForm, "Register");
-        tabSheet.addTab(loginForm, "Already registered");
+        tabSheet.addTab(registerForm, "Register").setIcon(FontAwesome.USER_PLUS);
+        tabSheet.addTab(loginForm, "Already registered").setIcon(FontAwesome.USER);
         tabSheet.setSizeUndefined();
 
         setSpacing(true);
@@ -84,7 +85,7 @@ public class LoginView extends VerticalLayout implements View {
             user.addAuthority(new SimpleGrantedAuthority(Authorities.USER.role));
             userDetailsService.createUser(user);
             getSession().setAttribute(MainUI.SESSION_ATTR_USER, user);
-            Notification.show("Welcome!", "Great, welcome to concept2runkeeper!", WARNING_MESSAGE);
+            Notification.show("Welcome!", "Great, welcome to concept2runkeeper!", ERROR_MESSAGE);
             eventBus.publish(SESSION, this, new UserRegisteredEvent(user));
         } catch (Exception e) {
             log.warn("Exception...", e);
@@ -94,12 +95,15 @@ public class LoginView extends VerticalLayout implements View {
 
     private void onLogin(LoginCredentials credentials) {
         try {
-            Authentication ud = authenticationProvider.authenticate(new UsernamePasswordAuthenticationToken(credentials.getUsername(), credentials.getPassword()));
-            log.info("User logged in: " + ud);
-            final UserDetails userDetails = userDetailsService.loadUserByUsername(credentials.getUsername());
+            authenticationProvider.authenticate(new UsernamePasswordAuthenticationToken(credentials.getUsername(), credentials.getPassword()));
+            final User userDetails = (User) userDetailsService.loadUserByUsername(credentials.getUsername());
             getSession().setAttribute(MainUI.SESSION_ATTR_USER, userDetails);
             eventBus.publish(SESSION, this, new UserLoggedInEvent((User) userDetails));
-            Notification.show("Welcome " + ((User) userDetails).getFirstName(), WARNING_MESSAGE);
+            if(userDetails.lacksPermissions()) {
+                Notification.show("Welcome " + ((User) userDetails).getFirstName() + ". You still have to give us permission to access your concept2 and Runkeeper data, you will be directed to the settings page.", WARNING_MESSAGE);
+            } else {
+                Notification.show("Welcome " + ((User) userDetails).getFirstName(), WARNING_MESSAGE);
+            }
         } catch (AuthenticationException ae) {
             log.debug("Authentication failed...");
             Notification.show("Sorry, no such username/password combo found", WARNING_MESSAGE);

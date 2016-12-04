@@ -11,6 +11,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.util.StringUtils;
 
+import java.time.Instant;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -37,7 +38,11 @@ public class User implements UserDetails {
 
     private String runkeeperAccessToken;
 
+    private Instant runkeeperConnectDate;
+
     private String concept2AccessToken;
+
+    private String concept2ConnectDate;
 
     private Collection<GrantedAuthority> authorities = new HashSet<>();
 
@@ -84,7 +89,7 @@ public class User implements UserDetails {
     }
 
     /**
-     * @return true if either the concept2 token or the runkeeper token is missing
+     * @return true if either the concept2 accessToken or the runkeeper accessToken is missing
      */
     public boolean lacksPermissions() {
         return isEmpty(concept2AccessToken) || isEmpty(runkeeperAccessToken);

@@ -48,7 +48,7 @@ public class RegisterForm extends AbstractForm<User> {
         setEntity(new User());
         email.setIcon(ENVELOPE);
         email.setRequired(true);
-        email.setNullRepresentation("Also your username");
+        email.setNullRepresentation("a.b@c.de");
         email.setNullSettingAllowed(false);
         firstName.setIcon(TAG);
         firstName.setNullRepresentation("Your first name");

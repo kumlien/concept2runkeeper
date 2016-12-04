@@ -1,29 +1,24 @@
 package se.kumliens.concept2runkeeper.vaadin;
 
-import com.vaadin.annotations.Push;
-import com.vaadin.annotations.Theme;
-import com.vaadin.annotations.Title;
+import com.vaadin.annotations.*;
 import com.vaadin.navigator.View;
-import com.vaadin.server.BrowserWindowOpener;
-import com.vaadin.server.ExternalResource;
+import com.vaadin.server.FontAwesome;
 import com.vaadin.server.VaadinRequest;
+import com.vaadin.server.VaadinServlet;
 import com.vaadin.shared.ui.ui.Transport;
 import com.vaadin.spring.annotation.SpringUI;
 import com.vaadin.spring.navigator.SpringNavigator;
 import com.vaadin.ui.*;
 import com.vaadin.ui.themes.ValoTheme;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import org.vaadin.spring.events.Event;
 import org.vaadin.spring.events.EventBus;
-import org.vaadin.spring.events.EventBusListener;
 import org.vaadin.spring.events.annotation.EventBusListenerMethod;
-import org.vaadin.spring.events.annotation.EventBusListenerTopic;
 import org.vaadin.viritin.button.MButton;
 import org.vaadin.viritin.label.Header;
 import org.vaadin.viritin.layouts.MHorizontalLayout;
 import org.vaadin.viritin.layouts.MVerticalLayout;
-import se.kumliens.concept2runkeeper.domain.User;
 import se.kumliens.concept2runkeeper.runkeeper.RunkeeperProps;
 import se.kumliens.concept2runkeeper.vaadin.events.UserLoggedInEvent;
 import se.kumliens.concept2runkeeper.vaadin.events.UserRegisteredEvent;
@@ -31,6 +26,7 @@ import se.kumliens.concept2runkeeper.vaadin.views.*;
 import se.kumliens.concept2runkeeper.vaadin.views.login.LoginView;
 
 import javax.annotation.PreDestroy;
+import javax.servlet.annotation.WebServlet;
 
 import static com.vaadin.ui.themes.ValoTheme.BUTTON_LARGE;
 import static com.vaadin.ui.themes.ValoTheme.BUTTON_LINK;
@@ -39,15 +35,14 @@ import static com.vaadin.ui.themes.ValoTheme.BUTTON_LINK;
  * Created by svante2 on 2016-11-28.
  */
 @Title("C2R")
-@SpringUI(path = "c2r")
-@Theme("valo")
+@SpringUI
+@Theme("c2r")
 @Push(transport = Transport.WEBSOCKET)
+@PreserveOnRefresh
 @Slf4j
 public class MainUI extends UI {
 
     public static final String SESSION_ATTR_USER = "theUserObject";
-
-    private final RunkeeperProps runkeeperProps;
 
     private final MainViewDisplay mainViewDisplay;
 
@@ -59,11 +54,12 @@ public class MainUI extends UI {
 
     private Button homeLink; //displayed for logged in users
 
-    public MainUI(MainViewDisplay mainContent, SpringNavigator navigator, RunkeeperProps runkeeperProps, EventBus.UIEventBus eventBus) {
+    private Button settingsLink; //displayed for logged in users¨¨
+
+    public MainUI(MainViewDisplay mainContent, SpringNavigator navigator, EventBus.UIEventBus eventBus) {
         this.mainViewDisplay = mainContent;
         this.eventBus = eventBus;
         navigator.setErrorView(ErrorView.class);
-        this.runkeeperProps = runkeeperProps;
     }
 
     @PreDestroy
@@ -77,25 +73,38 @@ public class MainUI extends UI {
         setContent(
                 new MVerticalLayout().add(
                         new Header("Welcome to concept2runkeeper").withStyleName(ValoTheme.TEXTFIELD_ALIGN_CENTER),
-                new MHorizontalLayout()
-                        .add(createNavigationBar())
-                        .expand(mainViewDisplay)
-                        .withFullHeight().space()
+                        new MHorizontalLayout()
+                                .add(createNavigationBar())
+                                .expand(mainViewDisplay)
+                                .withFullHeight().space()
                 )
         );
     }
 
     private Component createNavigationBar() {
         MVerticalLayout m = new MVerticalLayout().withWidth("300px");
-        m.addComponent(createNavButton("Welcome", IndexView.class));
+
+        Button welcomeLink = createNavButton("Welcome", IndexView.class);
+        welcomeLink.setIcon(FontAwesome.HEART);
+        m.addComponent(welcomeLink);
+
         loginLink = createNavButton("Login", LoginView.class);
+        loginLink.setIcon(FontAwesome.USER_SECRET);
         m.addComponent(loginLink);
+
         homeLink = createNavButton("Home", HomeView.class);
         homeLink.setVisible(false);
+        homeLink.setIcon(FontAwesome.BANK);
         m.addComponent(homeLink);
+
+        settingsLink = createNavButton("Settings", SettingsView.class);
+        settingsLink.setVisible(false);
+        settingsLink.setIcon(FontAwesome.COGS);
+        m.addComponent(settingsLink);
 
         logoutLink = createNavButton("Logout", LoginView.class);
         logoutLink.setVisible(false);
+        logoutLink.setIcon(FontAwesome.EJECT);
         m.addComponent(logoutLink);
         return m;
     }
@@ -109,12 +118,9 @@ public class MainUI extends UI {
     @EventBusListenerMethod
     private void onLoggedInEvent(org.vaadin.spring.events.Event<UserLoggedInEvent> event) {
         UserLoggedInEvent userLoggedInEvent = event.getPayload();
-        log.info("User logged in...");
-        loginLink.setVisible(false);
-        homeLink.setVisible(true);
-        logoutLink.setVisible(true);
-        if(userLoggedInEvent.user.lacksPermissions()) {
-            getNavigator().navigateTo(getNavigatorViewNameBasedOnView(ConnectView.class));
+        adjustLinks(true);
+        if (userLoggedInEvent.user.lacksPermissions()) {
+            getNavigator().navigateTo(getNavigatorViewNameBasedOnView(SettingsView.class));
         } else {
             getNavigator().navigateTo(getNavigatorViewNameBasedOnView(HomeView.class));
         }
@@ -124,15 +130,16 @@ public class MainUI extends UI {
     private void onRegistredUserEvent(org.vaadin.spring.events.Event<UserRegisteredEvent> event) {
         UserRegisteredEvent userRegisteredEvent = event.getPayload();
         log.info("User registered ");
-        loginLink.setVisible(false);
-        homeLink.setVisible(true);
-        logoutLink.setVisible(true);
-        getNavigator().navigateTo(getNavigatorViewNameBasedOnView(ConnectView.class));
+        adjustLinks(true);
+        getNavigator().navigateTo(getNavigatorViewNameBasedOnView(SettingsView.class));
     }
 
-
-
-
+    private void adjustLinks(boolean loggedIn) {
+        loginLink.setVisible(!loggedIn);
+        homeLink.setVisible(loggedIn);
+        logoutLink.setVisible(loggedIn);
+        settingsLink.setVisible(loggedIn);
+    }
 
 
     public static final String getNavigatorViewNameBasedOnView(Class<? extends View> theView) {

@@ -19,8 +19,7 @@ public class RunkeeperProps {
 
     private String oauth2ClientId;
     private String oauth2ClientSecret;
-    private URI oauth2UrlAuthorize;
-    private URI oauth2UrlToken;
-    private URL oauth2CallbackUrl;
+    private URI userResource;
+    private URI profileResource;
 
 }

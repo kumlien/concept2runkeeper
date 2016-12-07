@@ -1,34 +1,33 @@
 package se.kumliens.concept2runkeeper.vaadin.views;
 
 import com.github.scribejava.core.builder.api.DefaultApi20;
+import com.github.scribejava.core.model.OAuth2AccessToken;
 import com.github.scribejava.core.model.Token;
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener;
 import com.vaadin.server.*;
 import com.vaadin.spring.annotation.SpringView;
-import com.vaadin.ui.Label;
+import com.vaadin.ui.Image;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.themes.ValoTheme;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.tomcat.util.modeler.NotificationInfo;
 import org.vaadin.addon.oauthpopup.OAuthListener;
 import org.vaadin.addon.oauthpopup.OAuthPopupButton;
 import org.vaadin.addon.oauthpopup.OAuthPopupConfig;
+import org.vaadin.addon.oauthpopup.URLBasedButton;
 import org.vaadin.spring.events.EventBus;
-import org.vaadin.spring.events.annotation.EventBusListenerMethod;
-import org.vaadin.viritin.button.MButton;
 import org.vaadin.viritin.label.Header;
 import org.vaadin.viritin.layouts.MHorizontalLayout;
 import org.vaadin.viritin.layouts.MVerticalLayout;
 import se.kumliens.concept2runkeeper.domain.User;
-import se.kumliens.concept2runkeeper.runkeeper.RunkeeperProps;
+import se.kumliens.concept2runkeeper.runkeeper.*;
 import se.kumliens.concept2runkeeper.vaadin.MainUI;
-import se.kumliens.concept2runkeeper.vaadin.events.RunkeeperAuthArrivedEvent;
-import se.kumliens.concept2runkeeper.vaadin.views.runkeeper.MyOAuthPopupButton;
 
 import javax.annotation.PostConstruct;
+
+import static com.vaadin.ui.Notification.Type.WARNING_MESSAGE;
 
 /**
  * The view where a user can manage his connections to concept2 and runkeeper
@@ -41,14 +40,16 @@ import javax.annotation.PostConstruct;
 public class SettingsView extends MVerticalLayout implements View {
 
     private static final ThemeResource CONNECT_TO_RUNKEEPER = new ThemeResource("images/connectToRunKeeper.png");
+    private static final ThemeResource RUNKEEPER_LOGO = new ThemeResource("images/rk-logo.png");
+    private static final ThemeResource RUNKEEPER_ICON = new ThemeResource("images/rk-icon.png");
 
     private final RunkeeperProps runkeeperProps;
 
     private final EventBus.ApplicationEventBus eventBus;
 
-    private User user;
+    private final RunkeeperService runkeeperService;
 
-    private MButton startAuthFlow;
+    private User user;
 
     @Override
     public void enter(ViewChangeListener.ViewChangeEvent event) {
@@ -63,20 +64,37 @@ public class SettingsView extends MVerticalLayout implements View {
             return;
         }
 
-        Header header = new Header("Your connection setting");
+        Header header = new Header("Your connection settings");
         header.setHeaderLevel(2);
 
-        startAuthFlow = createConnectToRunkeeperButton(user);
         eventBus.subscribe(this);
+        OAuthPopupButton popupButton = getRunkeeperAuthButton();
 
-        OAuthPopupButton popupButton = new MyOAuthPopupButton(new RunkeeperApi(runkeeperProps), runkeeperProps);
-        popupButton.setPopupWindowFeatures("resizable,width=400,height=300");
+        add(
+                new MHorizontalLayout(header), popupButton);
+    }
+
+
+
+    //Create the runkeeper auth button
+    private OAuthPopupButton getRunkeeperAuthButton() {
+        //https://developer.mozilla.org/en-US/docs/Web/API/Window/open#Position_and_size_features
+        OAuthPopupButton popupButton = new URLBasedButton(new RunKeeperOAuthApi(), OAuthPopupConfig.getStandardOAuth20Config(runkeeperProps.getOauth2ClientId(), runkeeperProps.getOauth2ClientSecret()));
+        popupButton.setPopupWindowFeatures("resizable,width=400,height=650,left=150,top=150");
+        popupButton.setIcon(CONNECT_TO_RUNKEEPER);
+        popupButton.addStyleName(ValoTheme.BUTTON_BORDERLESS);
+
         popupButton.addOAuthListener(new OAuthListener() {
             @Override
-            public void authSuccessful(Token token, boolean b) {
+            public void authSuccessful(Token token, boolean isOAuth20) {
                 getUI().access(() -> {
-                    Notification.show("Thanks", "Great, now we can push activities to RunKeeper!", Notification.Type.WARNING_MESSAGE);
+                    Notification.show("Great, now we can push activities to RunKeeper!", WARNING_MESSAGE);
                     popupButton.setVisible(false);
+                    OAuth2AccessToken token1 = (OAuth2AccessToken) token;
+                    RunKeeperUser runKeeperUser = runkeeperService.getUser(token1.getAccessToken());
+                    RunKeeperProfile runKeeperProfile = runkeeperService.getProfile(token1.getAccessToken());
+                    Image image = new Image("", new ExternalResource(runKeeperProfile.getNormalPicture()));
+                    add(image);
                 });
             }
 
@@ -85,49 +103,6 @@ public class SettingsView extends MVerticalLayout implements View {
                 log.info("Denied...:{}", s);
             }
         });
-
-        Label cogs = new Label();
-        cogs.setIcon(FontAwesome.COGS);
-        add(
-                new MHorizontalLayout(cogs, header), popupButton);
-    }
-
-    //https://developer.mozilla.org/en-US/docs/Web/API/Window/open#Position_and_size_features
-    private MButton createConnectToRunkeeperButton(User user) {
-        String url = runkeeperProps.getOauth2UrlAuthorize().toString() + "&state=" + user.getId();
-        ExternalResource externalResource = new ExternalResource(url);
-        MButton button = new MButton().withIcon(CONNECT_TO_RUNKEEPER).withStyleName(ValoTheme.BUTTON_LINK);
-
-        BrowserWindowOpener extension = new BrowserWindowOpener("popup/OAuthPopupUI");
-        extension.setFeatures("width=480,height=650,resizable=0,scrollbars=0,status=0,chrome=yes,centerscreen=yes");
-        extension.extend(button);
-        return button;
-    }
-
-
-    @EventBusListenerMethod
-    private void onRunkeeperAuthEvent(RunkeeperAuthArrivedEvent evt) {
-        log.info("Got a auth event: {}", evt);
-        if(evt.userId.equals(user.getId())) {
-            log.info("It's for us!");
-            startAuthFlow.setVisible(false);
-            UI ui = UI.getCurrent();
-        }
-    }
-
-    @RequiredArgsConstructor
-    private static class RunkeeperApi extends DefaultApi20 {
-
-        private final RunkeeperProps runkeeperProps;
-
-        @Override
-        public String getAccessTokenEndpoint() {
-            return runkeeperProps.getOauth2UrlToken().toString();
-        }
-
-        @Override
-        protected String getAuthorizationBaseUrl() {
-            return "https://runkeeper.com/apps/authorize";
-        }
+        return popupButton;
     }
 }

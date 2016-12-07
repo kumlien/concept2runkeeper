@@ -23,6 +23,5 @@ public class RunkeeperauthView extends VerticalLayout implements View {
 
     @PostConstruct
     public void init() {
-        addComponent(new Label("Hejsan..."));
     }
 }

@@ -3,16 +3,14 @@ package se.kumliens.concept2runkeeper.runkeeper;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PostConstruct;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.Map;
 
@@ -37,45 +35,29 @@ public class RunkeeperService {
         restTemplate = new RestTemplate();
     }
 
-
-    public String askForToken(String code) {
-        MultiValueMap<String, String> request = RunkeeperTokenRequest.builder().code(code).client_id(props.getOauth2ClientId())
-                .client_secret(props.getOauth2ClientSecret()).redirect_uri(props.getOauth2CallbackUrl().toString()).build().toMap();
-
-        log.info("Sending request to {} accessToken: {}", props.getOauth2UrlToken(), request);
-        HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(request, headersForTokenRequest);
-        ResponseEntity<RunkeeperTokenResponse> responseEntity = restTemplate.postForEntity(props.getOauth2UrlToken(), requestEntity, RunkeeperTokenResponse.class);
-        log.info("Got a response back: {}", responseEntity);
-
-        return responseEntity.getBody().getAccess_token();
-    }
-
     public void disconnectUser(String accessToken) {
         //TODO
     }
 
-    @Builder
-    @ToString
-    public static class RunkeeperTokenRequest {
-        private final String grant_type = "authorization_code";
-        private String code;
-        private String client_id;
-        private String client_secret;
-        private String redirect_uri;
-
-        MultiValueMap<String, String> toMap() {
-            MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
-            map.add("grant_type", grant_type);
-            map.add("code", code);
-            map.add("client_id", client_id);
-            map.add("client_secret", client_secret);
-            map.add("redirect_uri", redirect_uri);
-            return map;
-        }
+    public RunKeeperUser getUser(String token) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Accept", "application/vnd.com.runkeeper.User+json");
+        headers.set("Authorization", "Bearer " + token);
+        RequestEntity requestEntity = new RequestEntity(headers, HttpMethod.GET, props.getUserResource());
+        ResponseEntity<RunKeeperUser> response = restTemplate.exchange(requestEntity, RunKeeperUser.class);
+        log.info("got a user: {}", response.getBody());
+        return response.getBody();
     }
 
-    @Data
-    public static class RunkeeperTokenResponse {
-        private String access_token;
+    public RunKeeperProfile getProfile(String token) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Accept", "application/vnd.com.runkeeper.Profile+json");
+        headers.set("Authorization", "Bearer " + token);
+        RequestEntity requestEntity = new RequestEntity(headers, HttpMethod.GET, props.getProfileResource());
+        ResponseEntity<RunKeeperProfile> response = restTemplate.exchange(requestEntity, RunKeeperProfile.class);
+        log.info("got a profile: {}", response.getBody());
+        return response.getBody();
     }
+
+
 }

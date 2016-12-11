@@ -1,5 +1,7 @@
 package se.kumliens.concept2runkeeper.runkeeper;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 
@@ -10,6 +12,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PostConstruct;
+import java.net.URI;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Map;
@@ -26,12 +29,10 @@ public class RunkeeperService {
 
     private RestTemplate restTemplate;
 
-    HttpHeaders headersForTokenRequest = new HttpHeaders();
+    private final ObjectMapper objectMapper;
 
     @PostConstruct
     public void setup() {
-        headersForTokenRequest.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-        headersForTokenRequest.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
         restTemplate = new RestTemplate();
     }
 
@@ -60,4 +61,19 @@ public class RunkeeperService {
     }
 
 
+    public URI recordActivity(RecordActivityRequest request, String token) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Content-Type", "application/vnd.com.runkeeper.NewFitnessActivity+json");
+        headers.set("Authorization", "Bearer " + token);
+        log.info("Sending a {}", request);
+
+        try {
+            log.info("{}",objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(request));
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        RequestEntity requestEntity = new RequestEntity(request, headers, HttpMethod.POST, props.getFitnessActivityResource());
+        ResponseEntity<String> response = restTemplate.exchange(requestEntity, String.class);
+        return response.getHeaders().getLocation();
+    }
 }

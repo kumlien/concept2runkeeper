@@ -32,6 +32,7 @@ import se.kumliens.concept2runkeeper.vaadin.events.UserRegisteredEvent;
 import javax.annotation.PostConstruct;
 
 import static com.vaadin.ui.Notification.Type.ERROR_MESSAGE;
+import static com.vaadin.ui.Notification.Type.TRAY_NOTIFICATION;
 import static com.vaadin.ui.Notification.Type.WARNING_MESSAGE;
 import static org.vaadin.spring.events.EventScope.*;
 
@@ -71,8 +72,6 @@ public class LoginView extends VerticalLayout implements View {
         tabSheet.addTab(loginForm, "Already registered").setIcon(FontAwesome.USER);
         tabSheet.setSizeUndefined();
 
-        setSpacing(true);
-        setMargin(true);
         addComponent(tabSheet);
     }
 
@@ -98,11 +97,9 @@ public class LoginView extends VerticalLayout implements View {
             authenticationProvider.authenticate(new UsernamePasswordAuthenticationToken(credentials.getUsername(), credentials.getPassword()));
             final User userDetails = (User) userDetailsService.loadUserByUsername(credentials.getUsername());
             getSession().setAttribute(MainUI.SESSION_ATTR_USER, userDetails);
-            eventBus.publish(SESSION, this, new UserLoggedInEvent((User) userDetails));
+            eventBus.publish(SESSION, this, new UserLoggedInEvent(userDetails));
             if(userDetails.lacksPermissions()) {
-                Notification.show("Welcome " + ((User) userDetails).getFirstName() + ". You still have to give us permission to access your concept2 and Runkeeper data, you will be directed to the settings page.", WARNING_MESSAGE);
-            } else {
-                Notification.show("Welcome " + ((User) userDetails).getFirstName(), WARNING_MESSAGE);
+                Notification.show("Welcome " + userDetails.getFirstName(), TRAY_NOTIFICATION );
             }
         } catch (AuthenticationException ae) {
             log.debug("Authentication failed...");

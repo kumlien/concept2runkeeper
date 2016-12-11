@@ -8,6 +8,8 @@ import lombok.ToString;
 import java.net.URL;
 
 /**
+ * Representation of the json struct returned from RunKeeper from the /profile resource
+ *
  * Created by svante2 on 2016-12-07.
  */
 @Getter
@@ -28,6 +30,10 @@ public class RunKeeperProfile {
 
     private final URL normalPicture;
 
+    private final URL mediumPicture;
+
+    private final URL largePicture;
+
 
     @JsonCreator
     public RunKeeperProfile(@JsonProperty("name") String name,
@@ -36,7 +42,9 @@ public class RunKeeperProfile {
                             @JsonProperty("birthday") String birthday,
                             @JsonProperty("profile") URL profile,
                             @JsonProperty("small_picture") URL smallPicture,
-                            @JsonProperty("normal_picture") URL normalPicture) {
+                            @JsonProperty("normal_picture") URL normalPicture,
+                            @JsonProperty("medium_picture") URL mediumPicture,
+                            @JsonProperty("large_picture") URL largePicture) {
         this.name = name;
         this.location = location;
         this.gender = gender;
@@ -44,5 +52,7 @@ public class RunKeeperProfile {
         this.profile = profile;
         this.smallPicture = smallPicture;
         this.normalPicture = normalPicture;
+        this.mediumPicture = mediumPicture;
+        this.largePicture = largePicture;
     }
 }

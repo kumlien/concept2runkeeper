@@ -2,34 +2,33 @@ package se.kumliens.concept2runkeeper.vaadin;
 
 import com.vaadin.annotations.*;
 import com.vaadin.navigator.View;
-import com.vaadin.server.FontAwesome;
 import com.vaadin.server.VaadinRequest;
-import com.vaadin.server.VaadinServlet;
 import com.vaadin.shared.ui.ui.Transport;
 import com.vaadin.spring.annotation.SpringUI;
 import com.vaadin.spring.navigator.SpringNavigator;
+import com.vaadin.spring.navigator.SpringViewProvider;
 import com.vaadin.ui.*;
-import com.vaadin.ui.themes.ValoTheme;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.vaadin.dialogs.ConfirmDialog;
 import org.vaadin.spring.events.EventBus;
 import org.vaadin.spring.events.annotation.EventBusListenerMethod;
 import org.vaadin.viritin.button.MButton;
 import org.vaadin.viritin.label.Header;
 import org.vaadin.viritin.layouts.MHorizontalLayout;
 import org.vaadin.viritin.layouts.MVerticalLayout;
-import se.kumliens.concept2runkeeper.runkeeper.RunkeeperProps;
+import se.kumliens.concept2runkeeper.domain.User;
 import se.kumliens.concept2runkeeper.vaadin.events.UserLoggedInEvent;
+import se.kumliens.concept2runkeeper.vaadin.events.UserLoggedOutEvent;
 import se.kumliens.concept2runkeeper.vaadin.events.UserRegisteredEvent;
 import se.kumliens.concept2runkeeper.vaadin.views.*;
 import se.kumliens.concept2runkeeper.vaadin.views.login.LoginView;
+import se.kumliens.concept2runkeeper.vaadin.views.sync.SyncView;
 
 import javax.annotation.PreDestroy;
-import javax.servlet.annotation.WebServlet;
 
-import static com.vaadin.ui.themes.ValoTheme.BUTTON_LARGE;
-import static com.vaadin.ui.themes.ValoTheme.BUTTON_LINK;
+import static com.vaadin.ui.Alignment.TOP_CENTER;
+import static com.vaadin.ui.themes.ValoTheme.*;
 
 /**
  * Created by svante2 on 2016-11-28.
@@ -52,14 +51,15 @@ public class MainUI extends UI {
 
     private Button logoutLink; //displayed for logged in users
 
-    private Button homeLink; //displayed for logged in users
+    private Button syncLink; //displayed for logged in users
 
-    private Button settingsLink; //displayed for logged in users¨¨
+    private Button settingsLink; //displayed for logged in users
 
-    public MainUI(MainViewDisplay mainContent, SpringNavigator navigator, EventBus.UIEventBus eventBus) {
+    public MainUI(MainViewDisplay mainContent, SpringNavigator navigator, EventBus.UIEventBus eventBus, SpringViewProvider springViewProvider) {
         this.mainViewDisplay = mainContent;
         this.eventBus = eventBus;
         navigator.setErrorView(ErrorView.class);
+        springViewProvider.setAccessDeniedViewClass(IndexView.class);
     }
 
     @PreDestroy
@@ -69,50 +69,69 @@ public class MainUI extends UI {
 
     @Override
     protected void init(VaadinRequest vaadinRequest) {
+        final Header header = new Header("Keeping your workouts in sync");
+        header.setSizeUndefined();
         eventBus.subscribe(this);
+        MHorizontalLayout center = new MHorizontalLayout()
+                .add(createNavigationBar())
+                .expand(mainViewDisplay)
+                .withStyleName(LAYOUT_WELL)
+                .withCaption("Center");
+        center.setSizeFull();
+
         setContent(
-                new MVerticalLayout().add(
-                        new Header("Welcome to concept2runkeeper").withStyleName(ValoTheme.TEXTFIELD_ALIGN_CENTER),
-                        new MHorizontalLayout()
-                                .add(createNavigationBar())
-                                .expand(mainViewDisplay)
-                                .withFullHeight().space()
-                )
+                new MVerticalLayout(header)
+                        .expand(center)
+                        .withAlign(header, TOP_CENTER)
+                        .withStyleName(LAYOUT_WELL)
+                        .withMargin(true)
+                        .withSpacing(true)
+                        .withFullHeight()
+                        .withFullWidth()
+                        .withCaption("Content")
         );
     }
 
     private Component createNavigationBar() {
-        MVerticalLayout m = new MVerticalLayout().withWidth("300px");
+        MVerticalLayout links = new MVerticalLayout().withWidth("180px").withHeightUndefined();
 
         Button welcomeLink = createNavButton("Welcome", IndexView.class);
-        welcomeLink.setIcon(FontAwesome.HEART);
-        m.addComponent(welcomeLink);
+        links.addComponent(welcomeLink);
 
         loginLink = createNavButton("Login", LoginView.class);
-        loginLink.setIcon(FontAwesome.USER_SECRET);
-        m.addComponent(loginLink);
+        links.addComponent(loginLink);
 
-        homeLink = createNavButton("Home", HomeView.class);
-        homeLink.setVisible(false);
-        homeLink.setIcon(FontAwesome.BANK);
-        m.addComponent(homeLink);
+        syncLink = createNavButton("Synchronzie", SyncView.class);
+        syncLink.setVisible(false);
+        links.addComponent(syncLink);
 
         settingsLink = createNavButton("Settings", SettingsView.class);
         settingsLink.setVisible(false);
-        settingsLink.setIcon(FontAwesome.COGS);
-        m.addComponent(settingsLink);
+        links.addComponent(settingsLink);
 
-        logoutLink = createNavButton("Logout", LoginView.class);
+        logoutLink = createButton("Logout");
+        logoutLink.addClickListener(clk -> {
+            ConfirmDialog.show(getUI(), "Confirm", "Are you sure you want to logout?", "Yes", "No", e -> {
+                if (e.isConfirmed()) {
+                    eventBus.publish(this, new UserLoggedOutEvent(getUser()));
+                    getSession().setAttribute(SESSION_ATTR_USER, null);
+                    Notification.show("Hope to see you back soon again!", Notification.Type.WARNING_MESSAGE);
+                }
+            });
+        });
         logoutLink.setVisible(false);
-        logoutLink.setIcon(FontAwesome.EJECT);
-        m.addComponent(logoutLink);
-        return m;
+        links.addComponent(logoutLink);
+        return links;
     }
 
     private Button createNavButton(String linkText, Class<? extends View> theView) {
-        MButton button = new MButton().withCaption(linkText).withStyleName(BUTTON_LARGE, BUTTON_LINK);
+        MButton button = createButton(linkText);
         button.addClickListener(e -> getNavigator().navigateTo(getNavigatorViewNameBasedOnView(theView)));
         return button;
+    }
+
+    private MButton createButton(String linkText) {
+        return new MButton().withCaption(linkText).withStyleName(BUTTON_LARGE, BUTTON_LINK);
     }
 
     @EventBusListenerMethod
@@ -122,7 +141,7 @@ public class MainUI extends UI {
         if (userLoggedInEvent.user.lacksPermissions()) {
             getNavigator().navigateTo(getNavigatorViewNameBasedOnView(SettingsView.class));
         } else {
-            getNavigator().navigateTo(getNavigatorViewNameBasedOnView(HomeView.class));
+            getNavigator().navigateTo(getNavigatorViewNameBasedOnView(SyncView.class));
         }
     }
 
@@ -134,9 +153,17 @@ public class MainUI extends UI {
         getNavigator().navigateTo(getNavigatorViewNameBasedOnView(SettingsView.class));
     }
 
+    @EventBusListenerMethod
+    private void onLoggedOutEvent(org.vaadin.spring.events.Event<UserLoggedOutEvent> event) {
+        UserLoggedOutEvent userLoggedOutEvent = event.getPayload();
+        log.info("User {} logged out", userLoggedOutEvent.user.getEmail());
+        adjustLinks(false);
+        getNavigator().navigateTo(getNavigatorViewNameBasedOnView(IndexView.class));
+    }
+
     private void adjustLinks(boolean loggedIn) {
         loginLink.setVisible(!loggedIn);
-        homeLink.setVisible(loggedIn);
+        syncLink.setVisible(loggedIn);
         logoutLink.setVisible(loggedIn);
         settingsLink.setVisible(loggedIn);
     }
@@ -144,6 +171,10 @@ public class MainUI extends UI {
 
     public static final String getNavigatorViewNameBasedOnView(Class<? extends View> theView) {
         return theView.getSimpleName().replaceAll("View", "").toLowerCase();
+    }
+
+    public User getUser() {
+        return (User) getSession().getAttribute(SESSION_ATTR_USER);
     }
 
 }

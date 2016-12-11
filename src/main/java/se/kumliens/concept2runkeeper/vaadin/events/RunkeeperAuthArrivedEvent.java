@@ -1,7 +1,9 @@
 package se.kumliens.concept2runkeeper.vaadin.events;
 
+import com.github.scribejava.core.model.OAuth2AccessToken;
 import lombok.ToString;
 import org.springframework.context.ApplicationEvent;
+import se.kumliens.concept2runkeeper.domain.User;
 
 /**
  * Created by svante2 on 2016-11-30.
@@ -9,20 +11,20 @@ import org.springframework.context.ApplicationEvent;
 @ToString
 public class RunkeeperAuthArrivedEvent extends ApplicationEvent {
 
-    public final String accessToken;
+    public final OAuth2AccessToken accessToken;
 
-    public final String userId;
+    public final User user;
 
     /**
      * Create a new ApplicationEvent.
      *
      * @param source the object on which the event initially occurred (never {@code null})
-     * @param userId
+     * @param user
      * @param accessToken
      */
-    public RunkeeperAuthArrivedEvent(Object source, String userId, String accessToken) {
+    public RunkeeperAuthArrivedEvent(Object source, User user, OAuth2AccessToken accessToken) {
         super(source);
-        this.userId = userId;
+        this.user = user;
         this.accessToken = accessToken;
     }
 }

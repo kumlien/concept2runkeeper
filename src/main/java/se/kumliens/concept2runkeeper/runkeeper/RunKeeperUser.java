@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.ToString;
 
 /**
+ * Representation of the json struct returned from RunKeeper from the /user resource
+ *
  * Created by svante2 on 2016-12-07.
  */
 @Getter
@@ -14,11 +16,11 @@ public class RunKeeperUser {
 
     public final String userID;
 
-    public final String profile;
+    public final String profileResource; //path to the profile resource
 
     @JsonCreator
-    public RunKeeperUser(@JsonProperty(value = "userID") String userID, @JsonProperty("profile") String profile) {
+    public RunKeeperUser(@JsonProperty(value = "userID") String userID, @JsonProperty("profile") String profileResource) {
         this.userID = userID;
-        this.profile = profile;
+        this.profileResource = profileResource;
     }
 }

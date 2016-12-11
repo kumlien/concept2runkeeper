@@ -15,7 +15,6 @@ import javax.annotation.PostConstruct;
 /**
  * Created by svante2 on 2016-11-29.
  */
-@SpringComponent
 @UIScope
 @SpringView
 public class ErrorView extends VerticalLayout implements View {

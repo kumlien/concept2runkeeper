@@ -1,17 +1,15 @@
 package se.kumliens.concept2runkeeper.domain;
 
-import lombok.Builder;
 import lombok.Data;
 
 import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.util.StringUtils;
+import se.kumliens.concept2runkeeper.runkeeper.RunKeeperData;
 
-import java.time.Instant;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -36,9 +34,7 @@ public class User implements UserDetails {
 
     private String lastName;
 
-    private String runkeeperAccessToken;
-
-    private Instant runkeeperConnectDate;
+    private RunKeeperData runKeeperData;
 
     private String concept2AccessToken;
 
@@ -47,40 +43,47 @@ public class User implements UserDetails {
     private Collection<GrantedAuthority> authorities = new HashSet<>();
 
     @PersistenceConstructor
-    public User(String email, String firstName, String lastName, String password, String id, Collection<GrantedAuthority> authorities, String runkeeperAccessToken, String concept2AccessToken) {
+    public User(String email, String firstName, String lastName, String password, String id, Collection<GrantedAuthority> authorities, RunKeeperData runKeeperData, String concept2AccessToken) {
         this.email = email;
         this.firstName = firstName;
         this.lastName = lastName;
         this.password = password;
-        this.runkeeperAccessToken = runkeeperAccessToken;
+        this.runKeeperData = runKeeperData;
         this.concept2AccessToken = concept2AccessToken;
         this.id = id;
         this.authorities = authorities;
     }
 
-    public User() {}
+    public User() {
+    }
 
-    @Override public Collection<? extends GrantedAuthority> getAuthorities() {
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
         return Collections.unmodifiableCollection(authorities);
     }
 
-    @Override public String getUsername() {
+    @Override
+    public String getUsername() {
         return email;
     }
 
-    @Override public boolean isAccountNonExpired() {
+    @Override
+    public boolean isAccountNonExpired() {
         return true;
     }
 
-    @Override public boolean isAccountNonLocked() {
+    @Override
+    public boolean isAccountNonLocked() {
         return true;
     }
 
-    @Override public boolean isCredentialsNonExpired() {
+    @Override
+    public boolean isCredentialsNonExpired() {
         return true;
     }
 
-    @Override public boolean isEnabled() {
+    @Override
+    public boolean isEnabled() {
         return true;
     }
 
@@ -92,6 +95,17 @@ public class User implements UserDetails {
      * @return true if either the concept2 accessToken or the runkeeper accessToken is missing
      */
     public boolean lacksPermissions() {
-        return isEmpty(concept2AccessToken) || isEmpty(runkeeperAccessToken);
+        return isEmpty(concept2AccessToken) || runKeeperData == null;
+    }
+
+    public boolean hasConnectionTo(Provider provider) {
+        switch (provider) {
+            case CONCEPT2:
+                return StringUtils.hasText(concept2AccessToken);
+            case RUNKEEPER:
+                return runKeeperData != null && StringUtils.hasText(runKeeperData.getToken());
+            default:
+                throw new RuntimeException("Unhandled provider " + provider);
+        }
     }
 }

@@ -11,8 +11,7 @@ import org.vaadin.viritin.form.AbstractForm;
 import org.vaadin.viritin.layouts.MFormLayout;
 import org.vaadin.viritin.layouts.MVerticalLayout;
 
-import static com.vaadin.server.FontAwesome.LOCK;
-import static com.vaadin.server.FontAwesome.USER;
+import static com.vaadin.server.FontAwesome.*;
 
 /**
  * Created by svante2 on 2016-04-28.
@@ -34,8 +33,9 @@ public class LoginForm extends AbstractForm<LoginCredentials> {
     protected Component createContent() {
         focusFirst();
         setSaveCaption("Login");
-        getSaveButton().setIcon(FontAwesome.CHECK_CIRCLE);
-        getResetButton().setIcon(FontAwesome.CLOSE);
+        getSaveButton().setIcon(CHECK_CIRCLE);
+        getSaveButton().setStyleName("primary default");
+        getResetButton().setIcon(CLOSE);
         return new MVerticalLayout(
                 new MFormLayout(username,password),
                 getToolbar()

@@ -22,6 +22,7 @@ import se.kumliens.concept2runkeeper.domain.User;
 import java.util.function.Consumer;
 
 import static com.vaadin.server.FontAwesome.*;
+import static com.vaadin.ui.themes.ValoTheme.BUTTON_HUGE;
 
 /**
  * Created by svante2 on 2016-04-28.
@@ -60,8 +61,8 @@ public class RegisterForm extends AbstractForm<User> {
         password2.setIcon(LOCK);
         password2.addBlurListener(pwdChecker);
 
-        getSaveButton().addStyleName(ValoTheme.BUTTON_HUGE);
-        getResetButton().addStyleName(ValoTheme.BUTTON_HUGE);
+        getSaveButton().addStyleName(BUTTON_HUGE);
+        getResetButton().addStyleName(BUTTON_HUGE);
         email.focus();
     }
 

@@ -41,6 +41,7 @@ import static com.vaadin.ui.Grid.SelectionMode.MULTI;
 import static com.vaadin.ui.Notification.Type.WARNING_MESSAGE;
 import static com.vaadin.ui.themes.ValoTheme.*;
 import static se.kumliens.concept2runkeeper.domain.Provider.CONCEPT2;
+import static se.kumliens.concept2runkeeper.vaadin.MainUI.link;
 
 /**
  * The view used by a user to sync work outs.
@@ -198,10 +199,4 @@ public class SyncView extends MVerticalLayout implements View {
         top.add(button);
         top.withAlign(button, Alignment.MIDDLE_LEFT);
     }
-
-    private static String link(String linkText, String location) {
-        return new StringBuilder("<a href=\"").append(location).append("\">").append(linkText).append("</a>").toString();
-    }
-
-
 }

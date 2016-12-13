@@ -75,8 +75,7 @@ public class MainUI extends UI {
         MHorizontalLayout center = new MHorizontalLayout()
                 .add(createNavigationBar())
                 .expand(mainViewDisplay)
-                .withStyleName(LAYOUT_WELL)
-                .withCaption("Center");
+                .withStyleName(LAYOUT_WELL);
         center.setSizeFull();
 
         setContent(
@@ -175,6 +174,11 @@ public class MainUI extends UI {
 
     public User getUser() {
         return (User) getSession().getAttribute(SESSION_ATTR_USER);
+    }
+
+
+    public static String link(String linkText, String location) {
+        return new StringBuilder("<a href=\"").append(location).append("\">").append(linkText).append("</a>").toString();
     }
 
 }

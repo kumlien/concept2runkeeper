@@ -5,15 +5,15 @@ import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener;
 import com.vaadin.server.FontAwesome;
 import com.vaadin.spring.annotation.SpringView;
-import com.vaadin.ui.Notification;
-import com.vaadin.ui.TabSheet;
-import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.*;
 import com.vaadin.ui.themes.ValoTheme;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.vaadin.spring.events.EventBus;
 import org.vaadin.spring.events.EventScope;
+import org.vaadin.viritin.layouts.MPanel;
+import org.vaadin.viritin.layouts.MVerticalLayout;
 import se.kumliens.concept2runkeeper.domain.User;
 import se.kumliens.concept2runkeeper.security.Authorities;
 import se.kumliens.concept2runkeeper.security.MongoUserDetailsService;
@@ -31,9 +31,13 @@ import se.kumliens.concept2runkeeper.vaadin.events.UserRegisteredEvent;
 
 import javax.annotation.PostConstruct;
 
+import static com.vaadin.server.FontAwesome.USER;
+import static com.vaadin.server.FontAwesome.USER_PLUS;
 import static com.vaadin.ui.Notification.Type.ERROR_MESSAGE;
 import static com.vaadin.ui.Notification.Type.TRAY_NOTIFICATION;
 import static com.vaadin.ui.Notification.Type.WARNING_MESSAGE;
+import static com.vaadin.ui.themes.ValoTheme.TABSHEET_FRAMED;
+import static com.vaadin.ui.themes.ValoTheme.TABSHEET_PADDED_TABBAR;
 import static org.vaadin.spring.events.EventScope.*;
 
 /**
@@ -44,6 +48,7 @@ import static org.vaadin.spring.events.EventScope.*;
 @RequiredArgsConstructor
 public class LoginView extends VerticalLayout implements View {
 
+    public static final String DEFAULT_FORM_FIELD_WIDTH = "250px";
 
     private final AuthenticationProvider authenticationProvider;
 
@@ -64,15 +69,22 @@ public class LoginView extends VerticalLayout implements View {
 
         RegisterForm registerForm = new RegisterForm();
         registerForm.setSavedHandler(this::onRegister);
+        registerForm.setWidth("100%");
 
         TabSheet tabSheet = new TabSheet();
-        tabSheet.addStyleName(ValoTheme.TABSHEET_FRAMED);
-        tabSheet.addStyleName(ValoTheme.TABSHEET_PADDED_TABBAR);
-        tabSheet.addTab(registerForm, "Register").setIcon(FontAwesome.USER_PLUS);
-        tabSheet.addTab(loginForm, "Already registered").setIcon(FontAwesome.USER);
-        tabSheet.setSizeUndefined();
+        tabSheet.addStyleName(TABSHEET_FRAMED);
+        tabSheet.addStyleName(TABSHEET_PADDED_TABBAR);
+        tabSheet.addTab(registerForm, "Sign up").setIcon(USER_PLUS);
+        tabSheet.addTab(loginForm, "Login").setIcon(USER);
+        tabSheet.setWidth("100%");
 
-        addComponent(tabSheet);
+
+        MPanel panel = new MPanel("Login here or sign up if you are new to our service").withWidth("80%").withHeight("80%");
+        panel.setContent(new MVerticalLayout(tabSheet));
+
+        addComponent(panel);
+        setComponentAlignment(panel, Alignment.MIDDLE_CENTER);
+        setSizeFull();
     }
 
     private void onRegister(User user) {

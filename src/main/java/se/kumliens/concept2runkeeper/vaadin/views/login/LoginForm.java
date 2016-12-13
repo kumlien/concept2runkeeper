@@ -12,14 +12,15 @@ import org.vaadin.viritin.layouts.MFormLayout;
 import org.vaadin.viritin.layouts.MVerticalLayout;
 
 import static com.vaadin.server.FontAwesome.*;
+import static se.kumliens.concept2runkeeper.vaadin.views.login.LoginView.DEFAULT_FORM_FIELD_WIDTH;
 
 /**
  * Created by svante2 on 2016-04-28.
  */
 public class LoginForm extends AbstractForm<LoginCredentials> {
 
-    private EmailField username = (EmailField) new EmailField("Email").withValidator(new EmailValidator("That is not a valid email address"));
-    private MPasswordField password = new MPasswordField("Password");
+    private EmailField username = (EmailField) new EmailField("Email").withWidth(DEFAULT_FORM_FIELD_WIDTH).withValidator(new EmailValidator("That is not a valid email address"));
+    private MPasswordField password = new MPasswordField("Password").withWidth(DEFAULT_FORM_FIELD_WIDTH);
 
     public LoginForm() {
         setEntity(new LoginCredentials());

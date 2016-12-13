@@ -23,6 +23,7 @@ import java.util.function.Consumer;
 
 import static com.vaadin.server.FontAwesome.*;
 import static com.vaadin.ui.themes.ValoTheme.BUTTON_HUGE;
+import static se.kumliens.concept2runkeeper.vaadin.views.login.LoginView.DEFAULT_FORM_FIELD_WIDTH;
 
 /**
  * Created by svante2 on 2016-04-28.
@@ -30,11 +31,12 @@ import static com.vaadin.ui.themes.ValoTheme.BUTTON_HUGE;
 @Slf4j
 public class RegisterForm extends AbstractForm<User> {
 
-    private EmailField email = (EmailField) new EmailField("E-mail").withValidator(new EmailValidator("Not a valid email address...")).withValidator(new StringLengthValidator("Please specify your first name", 2, 32, false));
-    private MTextField firstName = new MTextField("First name").withValidator(new StringLengthValidator("Please specify your first name", 2, 32, false));
-    private MTextField lastName = new MTextField("Last name").withValidator(new StringLengthValidator("Please specify your last name", 2, 32, false));
-    private MPasswordField password = new MPasswordField("Password").withValidator(new StringLengthValidator("Must contain at least six characters", 6, 32, false));
-    private MPasswordField password2 = new MPasswordField("Password").withValidator(new StringLengthValidator("Must contain at least six characters", 6, 32, false));
+
+    private EmailField email = (EmailField) new EmailField("E-mail").withWidth(DEFAULT_FORM_FIELD_WIDTH).withValidator(new EmailValidator("Not a valid email address...")).withValidator(new StringLengthValidator("Please specify your first name", 2, 32, false));
+    private MTextField firstName = new MTextField("First name").withWidth(DEFAULT_FORM_FIELD_WIDTH).withValidator(new StringLengthValidator("Please specify your first name", 2, 32, false));
+    private MTextField lastName = new MTextField("Last name").withWidth(DEFAULT_FORM_FIELD_WIDTH).withValidator(new StringLengthValidator("Please specify your last name", 2, 32, false));
+    private MPasswordField password = new MPasswordField("Password").withWidth(DEFAULT_FORM_FIELD_WIDTH).withValidator(new StringLengthValidator("Must contain at least six characters", 6, 32, false));
+    private MPasswordField password2 = new MPasswordField("Password").withWidth(DEFAULT_FORM_FIELD_WIDTH).withValidator(new StringLengthValidator("Must contain at least six characters", 6, 32, false));
 
     private FieldEvents.BlurListener pwdChecker = blurEvent -> {
         String pwd1 = password.getValue();

@@ -2,6 +2,7 @@ package se.kumliens.concept2runkeeper.vaadin;
 
 import com.vaadin.annotations.*;
 import com.vaadin.navigator.View;
+import com.vaadin.server.ExternalResource;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.shared.ui.ui.Transport;
 import com.vaadin.spring.annotation.SpringUI;
@@ -22,13 +23,16 @@ import se.kumliens.concept2runkeeper.vaadin.events.UserLoggedInEvent;
 import se.kumliens.concept2runkeeper.vaadin.events.UserLoggedOutEvent;
 import se.kumliens.concept2runkeeper.vaadin.events.UserRegisteredEvent;
 import se.kumliens.concept2runkeeper.vaadin.views.*;
+import se.kumliens.concept2runkeeper.vaadin.views.connectionTabs.RunKeeperTab;
 import se.kumliens.concept2runkeeper.vaadin.views.login.LoginView;
 import se.kumliens.concept2runkeeper.vaadin.views.sync.SyncView;
 
 import javax.annotation.PreDestroy;
 
+import static com.vaadin.server.Sizeable.Unit.PIXELS;
 import static com.vaadin.ui.Alignment.TOP_CENTER;
 import static com.vaadin.ui.themes.ValoTheme.*;
+import static se.kumliens.concept2runkeeper.vaadin.C2RThemeResources.RUNKEEPER_DEFAULT_PROFILE_ICON;
 
 /**
  * Created by svante2 on 2016-11-28.
@@ -46,6 +50,8 @@ public class MainUI extends UI {
     private final MainViewDisplay mainViewDisplay;
 
     private final EventBus.UIEventBus eventBus;
+
+    private Image avatar = new Image(null, RUNKEEPER_DEFAULT_PROFILE_ICON);
 
     private Button loginLink; //displayed for non logged in users
 
@@ -93,6 +99,9 @@ public class MainUI extends UI {
 
     private Component createNavigationBar() {
         MVerticalLayout links = new MVerticalLayout().withWidth("180px").withHeightUndefined();
+
+        avatar.setWidth(70, PIXELS);
+        links.add(avatar, Alignment.TOP_CENTER);
 
         Button welcomeLink = createNavButton("Welcome", IndexView.class);
         links.addComponent(welcomeLink);
@@ -165,6 +174,15 @@ public class MainUI extends UI {
         syncLink.setVisible(loggedIn);
         logoutLink.setVisible(loggedIn);
         settingsLink.setVisible(loggedIn);
+        if(loggedIn) {
+            if(null != getUser().getRunKeeperData().getProfile().getNormalPicture()) {
+                avatar.setSource(new ExternalResource(getUser().getRunKeeperData().getProfile().getNormalPicture()));
+            } else if(null != getUser().getRunKeeperData().getProfile().getMediumPicture()) {
+                avatar.setSource(new ExternalResource(getUser().getRunKeeperData().getProfile().getMediumPicture()));
+            }
+        } else {
+            avatar.setSource(RUNKEEPER_DEFAULT_PROFILE_ICON);
+        }
     }
 
 

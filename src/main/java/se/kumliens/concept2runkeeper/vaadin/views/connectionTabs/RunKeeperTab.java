@@ -14,10 +14,8 @@ import org.vaadin.addon.oauthpopup.OAuthPopupButton;
 import org.vaadin.addon.oauthpopup.OAuthPopupConfig;
 import org.vaadin.addon.oauthpopup.URLBasedButton;
 import org.vaadin.spring.events.EventBus;
-import org.vaadin.viritin.layouts.MHorizontalLayout;
 import se.kumliens.concept2runkeeper.repos.UserRepo;
 import se.kumliens.concept2runkeeper.runkeeper.*;
-import se.kumliens.concept2runkeeper.vaadin.C2RThemeResources;
 import se.kumliens.concept2runkeeper.vaadin.MainUI;
 import se.kumliens.concept2runkeeper.vaadin.events.RunkeeperAuthArrivedEvent;
 
@@ -27,12 +25,11 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 
-import static com.vaadin.server.Sizeable.Unit.PIXELS;
+import static com.vaadin.server.FontAwesome.MAIL_FORWARD;
 import static com.vaadin.shared.ui.label.ContentMode.HTML;
 import static com.vaadin.ui.Notification.Type.WARNING_MESSAGE;
 import static com.vaadin.ui.themes.ValoTheme.BUTTON_BORDERLESS;
 import static se.kumliens.concept2runkeeper.vaadin.C2RThemeResources.CONNECT_TO_RUNKEEPER;
-import static se.kumliens.concept2runkeeper.vaadin.C2RThemeResources.RUNKEEPER_DEFAULT_PROFILE_ICON;
 
 /**
  * Created by svante2 on 2016-12-08.
@@ -68,27 +65,23 @@ public class RunKeeperTab extends AbstractConnectionTab {
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT).withLocale(ui.getLocale()).withZone(ZoneId.systemDefault());
         String firstConnectDate = dateTimeFormatter.format(runKeeperData.getFirstConnected());
         Label label = new Label("Hi " + runKeeperData.getProfile().getName() + ".</br>" +
-                "You are connected since " + firstConnectDate + "</br>" +
+                "You are happily connected to RunKeeper since " + firstConnectDate + "</br>" +
                 "The last time we checked your connection was " + dateTimeFormatter.format(runKeeperData.getLastTimeConnected()));
         label.setContentMode(HTML);
         addComponent(label);
-        addProfileImageAndLink(runKeeperData);
+        Link link = createLink(runKeeperData);
+        link.setSizeUndefined();
+        addComponent(link);
+        setExpandRatio(link, 1.0f);
+
         tab.setIcon(FontAwesome.CHECK_SQUARE_O);
     }
 
-    private void addProfileImageAndLink(RunKeeperData runKeeperData) {
-        Image image = new Image(null, RUNKEEPER_DEFAULT_PROFILE_ICON);
-        if(null != runKeeperData.getProfile().getNormalPicture()) {
-            image = new Image(null, new ExternalResource(runKeeperData.getProfile().getNormalPicture()));
-        } else if(null != runKeeperData.getProfile().getMediumPicture()) {
-            image = new Image(null, new ExternalResource(runKeeperData.getProfile().getMediumPicture()));
-        }
-        image.setWidth(75, PIXELS);
-
-        Link link = new Link("Your RunKeeper profile", new ExternalResource(runKeeperData.getProfile().getProfile()));
+    private static Link createLink(RunKeeperData runKeeperData) {
+        Link link = new Link("Take me to my RunKeeper profile!", new ExternalResource(runKeeperData.getProfile().getProfile()));
         link.setDescription("Visit runkeeper.com");
-        link.setIcon(FontAwesome.MAIL_FORWARD);
-        addComponent(new MHorizontalLayout(image, link).withSpacing(true).withMargin(true));
+        link.setIcon(MAIL_FORWARD);
+        return link;
     }
 
     protected void setUpWithMissingAuth() {

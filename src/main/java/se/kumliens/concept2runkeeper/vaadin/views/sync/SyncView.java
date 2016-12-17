@@ -1,15 +1,11 @@
 package se.kumliens.concept2runkeeper.vaadin.views.sync;
 
 import com.vaadin.data.util.BeanItemContainer;
-import com.vaadin.data.util.filter.Not;
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener;
-import com.vaadin.server.ClassResource;
-import com.vaadin.server.FontAwesome;
 import com.vaadin.server.Page;
 import com.vaadin.spring.annotation.SpringView;
 import com.vaadin.ui.*;
-import com.vaadin.ui.themes.ValoTheme;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.vaadin.viritin.button.MButton;
@@ -160,7 +156,7 @@ public class SyncView extends MVerticalLayout implements View {
                             .duration(Double.valueOf(next.getWorkTimeInSeconds()).intValue())
                             .totalCalories(next.getCalPerHours())
                             .type(ActivityType.ROWING).build();
-                    URI location = runkeeperService.recordActivity(request, ui.getUser().getRunKeeperData().getToken());
+                    URI location = runkeeperService.recordActivity(request, ui.getUser().getInternalRunKeeperData().getToken());
                     Notification.show("Activity synchronized with RunKeeper: " + location.toString());
                     iter.remove();
                 }

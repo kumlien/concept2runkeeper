@@ -95,7 +95,6 @@ public class LoginView extends VerticalLayout implements View {
         try {
             user.addAuthority(new SimpleGrantedAuthority(Authorities.USER.role));
             userDetailsService.createUser(user);
-            getSession().setAttribute(MainUI.SESSION_ATTR_USER, user);
             Notification.show("Welcome!", "Great, welcome to concept2runkeeper!", ERROR_MESSAGE);
             eventBus.publish(SESSION, this, new UserRegisteredEvent(user));
         } catch (Exception e) {
@@ -108,11 +107,8 @@ public class LoginView extends VerticalLayout implements View {
         try {
             authenticationProvider.authenticate(new UsernamePasswordAuthenticationToken(credentials.getUsername(), credentials.getPassword()));
             final User userDetails = (User) userDetailsService.loadUserByUsername(credentials.getUsername());
-            getSession().setAttribute(MainUI.SESSION_ATTR_USER, userDetails);
             eventBus.publish(SESSION, this, new UserLoggedInEvent(userDetails));
-            if(userDetails.lacksPermissions()) {
-                Notification.show("Welcome " + userDetails.getFirstName(), TRAY_NOTIFICATION );
-            }
+            Notification.show("Welcome " + userDetails.getFirstName(), TRAY_NOTIFICATION );
         } catch (AuthenticationException ae) {
             log.debug("Authentication failed...");
             Notification.show("Sorry, no such username/password combo found", WARNING_MESSAGE);

@@ -19,18 +19,21 @@ import org.vaadin.viritin.label.Header;
 import org.vaadin.viritin.layouts.MHorizontalLayout;
 import org.vaadin.viritin.layouts.MVerticalLayout;
 import se.kumliens.concept2runkeeper.domain.User;
+import se.kumliens.concept2runkeeper.vaadin.events.RunkeeperAuthArrivedEvent;
 import se.kumliens.concept2runkeeper.vaadin.events.UserLoggedInEvent;
 import se.kumliens.concept2runkeeper.vaadin.events.UserLoggedOutEvent;
 import se.kumliens.concept2runkeeper.vaadin.events.UserRegisteredEvent;
 import se.kumliens.concept2runkeeper.vaadin.views.*;
-import se.kumliens.concept2runkeeper.vaadin.views.connectionTabs.RunKeeperTab;
 import se.kumliens.concept2runkeeper.vaadin.views.login.LoginView;
 import se.kumliens.concept2runkeeper.vaadin.views.sync.SyncView;
 
 import javax.annotation.PreDestroy;
 
+import java.net.URL;
+
 import static com.vaadin.server.Sizeable.Unit.PIXELS;
 import static com.vaadin.ui.Alignment.TOP_CENTER;
+import static com.vaadin.ui.Notification.Type.WARNING_MESSAGE;
 import static com.vaadin.ui.themes.ValoTheme.*;
 import static se.kumliens.concept2runkeeper.vaadin.C2RThemeResources.RUNKEEPER_DEFAULT_PROFILE_ICON;
 
@@ -45,7 +48,7 @@ import static se.kumliens.concept2runkeeper.vaadin.C2RThemeResources.RUNKEEPER_D
 @Slf4j
 public class MainUI extends UI {
 
-    public static final String SESSION_ATTR_USER = "theUserObject";
+    private static final String SESSION_ATTR_USER = "theUserObject";
 
     private final MainViewDisplay mainViewDisplay;
 
@@ -123,7 +126,7 @@ public class MainUI extends UI {
                 if (e.isConfirmed()) {
                     eventBus.publish(this, new UserLoggedOutEvent(getUser()));
                     getSession().setAttribute(SESSION_ATTR_USER, null);
-                    Notification.show("Hope to see you back soon again!", Notification.Type.WARNING_MESSAGE);
+                    Notification.show("Hope to see you soon again!", WARNING_MESSAGE);
                 }
             });
         });
@@ -145,6 +148,7 @@ public class MainUI extends UI {
     @EventBusListenerMethod
     private void onLoggedInEvent(org.vaadin.spring.events.Event<UserLoggedInEvent> event) {
         UserLoggedInEvent userLoggedInEvent = event.getPayload();
+        setUserInSession(userLoggedInEvent.user);
         adjustLinks(true);
         if (userLoggedInEvent.user.lacksPermissions()) {
             getNavigator().navigateTo(getNavigatorViewNameBasedOnView(SettingsView.class));
@@ -169,19 +173,26 @@ public class MainUI extends UI {
         getNavigator().navigateTo(getNavigatorViewNameBasedOnView(IndexView.class));
     }
 
+    @EventBusListenerMethod
+    private void onRunkeeperAuthEvent(org.vaadin.spring.events.Event<RunkeeperAuthArrivedEvent> event) {
+        RunkeeperAuthArrivedEvent authArrivedEvent = event.getPayload();
+        log.info("Runkeeper auth event {}", authArrivedEvent);
+        adjustLinks(true);
+    }
+
+
     private void adjustLinks(boolean loggedIn) {
         loginLink.setVisible(!loggedIn);
         syncLink.setVisible(loggedIn);
         logoutLink.setVisible(loggedIn);
         settingsLink.setVisible(loggedIn);
-        if(loggedIn) {
-            if(null != getUser().getRunKeeperData().getProfile().getNormalPicture()) {
-                avatar.setSource(new ExternalResource(getUser().getRunKeeperData().getProfile().getNormalPicture()));
-            } else if(null != getUser().getRunKeeperData().getProfile().getMediumPicture()) {
-                avatar.setSource(new ExternalResource(getUser().getRunKeeperData().getProfile().getMediumPicture()));
+        if (loggedIn) {
+            URL rkImg = getUser().getAnyRunkeeperProfileImage();
+            if (rkImg != null) {
+                avatar.setSource(new ExternalResource(rkImg));
+            } else {
+                avatar.setSource(RUNKEEPER_DEFAULT_PROFILE_ICON);
             }
-        } else {
-            avatar.setSource(RUNKEEPER_DEFAULT_PROFILE_ICON);
         }
     }
 
@@ -199,4 +210,7 @@ public class MainUI extends UI {
         return new StringBuilder("<a href=\"").append(location).append("\">").append(linkText).append("</a>").toString();
     }
 
+    public void setUserInSession(User user) {
+        getSession().setAttribute(SESSION_ATTR_USER, user);
+    }
 }

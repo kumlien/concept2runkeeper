@@ -1,5 +1,6 @@
 package se.kumliens.concept2runkeeper.domain;
 
+import com.google.common.base.MoreObjects;
 import lombok.Data;
 
 import org.springframework.data.annotation.PersistenceConstructor;
@@ -8,8 +9,10 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.util.StringUtils;
-import se.kumliens.concept2runkeeper.runkeeper.RunKeeperData;
+import se.kumliens.concept2runkeeper.runkeeper.ExternalRunkeeperData;
+import se.kumliens.concept2runkeeper.runkeeper.InternalRunKeeperData;
 
+import java.net.URL;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -34,7 +37,9 @@ public class User implements UserDetails {
 
     private String lastName;
 
-    private RunKeeperData runKeeperData;
+    private InternalRunKeeperData internalRunKeeperData;
+
+    private ExternalRunkeeperData externalRunkeeperData;
 
     private String concept2AccessToken;
 
@@ -43,13 +48,15 @@ public class User implements UserDetails {
     private Collection<GrantedAuthority> authorities = new HashSet<>();
 
     @PersistenceConstructor
-    public User(String email, String firstName, String lastName, String password, String id, Collection<GrantedAuthority> authorities, RunKeeperData runKeeperData, String concept2AccessToken) {
+    public User(String email, String firstName, String lastName, String password, String id, Collection<GrantedAuthority> authorities, InternalRunKeeperData internalRunKeeperData, ExternalRunkeeperData externalRunkeeperData, String concept2AccessToken, String concept2ConnectDate) {
         this.email = email;
         this.firstName = firstName;
         this.lastName = lastName;
         this.password = password;
-        this.runKeeperData = runKeeperData;
+        this.internalRunKeeperData = internalRunKeeperData;
+        this.externalRunkeeperData = externalRunkeeperData;
         this.concept2AccessToken = concept2AccessToken;
+        this.concept2ConnectDate = concept2ConnectDate;
         this.id = id;
         this.authorities = authorities;
     }
@@ -95,7 +102,7 @@ public class User implements UserDetails {
      * @return true if either the concept2 accessToken or the runkeeper accessToken is missing
      */
     public boolean lacksPermissions() {
-        return isEmpty(concept2AccessToken) || runKeeperData == null;
+        return isEmpty(concept2AccessToken) || internalRunKeeperData == null;
     }
 
     public boolean hasConnectionTo(Provider provider) {
@@ -103,9 +110,25 @@ public class User implements UserDetails {
             case CONCEPT2:
                 return StringUtils.hasText(concept2AccessToken);
             case RUNKEEPER:
-                return runKeeperData != null && StringUtils.hasText(runKeeperData.getToken());
+                return internalRunKeeperData != null && StringUtils.hasText(internalRunKeeperData.getToken());
             default:
                 throw new RuntimeException("Unhandled provider " + provider);
         }
+    }
+
+    public URL getAnyRunkeeperProfileImage() {
+        if(externalRunkeeperData == null || externalRunkeeperData.getProfile() == null) {
+            return null;
+        }
+        if(externalRunkeeperData.getProfile().getNormalPicture() != null) {
+            return externalRunkeeperData.getProfile().getNormalPicture();
+        }
+        if(externalRunkeeperData.getProfile().getMediumPicture() != null) {
+            return externalRunkeeperData.getProfile().getMediumPicture();
+        }
+        if(externalRunkeeperData.getProfile().getLargePicture() != null) {
+            return externalRunkeeperData.getProfile().getLargePicture();
+        }
+        return null;
     }
 }

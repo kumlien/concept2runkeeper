@@ -22,4 +22,5 @@ public class RunkeeperProps {
     private URI userResource;
     private URI profileResource;
     private URI fitnessActivityResource;
+    private URI baseUrl;
 }

@@ -12,7 +12,7 @@ import se.kumliens.concept2runkeeper.vaadin.MainUI;
 /**
  * Created by svante2 on 2016-12-09.
  */
-public abstract class AbstractConnectionTab extends VerticalLayout {
+public abstract class AbstractSettingsTab extends VerticalLayout {
 
     protected User user;
     protected TabSheet.Tab tab;
@@ -20,7 +20,7 @@ public abstract class AbstractConnectionTab extends VerticalLayout {
     public void init(TabSheet.Tab tab, MainUI ui) {
         this.tab = tab;
         user = ui.getUser();
-        if(user == null) return;
+        if(user == null) return; //Should allways be there
 
         setSizeFull();
         setMargin(true);

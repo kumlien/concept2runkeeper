@@ -37,8 +37,6 @@ public class SettingsView extends MVerticalLayout implements View {
 
     private final MainUI ui;
 
-    private User user;
-
     @Override
     public void enter(ViewChangeListener.ViewChangeEvent event) {
         log.info("Entering settings view...");
@@ -46,8 +44,7 @@ public class SettingsView extends MVerticalLayout implements View {
 
     @PostConstruct
     public void setUp() {
-        user = (User) UI.getCurrent().getSession().getAttribute(MainUI.SESSION_ATTR_USER);
-        if (user == null) {
+        if (ui.getUser() == null) {
             UI.getCurrent().getNavigator().navigateTo(MainUI.getNavigatorViewNameBasedOnView(IndexView.class));
             return;
         }

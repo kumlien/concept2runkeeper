@@ -4,15 +4,9 @@ import com.vaadin.server.FontAwesome;
 import com.vaadin.spring.annotation.SpringComponent;
 import com.vaadin.spring.annotation.ViewScope;
 import com.vaadin.ui.Label;
-import com.vaadin.ui.TabSheet;
-import com.vaadin.ui.VerticalLayout;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
-import se.kumliens.concept2runkeeper.vaadin.MainUI;
-import sun.jvm.hotspot.debugger.cdbg.basic.LazyBlockSym;
-
-import javax.annotation.PostConstruct;
 
 /**
  * Created by svante2 on 2016-12-08.
@@ -21,7 +15,7 @@ import javax.annotation.PostConstruct;
 @ViewScope
 @Slf4j
 @RequiredArgsConstructor
-public class Concept2Tab extends AbstractConnectionTab {
+public class Concept2Tab extends AbstractSettingsTab {
 
 
     protected void doInit() {

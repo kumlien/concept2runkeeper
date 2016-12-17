@@ -14,13 +14,19 @@ import lombok.ToString;
 @ToString
 public class RunKeeperUser {
 
-    public final String userID;
+    private final String userID;
 
-    public final String profileResource; //path to the profile resource
+    private final String profileResource; //path to the profile resource
+
+    private final String settingsResource;
 
     @JsonCreator
-    public RunKeeperUser(@JsonProperty(value = "userID") String userID, @JsonProperty("profile") String profileResource) {
+    public RunKeeperUser(
+            @JsonProperty(value = "userID") String userID,
+            @JsonProperty("profile") String profileResource,
+            @JsonProperty("settings") String settingsResource) {
         this.userID = userID;
         this.profileResource = profileResource;
+        this.settingsResource = settingsResource;
     }
 }

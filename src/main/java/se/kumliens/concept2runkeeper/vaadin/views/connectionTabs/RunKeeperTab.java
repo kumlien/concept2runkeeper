@@ -2,11 +2,13 @@ package se.kumliens.concept2runkeeper.vaadin.views.connectionTabs;
 
 import com.github.scribejava.core.model.OAuth2AccessToken;
 import com.github.scribejava.core.model.Token;
+import com.google.common.base.MoreObjects;
 import com.vaadin.server.ExternalResource;
-import com.vaadin.server.FontAwesome;
+import com.vaadin.server.Page;
 import com.vaadin.spring.annotation.SpringComponent;
 import com.vaadin.spring.annotation.ViewScope;
 import com.vaadin.ui.*;
+import com.vaadin.ui.themes.ValoTheme;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.vaadin.addon.oauthpopup.OAuthListener;
@@ -14,6 +16,14 @@ import org.vaadin.addon.oauthpopup.OAuthPopupButton;
 import org.vaadin.addon.oauthpopup.OAuthPopupConfig;
 import org.vaadin.addon.oauthpopup.URLBasedButton;
 import org.vaadin.spring.events.EventBus;
+import org.vaadin.viritin.button.MButton;
+import org.vaadin.viritin.fields.MCheckBox;
+import org.vaadin.viritin.fields.MTextField;
+import org.vaadin.viritin.label.MLabel;
+import org.vaadin.viritin.layouts.MFormLayout;
+import org.vaadin.viritin.layouts.MHorizontalLayout;
+import org.vaadin.viritin.layouts.MPanel;
+import org.vaadin.viritin.layouts.MVerticalLayout;
 import se.kumliens.concept2runkeeper.repos.UserRepo;
 import se.kumliens.concept2runkeeper.runkeeper.*;
 import se.kumliens.concept2runkeeper.vaadin.MainUI;
@@ -25,10 +35,13 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 
+import static com.vaadin.server.FontAwesome.*;
+import static com.vaadin.server.FontAwesome.CHECK_SQUARE_O;
+import static com.vaadin.server.FontAwesome.FACEBOOK;
 import static com.vaadin.server.FontAwesome.MAIL_FORWARD;
 import static com.vaadin.shared.ui.label.ContentMode.HTML;
-import static com.vaadin.ui.Notification.Type.WARNING_MESSAGE;
-import static com.vaadin.ui.themes.ValoTheme.BUTTON_BORDERLESS;
+import static com.vaadin.ui.themes.ValoTheme.*;
+import static org.springframework.util.StringUtils.isEmpty;
 import static se.kumliens.concept2runkeeper.vaadin.C2RThemeResources.CONNECT_TO_RUNKEEPER;
 
 /**
@@ -38,7 +51,9 @@ import static se.kumliens.concept2runkeeper.vaadin.C2RThemeResources.CONNECT_TO_
 @ViewScope
 @RequiredArgsConstructor
 @Slf4j
-public class RunKeeperTab extends AbstractConnectionTab {
+public class RunKeeperTab extends AbstractSettingsTab {
+
+    private static final String DEFAULT_ACTIVITY_COMMENT = "This activity was synchronized from Concept2 using http://www.concept2runkeeper.com";
 
     private final RunkeeperService runkeeperService;
 
@@ -52,7 +67,7 @@ public class RunKeeperTab extends AbstractConnectionTab {
 
     @Override
     protected void doInit() {
-        if(user.getRunKeeperData() == null) {
+        if (user.getInternalRunKeeperData() == null || isEmpty(user.getInternalRunKeeperData().getToken())) { //todo also check if the token is valid?
             setUpWithMissingAuth();
         } else {
             setUpWithAuthPresent();
@@ -60,27 +75,91 @@ public class RunKeeperTab extends AbstractConnectionTab {
     }
 
     protected void setUpWithAuthPresent() {
-        RunKeeperData runKeeperData = user.getRunKeeperData();
         removeAllComponents();
-        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT).withLocale(ui.getLocale()).withZone(ZoneId.systemDefault());
-        String firstConnectDate = dateTimeFormatter.format(runKeeperData.getFirstConnected());
-        Label label = new Label("Hi " + runKeeperData.getProfile().getName() + ".</br>" +
-                "You are happily connected to RunKeeper since " + firstConnectDate + "</br>" +
-                "The last time we checked your connection was " + dateTimeFormatter.format(runKeeperData.getLastTimeConnected()));
-        label.setContentMode(HTML);
-        addComponent(label);
-        Link link = createLink(runKeeperData);
-        link.setSizeUndefined();
-        addComponent(link);
-        setExpandRatio(link, 1.0f);
 
-        tab.setIcon(FontAwesome.CHECK_SQUARE_O);
+        MPanel panelWithGeneralInfo = getPanelWithGeneralInfo();
+        addComponent(panelWithGeneralInfo);
+
+        Panel panelWithSettings = getPanelWithSettings();
+        addComponent(panelWithSettings);
+
+        setExpandRatio(panelWithSettings, 1.0f);
+        setSpacing(true);
+        tab.setIcon(CHECK_SQUARE_O);
     }
 
-    private static Link createLink(RunKeeperData runKeeperData) {
-        Link link = new Link("Take me to my RunKeeper profile!", new ExternalResource(runKeeperData.getProfile().getProfile()));
-        link.setDescription("Visit runkeeper.com");
+    //Create the panel with the different settings.
+    private Panel getPanelWithSettings() {
+        RunKeeperSettings settings = user.getExternalRunkeeperData().getSettings();
+        Panel panelWithSettings = new Panel("Settings used when posting activities to RunKeeper");
+        MHorizontalLayout settingsLayout = new MHorizontalLayout().withCaption("Default setting for posting to RunKeeper").withMargin(true);
+
+        MTextField defaultComment = new MTextField("Default comment:").withValue(isEmpty(user.getInternalRunKeeperData().getDefaultComment()) ? DEFAULT_ACTIVITY_COMMENT : user.getInternalRunKeeperData().getDefaultComment()).withWidth("90%");
+
+        MCheckBox postToFacebook = new MCheckBox("Post to Facebook").withValue(MoreObjects.firstNonNull(user.getInternalRunKeeperData().getPostToFacebookOverride(), settings.isPostToFacebook())).withIcon(FACEBOOK);
+        postToFacebook.setEnabled(settings.isFacebookConnected());
+        if(!settings.isFacebookConnected()) {
+            postToFacebook.setDescription("This option is disabled since you haven't connected your RunKeeper account to Facebook");
+        }
+
+        MCheckBox postToTwitter = new MCheckBox("Post to Twitter").withValue(MoreObjects.firstNonNull(user.getInternalRunKeeperData().getPostToTwitterOverride(), settings.isPostToTwitter())).withIcon(TWITTER);
+        postToTwitter.setEnabled(settings.isTwitterConnected());
+        if(!settings.isTwitterConnected()) {
+            postToTwitter.setDescription("This option is disabled since you haven't connected your RunKeeper account to Twitter");
+        }
+
+        MButton save = new MButton(CHECK_SQUARE_O, "Save", clk -> {
+            user.getInternalRunKeeperData().setDefaultComment(defaultComment.getValue());
+            user.getInternalRunKeeperData().setPostToFacebookOverride(postToFacebook.isChecked());
+            user.getInternalRunKeeperData().setPostToTwitterOverride(postToTwitter.isChecked());
+            userRepo.save(user);
+            setUpWithAuthPresent();
+            Notification notification = new Notification("Your settings has been updated");
+            notification.setDelayMsec(2000);
+            notification.setStyleName(NOTIFICATION_SUCCESS);
+            notification.show(Page.getCurrent());
+        }).withStyleName(BUTTON_FRIENDLY);
+        settingsLayout.expand(new MFormLayout(defaultComment, postToFacebook, postToTwitter, save).withSizeUndefined());
+        panelWithSettings.setContent(settingsLayout);
+        return panelWithSettings;
+    }
+
+    private MPanel getPanelWithGeneralInfo() {
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT).withLocale(ui.getLocale()).withZone(ZoneId.systemDefault());
+        String firstConnectDate = dateTimeFormatter.format(user.getInternalRunKeeperData().getFirstConnected());
+        Label infoText = new MLabel("You've been connected to RunKeeper since " + firstConnectDate + "</br>" +
+                "Last time we successfully accessed RunKeeper on your behalf was " + dateTimeFormatter.format(user.getInternalRunKeeperData().getLastTimeConnected())).withContentMode(HTML);
+        MButton refreshButton = getRefreshProfileButton("fetch");
+        Link link = createProfileLink(user.getExternalRunkeeperData(), " View ");
+        MVerticalLayout generalInfoLayout = new MVerticalLayout(infoText,
+                new MHorizontalLayout(
+                        new MLabel("You can"),
+                        link,
+                        new MLabel("or"),
+                        refreshButton,
+                        new MLabel("your profile.")
+                ).withSpacing(true).withMargin(false)
+        );
+        return new MPanel("General info", generalInfoLayout);
+    }
+
+    private MButton getRefreshProfileButton(String caption) {
+        return new MButton(REFRESH, clk -> {
+            ExternalRunkeeperData.Builder builder = runkeeperService.getAllData(user.getInternalRunKeeperData().getToken());
+            user.setExternalRunkeeperData(builder.build());
+            userRepo.save(user);
+            Notification notification = new Notification("Your profile was successfully updated from RunKeeper");
+            notification.setStyleName(NOTIFICATION_SUCCESS);
+            notification.show(Page.getCurrent());
+            setUpWithAuthPresent();
+        }).withCaption(caption).withStyleName(BUTTON_LINK, BUTTON_SMALL).withDescription("We will fetch your profile from RunKeeper and thereby verify that we still can post activities to your stream");
+    }
+
+    private static Link createProfileLink(ExternalRunkeeperData runKeeperData, String text) {
+        Link link = new Link(text, new ExternalResource(runKeeperData.getProfile().getProfile()));
+        link.setDescription("View your profile on http://www.runkeeper.com (external link)");
         link.setIcon(MAIL_FORWARD);
+        link.setStyleName(BUTTON_TINY);
         return link;
     }
 
@@ -88,7 +167,7 @@ public class RunKeeperTab extends AbstractConnectionTab {
         removeAllComponents();
         OAuthPopupButton popupButton = getRunkeeperAuthButton();
         addComponent(popupButton);
-        tab.setIcon(FontAwesome.CHAIN_BROKEN);
+        tab.setIcon(CHAIN_BROKEN);
     }
 
 
@@ -104,22 +183,30 @@ public class RunKeeperTab extends AbstractConnectionTab {
             @Override
             public void authSuccessful(Token token, boolean isOAuth20) {
                 getUI().access(() -> {
-                    Notification.show("Great, now we can push activities to RunKeeper!", WARNING_MESSAGE);
+                    Notification notification = new Notification("Great, we can now create RunKeeper activities for you");
+                    notification.setStyleName(NOTIFICATION_SUCCESS);
+                    notification.setDelayMsec(2500);
+                    notification.show(Page.getCurrent());
+
                     popupButton.setVisible(false);
                     OAuth2AccessToken oAuth2AccessToken = (OAuth2AccessToken) token;
-                    RunKeeperUser runKeeperUser = runkeeperService.getUser(oAuth2AccessToken.getAccessToken());
-                    RunKeeperProfile runKeeperProfile = runkeeperService.getProfile(oAuth2AccessToken.getAccessToken());
-                    RunKeeperData data = RunKeeperData.builder().token(oAuth2AccessToken.getAccessToken()).user(runKeeperUser).profile(runKeeperProfile).lastTimeConnected(Instant.now()).firstConnected(Instant.now()).build();
-                    user.setRunKeeperData(data);
+                    ExternalRunkeeperData externalRunkeeperData = runkeeperService.getAllData(oAuth2AccessToken.getAccessToken()).build();
+                    InternalRunKeeperData internalRunKeeperData = InternalRunKeeperData.builder().token(oAuth2AccessToken.getAccessToken()).firstConnected(Instant.now()).lastTimeConnected(Instant.now()).build();
+                    user.setInternalRunKeeperData(internalRunKeeperData);
+                    user.setExternalRunkeeperData(externalRunkeeperData);
+                    user = userRepo.save(user);
+                    ui.setUserInSession(user);
                     applicationEventBus.publish(this, new RunkeeperAuthArrivedEvent(this, user, oAuth2AccessToken));
-                    userRepo.save(user);
                     setUpWithAuthPresent();
                 });
             }
 
             @Override
             public void authDenied(String s) {
-                log.info("Denied...:{}", s);
+                Notification notification = new Notification("Access was denied (" + s +")");
+                notification.setStyleName(NOTIFICATION_ERROR);
+                notification.show(Page.getCurrent());
+                setUpWithMissingAuth();
             }
         });
         return popupButton;

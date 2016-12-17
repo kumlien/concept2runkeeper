@@ -15,9 +15,8 @@ import com.vaadin.ui.Notification;
 import lombok.extern.slf4j.Slf4j;
 import se.kumliens.concept2runkeeper.concept2.CsvActivity;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
+import java.nio.charset.Charset;
 import java.util.List;
 
 import static com.vaadin.ui.Notification.Type.ERROR_MESSAGE;
@@ -116,10 +115,12 @@ class CsvFileDropHandler extends DragAndDropWrapper implements DropHandler {
 
     private List<CsvActivity> parseFile(final ByteArrayOutputStream bas) throws IOException {
         CsvMapper mapper = new CsvMapper();
-        CsvSchema schema = mapper.schemaFor(CsvActivity.class)
-                .withUseHeader(true);
+        CsvSchema schema = mapper.schemaFor(CsvActivity.class).withUseHeader(true);
+        ByteArrayInputStream inputStream = new ByteArrayInputStream(bas.toByteArray());
+        InputStreamReader inputStreamReader = new InputStreamReader(inputStream, Charset.forName("utf8"));
+        BufferedReader reader = new BufferedReader(inputStreamReader);
         try {
-            MappingIterator<CsvActivity> activities = mapper.readerFor(CsvActivity.class).with(schema).readValues(bas.toByteArray());
+            MappingIterator<CsvActivity> activities = mapper.readerFor(CsvActivity.class).with(schema).readValues(reader);
             return activities.readAll();
         } finally {
             bas.close();

@@ -1,8 +1,6 @@
 package se.kumliens.concept2runkeeper.runkeeper;
 
 import com.fasterxml.jackson.annotation.JsonValue;
-import lombok.AccessLevel;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 import static lombok.AccessLevel.PRIVATE;
@@ -20,5 +18,13 @@ public enum Equipment {
     @JsonValue
     public String getJsonString(){
         return jsonString;
+    }
+
+    public static Equipment from(String type) {
+        if(ROW_MACHINE.jsonString.equalsIgnoreCase(type)) return ROW_MACHINE;
+        if(TREADMILL.jsonString.equalsIgnoreCase(type)) return TREADMILL;
+        if(STATIONARY_BIKE.jsonString.equalsIgnoreCase(type)) return STATIONARY_BIKE;
+        if(ELLIPTICAL.jsonString.equalsIgnoreCase(type)) return ELLIPTICAL;
+        return null;
     }
 }

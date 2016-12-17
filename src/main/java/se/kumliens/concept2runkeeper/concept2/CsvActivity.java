@@ -57,7 +57,6 @@ public class CsvActivity {
     @JsonProperty("Avg Heart Rate")
     private String avgHeartRate;
 
-
     @JsonProperty("Type")
     private String type;
 

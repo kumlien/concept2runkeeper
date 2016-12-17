@@ -31,6 +31,9 @@ public class RecordActivityRequest {
     @JsonProperty("duration")
     private int duration;
 
+    @JsonProperty("total_distance")
+    private String distance;
+
     @JsonProperty("total_calories")
     private Double totalCalories;
 

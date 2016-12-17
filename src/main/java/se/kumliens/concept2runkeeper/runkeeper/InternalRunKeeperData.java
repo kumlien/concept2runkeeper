@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
 
+import java.net.URL;
 import java.time.Instant;
 
 /**
@@ -29,7 +30,7 @@ public class InternalRunKeeperData {
     private Boolean postToFacebookOverride;
 
     public static Builder from(InternalRunKeeperData runKeeperData) {
-        return InternalRunKeeperData.builder()
+        return builder()
                 .firstConnected(runKeeperData.firstConnected)
                 .lastTimeConnected(runKeeperData.lastTimeConnected)
                 .token(runKeeperData.token)

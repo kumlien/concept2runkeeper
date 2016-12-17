@@ -53,7 +53,7 @@ import static se.kumliens.concept2runkeeper.vaadin.C2RThemeResources.CONNECT_TO_
 @Slf4j
 public class RunKeeperTab extends AbstractSettingsTab {
 
-    private static final String DEFAULT_ACTIVITY_COMMENT = "This activity was synchronized from Concept2 using http://www.concept2runkeeper.com";
+    private static final String DEFAULT_ACTIVITY_COMMENT = "This activity was synchronized from Concept2 using the concept2runkeeper app";
 
     private final RunkeeperService runkeeperService;
 
@@ -94,7 +94,9 @@ public class RunKeeperTab extends AbstractSettingsTab {
         Panel panelWithSettings = new Panel("Settings used when posting activities to RunKeeper");
         MHorizontalLayout settingsLayout = new MHorizontalLayout().withCaption("Default setting for posting to RunKeeper").withMargin(true);
 
-        MTextField defaultComment = new MTextField("Default comment:").withValue(isEmpty(user.getInternalRunKeeperData().getDefaultComment()) ? DEFAULT_ACTIVITY_COMMENT : user.getInternalRunKeeperData().getDefaultComment()).withWidth("90%");
+        MTextField defaultComment = new MTextField("Default comment:")
+                .withValue(isEmpty(user.getInternalRunKeeperData().getDefaultComment()) ? DEFAULT_ACTIVITY_COMMENT : user.getInternalRunKeeperData().getDefaultComment())
+                .withWidth("90%");
 
         MCheckBox postToFacebook = new MCheckBox("Post to Facebook").withValue(MoreObjects.firstNonNull(user.getInternalRunKeeperData().getPostToFacebookOverride(), settings.isPostToFacebook())).withIcon(FACEBOOK);
         postToFacebook.setEnabled(settings.isFacebookConnected());

@@ -90,13 +90,28 @@ public class RunkeeperService {
         headers.set("Authorization", "Bearer " + token);
         log.info("Sending a {}", request);
 
-        try {
-            log.info("{}",objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(request));
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
+        //try {
+        //    log.info("{}",objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(request));
+        //} catch (JsonProcessingException e) {
+        //    e.printStackTrace();
+        // }
         RequestEntity requestEntity = new RequestEntity(request, headers, POST, props.getFitnessActivityResource());
         ResponseEntity<String> response = restTemplate.exchange(requestEntity, String.class);
         return response.getHeaders().getLocation();
+    }
+
+    public RunkeeperActivity getActivity(String token, URI activityLocation) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Accept", "application/vnd.com.runkeeper.FitnessActivity+json");
+        headers.set("Authorization", "Bearer " + token);
+        RequestEntity requestEntity = new RequestEntity(headers, GET, URI.create(props.getBaseUrl().toString().concat(activityLocation.toString())));
+        try {
+            log.info("{}",objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(requestEntity));
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        ResponseEntity<RunkeeperActivity> response = restTemplate.exchange(requestEntity, RunkeeperActivity.class);
+        log.info("got an activity: {}", response.getBody());
+        return response.getBody();
     }
 }

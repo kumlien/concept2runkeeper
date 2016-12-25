@@ -4,6 +4,7 @@ import com.github.scribejava.core.model.OAuth2AccessToken;
 import com.github.scribejava.core.model.Token;
 import com.google.common.base.MoreObjects;
 import com.vaadin.server.ExternalResource;
+import com.vaadin.server.FontAwesome;
 import com.vaadin.server.Page;
 import com.vaadin.spring.annotation.SpringComponent;
 import com.vaadin.spring.annotation.ViewScope;
@@ -24,11 +25,11 @@ import org.vaadin.viritin.layouts.MFormLayout;
 import org.vaadin.viritin.layouts.MHorizontalLayout;
 import org.vaadin.viritin.layouts.MPanel;
 import org.vaadin.viritin.layouts.MVerticalLayout;
+import org.vaadin.viritin.ui.MNotification;
 import se.kumliens.concept2runkeeper.repos.UserRepo;
 import se.kumliens.concept2runkeeper.runkeeper.*;
 import se.kumliens.concept2runkeeper.vaadin.MainUI;
 import se.kumliens.concept2runkeeper.vaadin.events.RunkeeperAuthArrivedEvent;
-
 
 import java.time.Instant;
 import java.time.ZoneId;
@@ -40,6 +41,7 @@ import static com.vaadin.server.FontAwesome.CHECK_SQUARE_O;
 import static com.vaadin.server.FontAwesome.FACEBOOK;
 import static com.vaadin.server.FontAwesome.MAIL_FORWARD;
 import static com.vaadin.shared.ui.label.ContentMode.HTML;
+import static com.vaadin.ui.Alignment.BOTTOM_RIGHT;
 import static com.vaadin.ui.themes.ValoTheme.*;
 import static org.springframework.util.StringUtils.isEmpty;
 import static se.kumliens.concept2runkeeper.vaadin.C2RThemeResources.CONNECT_TO_RUNKEEPER;
@@ -97,6 +99,9 @@ public class RunKeeperTab extends AbstractSettingsTab {
         MTextField defaultComment = new MTextField("Default comment:")
                 .withValue(isEmpty(user.getInternalRunKeeperData().getDefaultComment()) ? DEFAULT_ACTIVITY_COMMENT : user.getInternalRunKeeperData().getDefaultComment())
                 .withWidth("90%");
+        MButton defaultCommentInfoBtn = new MButton().withStyleName(BUTTON_BORDERLESS).withIcon(QUESTION_CIRCLE);
+        defaultCommentInfoBtn.addClickListener(evt ->  new MNotification("This comment will be used for activities without comments added by you")
+                .withDelayMsec(2000).withStyleName(NOTIFICATION_SMALL).display());
 
         MCheckBox postToFacebook = new MCheckBox("Post to Facebook").withValue(MoreObjects.firstNonNull(user.getInternalRunKeeperData().getPostToFacebookOverride(), settings.isPostToFacebook())).withIcon(FACEBOOK);
         postToFacebook.setEnabled(settings.isFacebookConnected());
@@ -110,7 +115,7 @@ public class RunKeeperTab extends AbstractSettingsTab {
             postToTwitter.setDescription("This option is disabled since you haven't connected your RunKeeper account to Twitter");
         }
 
-        MButton save = new MButton(CHECK_SQUARE_O, "Save", clk -> {
+        MButton save = new MButton(CHECK_CIRCLE_O, "Save", clk -> {
             user.getInternalRunKeeperData().setDefaultComment(defaultComment.getValue());
             user.getInternalRunKeeperData().setPostToFacebookOverride(postToFacebook.isChecked());
             user.getInternalRunKeeperData().setPostToTwitterOverride(postToTwitter.isChecked());
@@ -120,8 +125,8 @@ public class RunKeeperTab extends AbstractSettingsTab {
             notification.setDelayMsec(2000);
             notification.setStyleName(NOTIFICATION_SUCCESS);
             notification.show(Page.getCurrent());
-        }).withStyleName(BUTTON_FRIENDLY);
-        settingsLayout.expand(new MFormLayout(defaultComment, postToFacebook, postToTwitter, save).withSizeUndefined());
+        }).withStyleName(BUTTON_FRIENDLY, BUTTON_LARGE);
+        settingsLayout.expand(new MFormLayout(new MHorizontalLayout().expand(defaultComment).add(defaultCommentInfoBtn, BOTTOM_RIGHT), postToFacebook, postToTwitter, save).withSizeUndefined());
         panelWithSettings.setContent(settingsLayout);
         return panelWithSettings;
     }
@@ -132,7 +137,7 @@ public class RunKeeperTab extends AbstractSettingsTab {
         Label infoText = new MLabel("You've been connected to RunKeeper since " + firstConnectDate + "</br>" +
                 "Last time we successfully accessed RunKeeper on your behalf was " + dateTimeFormatter.format(user.getInternalRunKeeperData().getLastTimeConnected())).withContentMode(HTML);
         MButton refreshButton = getRefreshProfileButton("fetch");
-        Link link = createProfileLink(user.getExternalRunkeeperData(), " View ");
+        Link link = createProfileLink(user.getExternalRunkeeperData(), " view ");
         MVerticalLayout generalInfoLayout = new MVerticalLayout(infoText,
                 new MHorizontalLayout(
                         new MLabel("You can"),
@@ -168,8 +173,12 @@ public class RunKeeperTab extends AbstractSettingsTab {
     protected void setUpWithMissingAuth() {
         removeAllComponents();
         OAuthPopupButton popupButton = getRunkeeperAuthButton();
+        MLabel label = new MLabel("You are not yet connected to RunKeeper. </br>" +
+                "Login to RunKeeper by clicking the button below and allow us to post new activities on your behalf.").withContentMode(HTML);
+        addComponent(label);
         addComponent(popupButton);
-        tab.setIcon(CHAIN_BROKEN);
+        setExpandRatio(popupButton, 1.0f);
+        tab.setIcon(EXCLAMATION_CIRCLE);
     }
 
 

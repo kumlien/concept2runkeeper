@@ -40,7 +40,7 @@ import static se.kumliens.concept2runkeeper.vaadin.C2RThemeResources.RUNKEEPER_D
 /**
  * Created by svante2 on 2016-11-28.
  */
-@Title("C2R")
+@Title("Concept2RunKeeper")
 @SpringUI
 @Theme("c2r")
 @Push(transport = Transport.WEBSOCKET)
@@ -159,8 +159,9 @@ public class MainUI extends UI {
 
     @EventBusListenerMethod
     private void onRegistredUserEvent(org.vaadin.spring.events.Event<UserRegisteredEvent> event) {
-        UserRegisteredEvent userRegisteredEvent = event.getPayload();
         log.info("User registered ");
+        UserRegisteredEvent userRegisteredEvent = event.getPayload();
+        setUserInSession(userRegisteredEvent.user);
         adjustLinks(true);
         getNavigator().navigateTo(getNavigatorViewNameBasedOnView(SettingsView.class));
     }

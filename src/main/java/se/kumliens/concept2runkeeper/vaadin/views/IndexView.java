@@ -23,9 +23,7 @@ import javax.annotation.PostConstruct;
 
 import static com.vaadin.shared.ui.label.ContentMode.HTML;
 import static com.vaadin.ui.Alignment.*;
-import static com.vaadin.ui.themes.ValoTheme.PANEL_WELL;
-import static com.vaadin.ui.themes.ValoTheme.TEXTFIELD_HUGE;
-import static com.vaadin.ui.themes.ValoTheme.TEXTFIELD_LARGE;
+import static com.vaadin.ui.themes.ValoTheme.*;
 import static se.kumliens.concept2runkeeper.vaadin.MainUI.link;
 
 /**
@@ -38,9 +36,9 @@ import static se.kumliens.concept2runkeeper.vaadin.MainUI.link;
 @SpringView
 public class IndexView extends MVerticalLayout implements View {
 
-    private static final Image rk = new Image(null, C2RThemeResources.RUNKEEPER_LOGO);
+    private final Image rk = new Image(null, C2RThemeResources.RUNKEEPER_LOGO);
 
-    private static final Image c2 = new Image(null, C2RThemeResources.CONCEPT2_LOGO);
+    private final Image c2 = new Image(null, C2RThemeResources.CONCEPT2_LOGO);
 
     @Override
     public void enter(ViewChangeListener.ViewChangeEvent event) {
@@ -68,7 +66,7 @@ public class IndexView extends MVerticalLayout implements View {
         body.add(left, right);
         body.withWidth("100%");
         //body.withStyleName(ValoTheme.PANEL_WELL).withSpacing(true);
-        MPanel panel = new MPanel(body).withStyleName(ValoTheme.PANEL_BORDERLESS);
+        MPanel panel = new MPanel(body).withStyleName(PANEL_BORDERLESS);
         panel.setWidth("80%");
 
         MHorizontalLayout images = new MHorizontalLayout(c2, rk).withSpacing(true).withWidth("60%")

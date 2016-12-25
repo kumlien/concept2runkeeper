@@ -1,1 +1,6 @@
 @import "c2r.scss";
+@import "addons.scss";
+
+
+@include addons;
+@include c2r;

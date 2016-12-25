@@ -1,12 +1,18 @@
 package se.kumliens.concept2runkeeper.vaadin.views.connectionTabs;
 
 import com.vaadin.server.FontAwesome;
+import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.spring.annotation.SpringComponent;
 import com.vaadin.spring.annotation.ViewScope;
 import com.vaadin.ui.Label;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
+import org.vaadin.viritin.label.MLabel;
+
+import static com.vaadin.server.FontAwesome.CHECK_SQUARE_O;
+import static com.vaadin.server.FontAwesome.EXCLAMATION_CIRCLE;
+import static com.vaadin.shared.ui.label.ContentMode.HTML;
 
 /**
  * Created by svante2 on 2016-12-08.
@@ -29,12 +35,17 @@ public class Concept2Tab extends AbstractSettingsTab {
 
     @Override
     protected void setUpWithAuthPresent() {
-        tab.setIcon(FontAwesome.CHECK_SQUARE_O);
+        tab.setIcon(CHECK_SQUARE_O);
     }
 
     @Override
     protected void setUpWithMissingAuth() {
-        tab.setIcon(FontAwesome.CHAIN_BROKEN);
-        addComponent(new Label("Darn, seems we still miss something here..."));
+        tab.setIcon(EXCLAMATION_CIRCLE);
+        addComponent(new MLabel(
+                "We are still waiting to get access to the Concept2 api, hopefully it won't take too long." +
+                        "</br>In the meantime you can use the file export utility from Concept2 and synchronize your</br>" +
+                        "activities using the generated file. Just make sure you have your RunKeeper connection set up first" +
+                        "</br>and then click on Synchronize in the menu bar.").withContentMode(HTML));
+        setMargin(true);
     }
 }

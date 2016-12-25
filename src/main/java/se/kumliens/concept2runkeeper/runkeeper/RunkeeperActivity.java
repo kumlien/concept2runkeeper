@@ -13,6 +13,7 @@ import java.net.URI;
 @Getter
 public class RunkeeperActivity {
 
+    //The fields. Used from the ui when creating the table
     public static final String URI = "uri";
 
     public static final String USER_ID = "userID";

@@ -14,6 +14,7 @@ import org.vaadin.spring.events.EventBus;
 import org.vaadin.spring.events.EventScope;
 import org.vaadin.viritin.layouts.MPanel;
 import org.vaadin.viritin.layouts.MVerticalLayout;
+import org.vaadin.viritin.ui.MNotification;
 import se.kumliens.concept2runkeeper.domain.User;
 import se.kumliens.concept2runkeeper.security.Authorities;
 import se.kumliens.concept2runkeeper.security.MongoUserDetailsService;
@@ -36,6 +37,7 @@ import static com.vaadin.server.FontAwesome.USER_PLUS;
 import static com.vaadin.ui.Notification.Type.ERROR_MESSAGE;
 import static com.vaadin.ui.Notification.Type.TRAY_NOTIFICATION;
 import static com.vaadin.ui.Notification.Type.WARNING_MESSAGE;
+import static com.vaadin.ui.themes.ValoTheme.NOTIFICATION_SUCCESS;
 import static com.vaadin.ui.themes.ValoTheme.TABSHEET_FRAMED;
 import static com.vaadin.ui.themes.ValoTheme.TABSHEET_PADDED_TABBAR;
 import static org.vaadin.spring.events.EventScope.*;
@@ -95,7 +97,7 @@ public class LoginView extends VerticalLayout implements View {
         try {
             user.addAuthority(new SimpleGrantedAuthority(Authorities.USER.role));
             userDetailsService.createUser(user);
-            Notification.show("Welcome!", "Great, welcome to concept2runkeeper!", ERROR_MESSAGE);
+            new MNotification("Welcome to concept2runkeeper!<br>Now it's time to configure your connections.").withHtmlContentAllowed(true).withStyleName(NOTIFICATION_SUCCESS).withDelayMsec(2500).display();
             eventBus.publish(SESSION, this, new UserRegisteredEvent(user));
         } catch (Exception e) {
             log.warn("Exception...", e);

@@ -6,7 +6,6 @@ import com.vaadin.ui.UI;
 import org.vaadin.addon.oauthpopup.OAuthPopupUI;
 import se.kumliens.concept2runkeeper.vaadin.views.IndexView;
 import se.kumliens.concept2runkeeper.vaadin.views.login.LoginView;
-import sun.applet.Main;
 
 /**
  * Created by svante2 on 2016-12-09.

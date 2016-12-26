@@ -1,8 +1,10 @@
 package se.kumliens.concept2runkeeper.runkeeper;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.ToString;
 
 import java.net.URI;
 
@@ -11,6 +13,8 @@ import java.net.URI;
  */
 @RequiredArgsConstructor
 @Getter
+@ToString
+@EqualsAndHashCode(of = {"uri"})
 public class RunkeeperActivity {
 
     //The fields. Used from the ui when creating the table
@@ -27,8 +31,6 @@ public class RunkeeperActivity {
     public static final String DISTANCE = "distance";
 
     public static final String DURATION = "duration";
-
-
 
     @JsonProperty("uri")
     private URI uri;

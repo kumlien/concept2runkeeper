@@ -110,7 +110,7 @@ public class LoginView extends VerticalLayout implements View {
             authenticationProvider.authenticate(new UsernamePasswordAuthenticationToken(credentials.getUsername(), credentials.getPassword()));
             final User userDetails = (User) userDetailsService.loadUserByUsername(credentials.getUsername());
             eventBus.publish(SESSION, this, new UserLoggedInEvent(userDetails));
-            Notification.show("Welcome " + userDetails.getFirstName(), TRAY_NOTIFICATION );
+            new MNotification("Welcome " + userDetails.getFirstName(), TRAY_NOTIFICATION ).withDelayMsec(2500);
         } catch (AuthenticationException ae) {
             log.debug("Authentication failed...");
             Notification.show("Sorry, no such username/password combo found", WARNING_MESSAGE);

@@ -4,6 +4,7 @@ import com.vaadin.annotations.*;
 import com.vaadin.navigator.View;
 import com.vaadin.server.ExternalResource;
 import com.vaadin.server.VaadinRequest;
+import com.vaadin.shared.communication.PushMode;
 import com.vaadin.shared.ui.ui.Transport;
 import com.vaadin.spring.annotation.SpringUI;
 import com.vaadin.spring.navigator.SpringNavigator;
@@ -32,6 +33,7 @@ import javax.annotation.PreDestroy;
 import java.net.URL;
 
 import static com.vaadin.server.Sizeable.Unit.PIXELS;
+import static com.vaadin.shared.ui.ui.Transport.WEBSOCKET_XHR;
 import static com.vaadin.ui.Alignment.TOP_CENTER;
 import static com.vaadin.ui.Notification.Type.WARNING_MESSAGE;
 import static com.vaadin.ui.themes.ValoTheme.*;
@@ -43,7 +45,7 @@ import static se.kumliens.concept2runkeeper.vaadin.C2RThemeResources.RUNKEEPER_D
 @Title("Concept2RunKeeper")
 @SpringUI
 @Theme("c2r")
-@Push(transport = Transport.WEBSOCKET)
+@Push(value = PushMode.MANUAL, transport = WEBSOCKET_XHR)
 @PreserveOnRefresh
 @Slf4j
 public class MainUI extends UI {

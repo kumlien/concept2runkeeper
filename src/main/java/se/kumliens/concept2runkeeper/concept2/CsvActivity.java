@@ -24,6 +24,12 @@ import java.util.Date;
         "Work Time (Seconds)","Rest Time (Formatted)","Rest Time (Seconds)","Work Distance","Rest Distance","Stroke Rate","Pace","Avg Watts","Cal/Hour","Avg Heart Rate","Age","Weight","Type","Ranked","Comments" })
 public class CsvActivity {
 
+    public static final String FIELD_DATE = "date";
+    public static final String FIELD_WORK_DISTANCE = "distance";
+    public static final String FIELD_WORK_TIME_IN_SECONDS = "workTimeInSeconds";
+    public static final String FIELD_PACE = "pace";
+    public static final String FIELD_TYPE = "type";
+
     @JsonProperty("Date")
     private String date;
 

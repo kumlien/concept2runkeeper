@@ -31,6 +31,7 @@ public class C2RActivity {
     @Indexed
     private String userId;
 
+    @Indexed(unique = true) //The id of this activity in the source system. For concept2 we use the timestamp, for RK we use the uri
     private String sourceId;
 
     private Provider source;
@@ -48,5 +49,4 @@ public class C2RActivity {
         }
         return synchronizations;
     }
-
 }

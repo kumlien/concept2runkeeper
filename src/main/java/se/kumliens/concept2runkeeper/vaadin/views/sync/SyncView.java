@@ -7,6 +7,7 @@ import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener;
 import com.vaadin.spring.annotation.SpringView;
 import com.vaadin.ui.*;
+import com.vaadin.ui.themes.ValoTheme;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
@@ -16,6 +17,7 @@ import org.vaadin.viritin.grid.MGrid;
 import org.vaadin.viritin.label.Header;
 import org.vaadin.viritin.layouts.MHorizontalLayout;
 import org.vaadin.viritin.layouts.MVerticalLayout;
+import org.vaadin.viritin.layouts.MWindow;
 import org.vaadin.viritin.ui.MNotification;
 import se.kumliens.concept2runkeeper.concept2.CsvActivity;
 import se.kumliens.concept2runkeeper.domain.C2RActivity;
@@ -36,6 +38,7 @@ import java.util.concurrent.atomic.LongAdder;
 import static com.google.common.base.MoreObjects.firstNonNull;
 import static com.vaadin.server.FontAwesome.EXCLAMATION_TRIANGLE;
 import static com.vaadin.server.FontAwesome.LONG_ARROW_RIGHT;
+import static com.vaadin.server.Sizeable.Unit.EM;
 import static com.vaadin.shared.ui.label.ContentMode.HTML;
 import static com.vaadin.ui.Alignment.*;
 import static com.vaadin.ui.Grid.SelectionMode.MULTI;
@@ -181,59 +184,85 @@ public class SyncView extends MVerticalLayout implements View {
                 new MNotification("No selection detected (this is a bug). Try to re-select the row(s)").withStyleName(NOTIFICATION_ERROR).withDelayMsec(5000).display();
                 return;
             }
-            InternalRunKeeperData internalRunKeeperData = ui.getUser().getInternalRunKeeperData();
-            ExternalRunkeeperData externalRunkeeperData = ui.getUser().getExternalRunkeeperData();
-            List<String> newLocations = new ArrayList<>();
-            final LongAdder skippedSync = new LongAdder();
 
-            selectedRows.forEach(csvActivity -> {
-                //If there is a stored activity then pick that one, otherwise create a new one.
-                C2RActivity c2RActivity = MoreObjects.firstNonNull(c2RActivityRepo.findBySourceId(csvActivity.getDate()), C2RActivity.builder()
-                        .userId(ui.getUser().getId())
-                        .imported(Instant.now())
-                        .source(CONCEPT2)
-                        .sourceActivity(csvActivity)
-                        .sourceId(csvActivity.getDate())
-                        .build());
 
-                //Add the sync if not already there
-                if (c2RActivity.getSynchronizations().stream().filter(synchronization -> synchronization.getTarget() == RUNKEEPER).count() == 0) {
-                    log.info("No sync to RunKeeper found, adding one...");
-                    RecordActivityRequest request = createRecordActivityRequest(csvActivity, internalRunKeeperData, externalRunkeeperData);
-                    URI activityLocation = runkeeperService.recordActivity(request, ui.getUser().getInternalRunKeeperData().getToken());
-                    newLocations.add(ui.getUser().getExternalRunkeeperData().getProfile().getProfile() + activityLocation.toString());
-                    RunkeeperActivity rkActivity = runkeeperService.getActivity(ui.getUser().getInternalRunKeeperData().getToken(), activityLocation);
-                    c2RActivity.getSynchronizations().add(Synchronization.builder().date(Instant.now()).source(CONCEPT2).target(RUNKEEPER).targetActivity(rkActivity).sourceActivity(csvActivity).build());
-                    rkContainer.addItem(rkActivity);
-                    concept2Grid.getContainerDataSource().removeItem(csvActivity);
-                    log.info("ok...");
-                } else {
-                    log.info("Already synced to RunKeeper, skip new sync");
-                    skippedSync.increment();
+            ProgressBar progressBar = new ProgressBar(0.0f);
+            progressBar.setSizeFull();
+            float percentPerRow = (float) 1 / selectedRows.size();
+
+            MWindow progressWindow = new MWindow("Synchronizing with RunKeeper")
+                    .withModal(true).withCenter().withContent(new MVerticalLayout().expand(progressBar).withWidth("100%")).withClosable(false).withWidth(40 , EM).withHeight(4, EM);
+            ui.addWindow(progressWindow);
+
+            new Thread(() -> {
+                InternalRunKeeperData internalRunKeeperData = ui.getUser().getInternalRunKeeperData();
+                ExternalRunkeeperData externalRunkeeperData = ui.getUser().getExternalRunkeeperData();
+                List<String> newLocations = new ArrayList<>();
+                final LongAdder skippedSync = new LongAdder();
+
+                selectedRows.forEach(csvActivity -> {
+                    //If there is a stored activity then pick that one, otherwise create a new one.
+                    C2RActivity c2RActivity = MoreObjects.firstNonNull(c2RActivityRepo.findBySourceId(csvActivity.getDate()), C2RActivity.builder()
+                            .userId(ui.getUser().getId())
+                            .imported(Instant.now())
+                            .source(CONCEPT2)
+                            .sourceActivity(csvActivity)
+                            .sourceId(csvActivity.getDate())
+                            .build());
+
+                    //Add the sync if not already there
+                    if (c2RActivity.getSynchronizations().stream().filter(synchronization -> synchronization.getTarget() == RUNKEEPER).count() == 0) {
+                        log.info("No sync to RunKeeper found, adding one...");
+                        RecordActivityRequest request = createRecordActivityRequest(csvActivity, internalRunKeeperData, externalRunkeeperData);
+                        URI activityLocation = runkeeperService.recordActivity(request, ui.getUser().getInternalRunKeeperData().getToken());
+                        newLocations.add(ui.getUser().getExternalRunkeeperData().getProfile().getProfile() + activityLocation.toString());
+                        RunkeeperActivity rkActivity = runkeeperService.getActivity(ui.getUser().getInternalRunKeeperData().getToken(), activityLocation);
+                        c2RActivity.getSynchronizations().add(Synchronization.builder().date(Instant.now()).source(CONCEPT2).target(RUNKEEPER).targetActivity(rkActivity).sourceActivity(csvActivity).build());
+                        rkContainer.addItem(rkActivity);
+                        concept2Grid.getContainerDataSource().removeItem(csvActivity);
+                        log.info("ok...");
+                    } else {
+                        log.info("Already synced to RunKeeper, skip new sync");
+                        skippedSync.increment();
+                    }
+
+                    c2RActivity = c2RActivityRepo.save(c2RActivity);
+                    log.info("Saved a new C2RActivity: {}", c2RActivity);
+                    ui.access(()-> {
+                        progressBar.setValue(progressBar.getValue() + percentPerRow);
+                        ui.push();
+                    });
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                });
+
+                //15 lines to display a message, wtf...
+                String firstPart = "No activities created!";
+                if (newLocations.size() == 1) {
+                    firstPart = "One activity created at RunKeeper, you can find it at<br>";
+                } else if (newLocations.size() > 1) {
+                    firstPart = newLocations.size() + " activities created at RunKeeper. You can find them at <br>";
                 }
-
-                c2RActivity = c2RActivityRepo.save(c2RActivity);
-                log.info("Saved a new C2RActivity: {}", c2RActivity);
-            });
-
-            //15 lines to display a message, wtf...
-            String firstPart = "No activities created!";
-            if (newLocations.size() == 1) {
-                firstPart = "One activity created at RunKeeper, you can find it at<br>";
-            } else if (newLocations.size() > 1) {
-                firstPart = newLocations.size() + " activities created at RunKeeper. You can find them at <br>";
-            }
-            String locationsWithLineBreak = newLocations.stream().map(s -> "<a href=\"" + s + "\">" + s + "</a>").collect(joining("<br>")).toString().replaceAll("fitnessActivities", "activity");
-            String skippedSyncMessage = "";
-            if (skippedSync.intValue() == 1) {
-                skippedSyncMessage = "<br>" + "One activity was not sent to RunKeeper since this activity was already synced to RunKeeper";
-            } else if(skippedSync.intValue() > 1) {
-                skippedSyncMessage = "<br>" + skippedSync.intValue() + " activities was not sent to RunKeeper since they were already synced to RunKeeper";
-            }
-            new MNotification( firstPart + locationsWithLineBreak + skippedSyncMessage).withHtmlContentAllowed(true).withStyleName(NOTIFICATION_SUCCESS).withDelayMsec(10000).display();
-            concept2Grid.getSelectionModel().reset();
-            concept2Grid.clearSortOrder();
+                String locationsWithLineBreak = newLocations.stream().map(s -> "<a href=\"" + s + "\">" + s + "</a>").collect(joining("<br>")).toString().replaceAll("fitnessActivities", "activity");
+                String skippedSyncMessage = "";
+                if (skippedSync.intValue() == 1) {
+                    skippedSyncMessage = "<br>" + "One activity was not sent to RunKeeper since this activity was already synced to RunKeeper";
+                } else if (skippedSync.intValue() > 1) {
+                    skippedSyncMessage = "<br>" + skippedSync.intValue() + " activities was not sent to RunKeeper since they were already synced to RunKeeper";
+                }
+                new MNotification(firstPart + locationsWithLineBreak + skippedSyncMessage).withHtmlContentAllowed(true).withStyleName(NOTIFICATION_SUCCESS).withDelayMsec(10000).display();
+                ui.access(() -> {
+                    concept2Grid.getSelectionModel().reset();
+                    concept2Grid.clearSortOrder();
+                    progressWindow.close();
+                    ui.push();
+                });
+            }).start();
         });
+
     }
 
     private static RecordActivityRequest createRecordActivityRequest(CsvActivity csvActivity, InternalRunKeeperData internalRunKeeperData, ExternalRunkeeperData externalRunkeeperData) {
@@ -259,8 +288,7 @@ public class SyncView extends MVerticalLayout implements View {
     private DragAndDropWrapper getDropAreaWithGrid(MGrid<CsvActivity> grid) {
         final CsvFileDropHandler dropBox = new CsvFileDropHandler(grid, activities -> {
             activities.forEach(csvActivity -> {
-                Item item = grid.getContainerDataSource().addItem(csvActivity);
-                log.info("Item added: {}", item);
+                grid.getContainerDataSource().addItem(csvActivity);
             });
             new MNotification(activities.size() + " activities found").withDelayMsec(2000).withStyleName(NOTIFICATION_SUCCESS).display();
         }, e -> {

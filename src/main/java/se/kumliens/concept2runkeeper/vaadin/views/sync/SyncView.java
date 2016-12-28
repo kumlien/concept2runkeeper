@@ -5,8 +5,11 @@ import com.vaadin.data.Item;
 import com.vaadin.data.util.BeanItemContainer;
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener;
+import com.vaadin.server.FontAwesome;
 import com.vaadin.spring.annotation.SpringView;
 import com.vaadin.ui.*;
+import com.vaadin.ui.Component;
+import com.vaadin.ui.Label;
 import com.vaadin.ui.themes.ValoTheme;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +18,7 @@ import org.vaadin.viritin.button.MButton;
 import org.vaadin.viritin.fields.MCheckBox;
 import org.vaadin.viritin.grid.MGrid;
 import org.vaadin.viritin.label.Header;
+import org.vaadin.viritin.label.MLabel;
 import org.vaadin.viritin.layouts.MHorizontalLayout;
 import org.vaadin.viritin.layouts.MVerticalLayout;
 import org.vaadin.viritin.layouts.MWindow;
@@ -29,15 +33,16 @@ import se.kumliens.concept2runkeeper.vaadin.converters.*;
 
 import javax.annotation.PostConstruct;
 
+import java.awt.*;
 import java.net.URI;
 import java.text.ParseException;
 import java.time.Instant;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.atomic.LongAdder;
 
 import static com.google.common.base.MoreObjects.firstNonNull;
-import static com.vaadin.server.FontAwesome.EXCLAMATION_TRIANGLE;
-import static com.vaadin.server.FontAwesome.LONG_ARROW_RIGHT;
+import static com.vaadin.server.FontAwesome.*;
 import static com.vaadin.server.Sizeable.Unit.EM;
 import static com.vaadin.shared.ui.label.ContentMode.HTML;
 import static com.vaadin.ui.Alignment.*;
@@ -73,7 +78,7 @@ public class SyncView extends MVerticalLayout implements View {
     @Override
     public void enter(ViewChangeListener.ViewChangeEvent event) {
         if (!ui.getUser().hasConnectionTo(RUNKEEPER)) {
-            new MNotification("Since you don't have a connection setup with RunKeeper yet we have disable the<br>" +
+            new MNotification("Since you don't have a connection setup with RunKeeper yet we have disabled the<br>" +
                     "synchronization for now. Head over to the Settings page to fix this!").withHtmlContentAllowed(true).withStyleName(NOTIFICATION_FAILURE).withDelayMsec(3000).display();
         } else {
             new MNotification("Since you don't have a connection set up with Concept2 yet we can't fetch your data automatically.</br>" +
@@ -131,48 +136,64 @@ public class SyncView extends MVerticalLayout implements View {
         Header header = new Header("Concept2").setHeaderLevel(3);
         header.setSizeUndefined();
 
-        MVerticalLayout layout = new MVerticalLayout();
+        MVerticalLayout fromContent = new MVerticalLayout();
         MHorizontalLayout topLayout = new MHorizontalLayout(header).withSpacing(true).withFullWidth();
         topLayout.withAlign(header, MIDDLE_LEFT);
-        layout.add(topLayout);
-        if (ui.getUser().hasConnectionTo(CONCEPT2)) {
-            layout.add(new Label("Should not happen until we have set up connection with Concept2..."));
-        } else {
-            MButton syncButton = new MButton("Send to RunKeeper").withIcon(LONG_ARROW_RIGHT).withStyleName("friendly");
-            syncButton.setEnabled(ui.getUser().hasConnectionTo(RUNKEEPER));
-            syncButton.setSizeUndefined();
-            syncButton.setEnabled(false);
+        fromContent.add(topLayout);
 
-            MCheckBox forceSync = new MCheckBox("Force synchronization").withBlurListener(evt -> {
+        //Create the tab sheet
+        TabSheet concept2TabSheet = new TabSheet();
+        concept2TabSheet.addStyleName(TABSHEET_FRAMED);
+        concept2TabSheet.addStyleName(TABSHEET_PADDED_TABBAR);
 
-            });
+        //Add the api tab
+        concept2TabSheet.addTab(new MVerticalLayout(new Label("Sorry, currently we have no access to the Concept2 API, please use the file based import for now.")), "API-Based import", CHAIN);
 
-            topLayout.add(syncButton);
-            topLayout.withAlign(syncButton, Alignment.MIDDLE_CENTER);
+        //Add the csv tab
+        MVerticalLayout csvTabLayout = new MVerticalLayout();
+        concept2TabSheet.addTab(csvTabLayout, "CSV-File import", FILE_TEXT_O);
 
-            MGrid<CsvActivity> grid = new MGrid<>(CsvActivity.class).withFullWidth().withFullHeight();
-            grid.setSelectionMode(MULTI);
-            grid.setContainerDataSource(concept2Container);
-            grid.removeAllColumns();
-            grid.addColumn("date").setHeaderCaption("Date");
-            grid.addColumn("workDistance").setHeaderCaption("Distance").setConverter(new Concept2DistanceConverter());
-            grid.addColumn("workTimeInSeconds").setHeaderCaption("Time").setConverter(new Concept2WorkTimeConverter());
-            grid.addColumn("pace").setHeaderCaption("Pace");
-            grid.addColumn("type").setHeaderCaption("(Concept2-) Type");
-            grid.addSelectionListener(evt -> {
-                syncButton.setEnabled(!grid.getSelectedRows().isEmpty());
-            });
+        MLabel dropHereLabel = new MLabel("Drop your Concept2 .csv file below");
 
-            setUpSyncClickHandler(syncButton, grid);
+        MButton syncButton = new MButton("Send to RunKeeper").withIcon(LONG_ARROW_RIGHT).withStyleName("friendly");
+        syncButton.setEnabled(ui.getUser().hasConnectionTo(RUNKEEPER));
+        syncButton.setSizeUndefined();
+        syncButton.setEnabled(false);
 
-            DragAndDropWrapper dropArea = getDropAreaWithGrid(grid);
-            dropArea.setSizeFull();
-            layout.add(dropArea);
-            layout.setExpandRatio(dropArea, 1.0f);
-        }
+        MCheckBox forceSync = new MCheckBox("Force sync of already synced activities").withValueChangeListener(evt -> {
+            if(((CheckBox)evt.getProperty()).getValue()) {
+                new MNotification("We try to make sure a given activity in only synced once.<br>" +
+                        "By using 'Force' you bypass this check and every activity will be synced.<br>" +
+                        "This might lead to duplicate activities at your RunKeeper account.<br>" +
+                        "Just saying...").withDelayMsec(7500).withHtmlContentAllowed(true).withStyleName(ValoTheme.NOTIFICATION_WARNING).display();
+            }
+        });
 
-        return layout;
-    }
+        csvTabLayout.add(new MHorizontalLayout(dropHereLabel, syncButton, forceSync).withAlign(forceSync, Alignment.MIDDLE_LEFT).withSpacing(true));
+
+        MGrid<CsvActivity> grid = new MGrid<>(CsvActivity.class).withFullWidth().withHeight("95%");
+        grid.setSelectionMode(MULTI);
+        grid.setContainerDataSource(concept2Container);
+        grid.removeAllColumns();
+        grid.addColumn("date").setHeaderCaption("Date");
+        grid.addColumn("workDistance").setHeaderCaption("Distance").setConverter(new Concept2DistanceConverter());
+        grid.addColumn("workTimeInSeconds").setHeaderCaption("Time").setConverter(new Concept2WorkTimeConverter());
+        grid.addColumn("pace").setHeaderCaption("Pace");
+        grid.addColumn("type").setHeaderCaption("(Concept2-) Type");
+        grid.addSelectionListener(evt -> {
+            syncButton.setEnabled(!grid.getSelectedRows().isEmpty());
+        });
+
+        setUpSyncClickHandler(syncButton, grid);
+
+        DragAndDropWrapper dropArea = getDropAreaWithGrid(grid);
+        dropArea.setSizeFull();
+        csvTabLayout.add(dropArea);
+        csvTabLayout.setExpandRatio(dropArea, 1.0f);
+
+        fromContent.expand(concept2TabSheet);
+        return fromContent;
+}
 
 
     //Handle the actual sync process to RunKeeper
@@ -185,13 +206,12 @@ public class SyncView extends MVerticalLayout implements View {
                 return;
             }
 
-
             ProgressBar progressBar = new ProgressBar(0.0f);
             progressBar.setSizeFull();
             float percentPerRow = (float) 1 / selectedRows.size();
 
             MWindow progressWindow = new MWindow("Synchronizing with RunKeeper")
-                    .withModal(true).withCenter().withContent(new MVerticalLayout().expand(progressBar).withWidth("100%")).withClosable(false).withWidth(40 , EM).withHeight(4, EM);
+                    .withModal(true).withCenter().withContent(new MVerticalLayout().expand(progressBar).withWidth("100%")).withClosable(false).withWidth(40, EM).withHeight(4, EM);
             ui.addWindow(progressWindow);
 
             new Thread(() -> {
@@ -228,7 +248,7 @@ public class SyncView extends MVerticalLayout implements View {
 
                     c2RActivity = c2RActivityRepo.save(c2RActivity);
                     log.info("Saved a new C2RActivity: {}", c2RActivity);
-                    ui.access(()-> {
+                    ui.access(() -> {
                         progressBar.setValue(progressBar.getValue() + percentPerRow);
                         ui.push();
                     });

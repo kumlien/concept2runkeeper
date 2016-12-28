@@ -43,7 +43,6 @@ class CsvFileDropHandler extends DragAndDropWrapper implements DropHandler {
 
     @Override
     public void drop(DragAndDropEvent dropEvent) {
-        log.info("Something was dropped: {}", dropEvent.getTransferable());
         // expecting this to be an html5 drag
         final WrapperTransferable tr = (WrapperTransferable) dropEvent.getTransferable();
         final Html5File[] files = tr.getFiles();

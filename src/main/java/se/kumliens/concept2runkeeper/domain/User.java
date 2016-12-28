@@ -1,6 +1,7 @@
 package se.kumliens.concept2runkeeper.domain;
 
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Preconditions;
 import lombok.Data;
 
 import org.springframework.data.annotation.PersistenceConstructor;
@@ -130,5 +131,10 @@ public class User implements UserDetails {
             return externalRunkeeperData.getProfile().getLargePicture();
         }
         return null;
+    }
+
+    public void setEmail(String email) {
+        Preconditions.checkArgument(StringUtils.hasText(email), "The email address must not be null");
+        this.email = email.toLowerCase();
     }
 }

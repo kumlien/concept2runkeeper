@@ -83,7 +83,7 @@ public class SyncView extends MVerticalLayout implements View {
         } else {
             new MNotification("Since you don't have a connection set up with Concept2 yet we can't fetch your data automatically.</br>" +
                     " You can still download your log file from Concept2 " + link("here", "http://log.concept2.com/history") + " and drop the file on the upper table.")
-                    .withHtmlContentAllowed(true).withStyleName(NOTIFICATION_WARNING).withIcon(EXCLAMATION_TRIANGLE).withDelayMsec(5000).display();
+                    .withHtmlContentAllowed(true).withStyleName(NOTIFICATION_CLOSABLE).withDelayMsec(5000).display();
         }
     }
 
@@ -150,17 +150,24 @@ public class SyncView extends MVerticalLayout implements View {
         concept2TabSheet.addTab(new MVerticalLayout(new Label("Sorry, currently we have no access to the Concept2 API, please use the file based import for now.")), "API-Based import", CHAIN);
 
         //Add the csv tab
-        MVerticalLayout csvTabLayout = new MVerticalLayout();
+        MVerticalLayout csvTabLayout = new MVerticalLayout().withHeightUndefined();
         concept2TabSheet.addTab(csvTabLayout, "CSV-File import", FILE_TEXT_O);
-
-        MLabel dropHereLabel = new MLabel("Drop your Concept2 .csv file below");
 
         MButton syncButton = new MButton("Send to RunKeeper").withIcon(LONG_ARROW_RIGHT).withStyleName("friendly");
         syncButton.setEnabled(ui.getUser().hasConnectionTo(RUNKEEPER));
         syncButton.setSizeUndefined();
         syncButton.setEnabled(false);
 
-        MCheckBox forceSync = new MCheckBox("Force sync of already synced activities").withValueChangeListener(evt -> {
+        MButton howToBtn = new MButton().withStyleName(BUTTON_BORDERLESS).withIcon(QUESTION_CIRCLE);
+        howToBtn.addClickListener(evt ->
+                new MNotification(
+                "Here you can sync your Concept2 activities using the file export functionality from Concept2.<br>" +
+                        "Drop the file on the table below, select some activities and push the button!<br>" +
+                        "Any activities not already synced with RunKeeper will be sent to RunKeeper.<br>" +
+                        "Use the check-box to the right if you want to force creation of already synced activities.")
+                .withDelayMsec(5000).withStyleName(NOTIFICATION_SMALL).withStyleName(NOTIFICATION_CLOSABLE).withHtmlContentAllowed(true).display());
+
+        MCheckBox forceSync = new MCheckBox("Force sync of activities already synced").withValueChangeListener(evt -> {
             if(((CheckBox)evt.getProperty()).getValue()) {
                 new MNotification("We try to make sure a given activity in only synced once.<br>" +
                         "By using 'Force' you bypass this check and every activity will be synced.<br>" +
@@ -169,9 +176,9 @@ public class SyncView extends MVerticalLayout implements View {
             }
         });
 
-        csvTabLayout.add(new MHorizontalLayout(dropHereLabel, syncButton, forceSync).withAlign(forceSync, Alignment.MIDDLE_LEFT).withSpacing(true));
+        csvTabLayout.add(new MHorizontalLayout(howToBtn, syncButton, forceSync).withAlign(forceSync, Alignment.MIDDLE_LEFT).withSpacing(true));
 
-        MGrid<CsvActivity> grid = new MGrid<>(CsvActivity.class).withFullWidth().withHeight("95%");
+        MGrid<CsvActivity> grid = new MGrid<>(CsvActivity.class).withFullHeight().withFullWidth();
         grid.setSelectionMode(MULTI);
         grid.setContainerDataSource(concept2Container);
         grid.removeAllColumns();
@@ -187,7 +194,7 @@ public class SyncView extends MVerticalLayout implements View {
         setUpSyncClickHandler(syncButton, grid);
 
         DragAndDropWrapper dropArea = getDropAreaWithGrid(grid);
-        dropArea.setSizeFull();
+        dropArea.setWidth("100%");
         csvTabLayout.add(dropArea);
         csvTabLayout.setExpandRatio(dropArea, 1.0f);
 

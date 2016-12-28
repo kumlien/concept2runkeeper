@@ -13,14 +13,17 @@ import com.vaadin.ui.DragAndDropWrapper;
 import com.vaadin.ui.Html5File;
 import com.vaadin.ui.Notification;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.StringUtils;
 import se.kumliens.concept2runkeeper.concept2.CsvActivity;
 
 import java.io.*;
 import java.nio.charset.Charset;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.vaadin.ui.Notification.Type.ERROR_MESSAGE;
 import static com.vaadin.ui.Notification.Type.WARNING_MESSAGE;
+import static java.util.stream.Collectors.toList;
 
 /**
  * Created by svante2 on 2016-12-10.
@@ -85,9 +88,9 @@ class CsvFileDropHandler extends DragAndDropWrapper implements DropHandler {
 
             @Override
             public void streamingFinished(StreamingEndEvent event) {
-                List<CsvActivity> activities = null;
+                List<CsvActivity> activities;
                 try {
-                    activities = parseFile(bas);
+                    activities = parseFile(bas).stream().filter(csvActivity -> StringUtils.hasText(csvActivity.getDate())).collect(toList());
                     successListener.onSuccess(activities);
                 } catch (IOException e) {
                     errorListener.onError(e);

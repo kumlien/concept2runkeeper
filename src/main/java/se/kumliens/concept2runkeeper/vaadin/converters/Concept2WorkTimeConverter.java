@@ -19,7 +19,7 @@ public class Concept2WorkTimeConverter implements Converter<String, Double> {
 
     @Override
     public String convertToPresentation(Double value, Class<? extends String> targetType, Locale locale) throws ConversionException {
-        return Constants.formatDuration(Duration.ofSeconds(value.intValue()));
+        return Constants.formatDuration(Duration.ofSeconds(value != null ? value.intValue() : 0));
     }
 
     @Override

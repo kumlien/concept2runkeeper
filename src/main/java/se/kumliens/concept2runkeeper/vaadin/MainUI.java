@@ -5,7 +5,6 @@ import com.vaadin.navigator.View;
 import com.vaadin.server.ExternalResource;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.shared.communication.PushMode;
-import com.vaadin.shared.ui.ui.Transport;
 import com.vaadin.spring.annotation.SpringUI;
 import com.vaadin.spring.navigator.SpringNavigator;
 import com.vaadin.spring.navigator.SpringViewProvider;
@@ -20,10 +19,9 @@ import org.vaadin.viritin.label.Header;
 import org.vaadin.viritin.layouts.MHorizontalLayout;
 import org.vaadin.viritin.layouts.MVerticalLayout;
 import se.kumliens.concept2runkeeper.domain.User;
-import se.kumliens.concept2runkeeper.vaadin.events.RunkeeperAuthArrivedEvent;
-import se.kumliens.concept2runkeeper.vaadin.events.UserLoggedInEvent;
-import se.kumliens.concept2runkeeper.vaadin.events.UserLoggedOutEvent;
-import se.kumliens.concept2runkeeper.vaadin.events.UserRegisteredEvent;
+import se.kumliens.concept2runkeeper.repos.EventRepo;
+import se.kumliens.concept2runkeeper.services.EventService;
+import se.kumliens.concept2runkeeper.vaadin.events.*;
 import se.kumliens.concept2runkeeper.vaadin.views.*;
 import se.kumliens.concept2runkeeper.vaadin.views.login.LoginView;
 import se.kumliens.concept2runkeeper.vaadin.views.sync.SyncView;
@@ -56,6 +54,8 @@ public class MainUI extends UI {
 
     private final EventBus.UIEventBus eventBus;
 
+    private final EventService eventService;
+
     private Image avatar = new Image(null, RUNKEEPER_DEFAULT_PROFILE_ICON);
 
     private Button loginLink; //displayed for non logged in users
@@ -66,9 +66,10 @@ public class MainUI extends UI {
 
     private Button settingsLink; //displayed for logged in users
 
-    public MainUI(MainViewDisplay mainContent, SpringNavigator navigator, EventBus.UIEventBus eventBus, SpringViewProvider springViewProvider) {
+    public MainUI(MainViewDisplay mainContent, SpringNavigator navigator, EventBus.UIEventBus eventBus, SpringViewProvider springViewProvider, EventService eventService) {
         this.mainViewDisplay = mainContent;
         this.eventBus = eventBus;
+        this.eventService = eventService;
         navigator.setErrorView(ErrorView.class);
         springViewProvider.setAccessDeniedViewClass(IndexView.class);
     }
@@ -150,6 +151,8 @@ public class MainUI extends UI {
     @EventBusListenerMethod
     private void onLoggedInEvent(org.vaadin.spring.events.Event<UserLoggedInEvent> event) {
         UserLoggedInEvent userLoggedInEvent = event.getPayload();
+        log.info("User logged in {}", event);
+        eventService.onUserLogIn(userLoggedInEvent.user);
         setUserInSession(userLoggedInEvent.user);
         adjustLinks(true);
         if (userLoggedInEvent.user.lacksPermissions()) {
@@ -163,6 +166,7 @@ public class MainUI extends UI {
     private void onRegistredUserEvent(org.vaadin.spring.events.Event<UserRegisteredEvent> event) {
         log.info("User registered ");
         UserRegisteredEvent userRegisteredEvent = event.getPayload();
+        eventService.onUserRegistration(userRegisteredEvent.user);
         setUserInSession(userRegisteredEvent.user);
         adjustLinks(true);
         getNavigator().navigateTo(getNavigatorViewNameBasedOnView(SettingsView.class));
@@ -171,7 +175,8 @@ public class MainUI extends UI {
     @EventBusListenerMethod
     private void onLoggedOutEvent(org.vaadin.spring.events.Event<UserLoggedOutEvent> event) {
         UserLoggedOutEvent userLoggedOutEvent = event.getPayload();
-        log.info("User {} logged out", userLoggedOutEvent.user.getEmail());
+        log.info("User {} logged out", userLoggedOutEvent.user);
+        eventService.onUserLogOut(userLoggedOutEvent.user);
         adjustLinks(false);
         getNavigator().navigateTo(getNavigatorViewNameBasedOnView(IndexView.class));
     }
@@ -180,6 +185,15 @@ public class MainUI extends UI {
     private void onRunkeeperAuthEvent(org.vaadin.spring.events.Event<RunkeeperAuthArrivedEvent> event) {
         RunkeeperAuthArrivedEvent authArrivedEvent = event.getPayload();
         log.info("Runkeeper auth event {}", authArrivedEvent);
+        eventService.onRunKeeperAuth(authArrivedEvent.user);
+        adjustLinks(true);
+    }
+
+    @EventBusListenerMethod
+    private void onActivitySyncEvent(org.vaadin.spring.events.Event<ActivitySyncEvent> event) {
+        ActivitySyncEvent activitySyncEvent = event.getPayload();
+        log.info("Activity sync event {}", activitySyncEvent);
+        eventService.onActivitySync(activitySyncEvent.user, activitySyncEvent.activity);
         adjustLinks(true);
     }
 

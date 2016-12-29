@@ -6,6 +6,8 @@ import lombok.Getter;
 import java.time.Instant;
 
 /**
+ * Represents a specific sync action.
+ *
  * Created by svante2 on 2016-12-22.
  */
 @Builder
@@ -16,10 +18,10 @@ public class Synchronization {
 
     private Provider target;
 
-    private Object targetActivity;
+    private ExternalActivity targetActivity;
 
-    //Redundant since this synch belongs to a C2RActivity containing the source activity but it feels better... Keep it until something breaks.
-    private Object sourceActivity;
+    //Redundant since this sync belongs to a C2RActivity containing the source activity but it feels better... Keep it until something breaks.
+    private ExternalActivity sourceActivity;
 
     private Instant date;
 

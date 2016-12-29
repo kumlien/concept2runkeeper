@@ -14,6 +14,7 @@ import com.vaadin.ui.themes.ValoTheme;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
+import org.vaadin.spring.events.EventBus;
 import org.vaadin.viritin.button.MButton;
 import org.vaadin.viritin.fields.MCheckBox;
 import org.vaadin.viritin.grid.MGrid;
@@ -30,6 +31,7 @@ import se.kumliens.concept2runkeeper.repos.C2RActivityRepo;
 import se.kumliens.concept2runkeeper.runkeeper.*;
 import se.kumliens.concept2runkeeper.vaadin.MainUI;
 import se.kumliens.concept2runkeeper.vaadin.converters.*;
+import se.kumliens.concept2runkeeper.vaadin.events.ActivitySyncEvent;
 
 import javax.annotation.PostConstruct;
 
@@ -71,9 +73,13 @@ public class SyncView extends MVerticalLayout implements View {
 
     private final C2RActivityRepo c2RActivityRepo;
 
+    private final EventBus.ApplicationEventBus eventBus;
+
     private BeanItemContainer<RunkeeperActivity> rkContainer = new BeanItemContainer<>(RunkeeperActivity.class);
 
     private BeanItemContainer<CsvActivity> concept2Container = new BeanItemContainer<>(CsvActivity.class);
+
+    private MCheckBox forceSync;
 
     @Override
     public void enter(ViewChangeListener.ViewChangeEvent event) {
@@ -162,12 +168,14 @@ public class SyncView extends MVerticalLayout implements View {
         howToBtn.addClickListener(evt ->
                 new MNotification(
                 "Here you can sync your Concept2 activities using the file export functionality from Concept2.<br>" +
-                        "Drop the file on the table below, select some activities and push the button!<br>" +
-                        "Any activities not already synced with RunKeeper will be sent to RunKeeper.<br>" +
-                        "Use the check-box to the right if you want to force creation of already synced activities.")
-                .withDelayMsec(5000).withStyleName(NOTIFICATION_SMALL).withStyleName(NOTIFICATION_CLOSABLE).withHtmlContentAllowed(true).display());
+                        "<ol>" +
+                        "<li>Export your activities as a .csv file from the Concept2 <a href=\"http://log.concept2.com/history\">history tab</a></li>" +
+                        "<li>Drop the file on the table below, select some activities and push the button.</li>" +
+                        "<li>Any activities not already synced with RunKeeper will be sent to RunKeeper.</li>" +
+                        "<li>Use the check-box to the right if you want to force sync of already synced activities.</li></ol>")
+                .withDelayMsec(15000).withStyleName(NOTIFICATION_SMALL).withStyleName(NOTIFICATION_CLOSABLE).withHtmlContentAllowed(true).display());
 
-        MCheckBox forceSync = new MCheckBox("Force sync of activities already synced").withValueChangeListener(evt -> {
+        forceSync = new MCheckBox("Force sync of activities already synced").withValueChangeListener(evt -> {
             if(((CheckBox)evt.getProperty()).getValue()) {
                 new MNotification("We try to make sure a given activity in only synced once.<br>" +
                         "By using 'Force' you bypass this check and every activity will be synced.<br>" +
@@ -215,7 +223,7 @@ public class SyncView extends MVerticalLayout implements View {
 
             ProgressBar progressBar = new ProgressBar(0.0f);
             progressBar.setSizeFull();
-            float percentPerRow = (float) 1 / selectedRows.size();
+            float percentPerActivity = (float) 1 / selectedRows.size();
 
             MWindow progressWindow = new MWindow("Synchronizing with RunKeeper")
                     .withModal(true).withCenter().withContent(new MVerticalLayout().expand(progressBar).withWidth("100%")).withClosable(false).withWidth(40, EM).withHeight(4, EM);
@@ -238,7 +246,7 @@ public class SyncView extends MVerticalLayout implements View {
                             .build());
 
                     //Add the sync if not already there
-                    if (c2RActivity.getSynchronizations().stream().filter(synchronization -> synchronization.getTarget() == RUNKEEPER).count() == 0) {
+                    if (forceSync.getValue() || c2RActivity.getSynchronizations().stream().filter(synchronization -> synchronization.getTarget() == RUNKEEPER).count() == 0) {
                         log.info("No sync to RunKeeper found, adding one...");
                         RecordActivityRequest request = createRecordActivityRequest(csvActivity, internalRunKeeperData, externalRunkeeperData);
                         URI activityLocation = runkeeperService.recordActivity(request, ui.getUser().getInternalRunKeeperData().getToken());
@@ -247,7 +255,7 @@ public class SyncView extends MVerticalLayout implements View {
                         c2RActivity.getSynchronizations().add(Synchronization.builder().date(Instant.now()).source(CONCEPT2).target(RUNKEEPER).targetActivity(rkActivity).sourceActivity(csvActivity).build());
                         rkContainer.addItem(rkActivity);
                         concept2Grid.getContainerDataSource().removeItem(csvActivity);
-                        log.info("ok...");
+                        eventBus.publish(this, new ActivitySyncEvent(ui.getUser(), c2RActivity));
                     } else {
                         log.info("Already synced to RunKeeper, skip new sync");
                         skippedSync.increment();
@@ -256,14 +264,9 @@ public class SyncView extends MVerticalLayout implements View {
                     c2RActivity = c2RActivityRepo.save(c2RActivity);
                     log.info("Saved a new C2RActivity: {}", c2RActivity);
                     ui.access(() -> {
-                        progressBar.setValue(progressBar.getValue() + percentPerRow);
+                        progressBar.setValue(progressBar.getValue() + percentPerActivity);
                         ui.push();
                     });
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
                 });
 
                 //15 lines to display a message, wtf...
@@ -278,14 +281,13 @@ public class SyncView extends MVerticalLayout implements View {
                 if (skippedSync.intValue() == 1) {
                     skippedSyncMessage = "<br>" + "One activity was not sent to RunKeeper since this activity was already synced to RunKeeper";
                 } else if (skippedSync.intValue() > 1) {
-                    skippedSyncMessage = "<br>" + skippedSync.intValue() + " activities was not sent to RunKeeper since they were already synced to RunKeeper";
+                    skippedSyncMessage = "<br>" + skippedSync.intValue() + " activities was not sent to RunKeeper since they were previously synced";
                 }
                 new MNotification(firstPart + locationsWithLineBreak + skippedSyncMessage).withHtmlContentAllowed(true).withStyleName(NOTIFICATION_SUCCESS).withDelayMsec(10000).display();
                 ui.access(() -> {
                     concept2Grid.getSelectionModel().reset();
                     concept2Grid.clearSortOrder();
                     progressWindow.close();
-                    ui.push();
                 });
             }).start();
         });

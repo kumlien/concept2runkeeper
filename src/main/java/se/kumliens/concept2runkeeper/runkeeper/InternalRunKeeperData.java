@@ -48,4 +48,8 @@ public class InternalRunKeeperData {
     public void setPostToFacebookOverride(boolean postToFacebookOverride) {
         this.postToFacebookOverride = postToFacebookOverride;
     }
+
+    public void setLastTimeConnected(Instant lastTimeConnected) {
+        this.lastTimeConnected = lastTimeConnected;
+    }
 }

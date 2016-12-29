@@ -153,6 +153,7 @@ public class RunKeeperTab extends AbstractSettingsTab {
     private MButton getRefreshProfileButton(String caption) {
         return new MButton(REFRESH, clk -> {
             ExternalRunkeeperData.Builder builder = runkeeperService.getAllData(user.getInternalRunKeeperData().getToken());
+            user.getInternalRunKeeperData().setLastTimeConnected(Instant.now());
             user.setExternalRunkeeperData(builder.build());
             userRepo.save(user);
             Notification notification = new Notification("Your profile was successfully updated from RunKeeper");

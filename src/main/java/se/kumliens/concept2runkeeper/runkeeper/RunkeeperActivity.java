@@ -5,6 +5,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
+import se.kumliens.concept2runkeeper.domain.ExternalActivity;
 
 import java.net.URI;
 
@@ -15,7 +16,7 @@ import java.net.URI;
 @Getter
 @ToString
 @EqualsAndHashCode(of = {"uri"})
-public class RunkeeperActivity {
+public class RunkeeperActivity implements ExternalActivity {
 
     //The fields. Used from the ui when creating the table
     public static final String URI = "uri";

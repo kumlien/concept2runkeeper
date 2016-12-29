@@ -12,4 +12,6 @@ import java.util.Optional;
 public interface C2RActivityRepo extends MongoRepository<C2RActivity, String> {
 
     C2RActivity findBySourceId(String sourceId);
+
+    void deleteByUserId(String email);
 }

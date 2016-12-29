@@ -1,11 +1,7 @@
-package se.kumliens.concept2runkeeper.vaadin.views.connectionTabs;
+package se.kumliens.concept2runkeeper.vaadin.views.settings;
 
-import com.vaadin.spring.annotation.SpringComponent;
-import com.vaadin.spring.annotation.ViewScope;
 import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.VerticalLayout;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import se.kumliens.concept2runkeeper.domain.User;
 import se.kumliens.concept2runkeeper.vaadin.MainUI;
 
@@ -20,7 +16,7 @@ public abstract class AbstractSettingsTab extends VerticalLayout {
     public void init(TabSheet.Tab tab, MainUI ui) {
         this.tab = tab;
         user = ui.getUser();
-        if(user == null) return; //Should allways be there
+        if(user == null) return; //Should always be there
 
         setSizeFull();
         setMargin(true);

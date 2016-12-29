@@ -8,7 +8,9 @@ import org.springframework.stereotype.Service;
 import se.kumliens.concept2runkeeper.domain.C2RActivity;
 import se.kumliens.concept2runkeeper.domain.User;
 import se.kumliens.concept2runkeeper.domain.events.*;
+import se.kumliens.concept2runkeeper.repos.C2RActivityRepo;
 import se.kumliens.concept2runkeeper.repos.EventRepo;
+import se.kumliens.concept2runkeeper.repos.UserRepo;
 
 /**
  * Created by svante2 on 2016-12-29.
@@ -18,14 +20,18 @@ import se.kumliens.concept2runkeeper.repos.EventRepo;
 @Slf4j
 public class EventService {
 
-    private final EventRepo repo;
+    private final EventRepo eventRepo;
+
+    private final UserRepo userRepo;
+
+    private final C2RActivityRepo c2RActivityRepo;
 
     public void onUserRegistration(User user) {
         Observable.just(user)
                 .subscribeOn(Schedulers.io())
                 .subscribe(evt -> {
                     log.info("Storing a user registration event");
-                    repo.save(new UserRegistrationEvent(user.getEmail()));
+                    eventRepo.save(new UserRegistrationEvent(user.getEmail()));
                 });
 
     }
@@ -35,7 +41,7 @@ public class EventService {
                 .subscribeOn(Schedulers.io())
                 .subscribe(evt -> {
                     log.info("Storing a login event");
-                    repo.save(new UserLogInEvent(user.getEmail()));
+                    eventRepo.save(new UserLogInEvent(user.getEmail()));
                 });
 
     }
@@ -45,7 +51,7 @@ public class EventService {
                 .subscribeOn(Schedulers.io())
                 .subscribe(evt -> {
                     log.info("Storing a logout event");
-                    repo.save(new UserLogOutEvent(user.getEmail()));
+                    eventRepo.save(new UserLogOutEvent(user.getEmail()));
                 });
     }
 
@@ -54,7 +60,7 @@ public class EventService {
                 .subscribeOn(Schedulers.io())
                 .subscribe(evt -> {
                     log.info("Storing an activity sync event");
-                    repo.save(new ActivitySyncEvent(user.getEmail(), activity.getId()));
+                    eventRepo.save(new ActivitySyncEvent(user.getEmail(), activity.getId()));
                 });
     }
 
@@ -63,7 +69,22 @@ public class EventService {
                 .subscribeOn(Schedulers.io())
                 .subscribe(evt -> {
                     log.info("Storing a RunKeeper auth event");
-                    repo.save(new RunKeeperAuthEvent(user.getEmail()));
+                    eventRepo.save(new RunKeeperAuthEvent(user.getEmail()));
+                });
+    }
+
+    public void onUserAccountDeleted(User user) {
+        Observable.just(user)
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.io())
+                .doOnNext(usr -> {
+                    userRepo.delete(usr);
+                    c2RActivityRepo.deleteByUserId(usr.getEmail());
+                    eventRepo.deleteByUserId(usr.getEmail());
+                })
+                .subscribe(evt -> {
+                    log.info("Storing a RunKeeper auth event");
+                    eventRepo.save(new UserAccountDeletedEvent(user.getEmail()));
                 });
     }
 }

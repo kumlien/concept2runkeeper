@@ -23,5 +23,4 @@ public class ActivitySyncEvent extends AbstractApplicationEvent {
         super(userId, Instant.now());
         this.activityId = activityId;
     }
-
 }

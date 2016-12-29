@@ -238,7 +238,7 @@ public class SyncView extends MVerticalLayout implements View {
                 selectedRows.forEach(csvActivity -> {
                     //If there is a stored activity then pick that one, otherwise create a new one.
                     C2RActivity c2RActivity = MoreObjects.firstNonNull(c2RActivityRepo.findBySourceId(csvActivity.getDate()), C2RActivity.builder()
-                            .userId(ui.getUser().getId())
+                            .userId(ui.getUser().getEmail())
                             .imported(Instant.now())
                             .source(CONCEPT2)
                             .sourceActivity(csvActivity)

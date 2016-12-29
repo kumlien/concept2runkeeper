@@ -19,10 +19,10 @@ import org.vaadin.viritin.label.Header;
 import org.vaadin.viritin.layouts.MHorizontalLayout;
 import org.vaadin.viritin.layouts.MVerticalLayout;
 import se.kumliens.concept2runkeeper.domain.User;
-import se.kumliens.concept2runkeeper.repos.EventRepo;
 import se.kumliens.concept2runkeeper.services.EventService;
 import se.kumliens.concept2runkeeper.vaadin.events.*;
 import se.kumliens.concept2runkeeper.vaadin.views.*;
+import se.kumliens.concept2runkeeper.vaadin.views.settings.SettingsView;
 import se.kumliens.concept2runkeeper.vaadin.views.login.LoginView;
 import se.kumliens.concept2runkeeper.vaadin.views.sync.SyncView;
 
@@ -177,6 +177,16 @@ public class MainUI extends UI {
         UserLoggedOutEvent userLoggedOutEvent = event.getPayload();
         log.info("User {} logged out", userLoggedOutEvent.user);
         eventService.onUserLogOut(userLoggedOutEvent.user);
+        adjustLinks(false);
+        getNavigator().navigateTo(getNavigatorViewNameBasedOnView(IndexView.class));
+    }
+
+    @EventBusListenerMethod
+    private void onAccountDeletedEvent(org.vaadin.spring.events.Event<UserAccountDeletedEvent> event) {
+        UserAccountDeletedEvent userAccountDeletedEvent = event.getPayload();
+        log.info("User account deleted: {}", userAccountDeletedEvent);
+        eventService.onUserAccountDeleted(userAccountDeletedEvent.user);
+        getSession().setAttribute(SESSION_ATTR_USER, null);
         adjustLinks(false);
         getNavigator().navigateTo(getNavigatorViewNameBasedOnView(IndexView.class));
     }

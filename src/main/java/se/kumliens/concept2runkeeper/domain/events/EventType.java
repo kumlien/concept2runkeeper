@@ -5,5 +5,5 @@ package se.kumliens.concept2runkeeper.domain.events;
  */
 public enum EventType {
 
-    USER_REGISTRATION, USER_LOGIN, USER_LOGOUT, RUNKEEPER_AUTH, ACTIVITY_SYNC;
+    USER_REGISTRATION, USER_LOGIN, USER_LOGOUT, USER_DELETED, RUNKEEPER_AUTH, ACTIVITY_SYNC;
 }

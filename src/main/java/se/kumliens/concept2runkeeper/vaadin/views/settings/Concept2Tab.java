@@ -1,10 +1,7 @@
-package se.kumliens.concept2runkeeper.vaadin.views.connectionTabs;
+package se.kumliens.concept2runkeeper.vaadin.views.settings;
 
-import com.vaadin.server.FontAwesome;
-import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.spring.annotation.SpringComponent;
 import com.vaadin.spring.annotation.ViewScope;
-import com.vaadin.ui.Label;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
@@ -25,7 +22,7 @@ public class Concept2Tab extends AbstractSettingsTab {
 
 
     protected void doInit() {
-        if (!StringUtils.hasText(user.getConcept2AccessToken())) {
+        if (!StringUtils.hasText(user.getConcept2AccessToken())) { //todo push this check to the User
             setUpWithMissingAuth();
         } else {
             setUpWithAuthPresent();

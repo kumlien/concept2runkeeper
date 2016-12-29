@@ -1,15 +1,13 @@
-package se.kumliens.concept2runkeeper.vaadin.views.connectionTabs;
+package se.kumliens.concept2runkeeper.vaadin.views.settings;
 
 import com.github.scribejava.core.model.OAuth2AccessToken;
 import com.github.scribejava.core.model.Token;
 import com.google.common.base.MoreObjects;
 import com.vaadin.server.ExternalResource;
-import com.vaadin.server.FontAwesome;
 import com.vaadin.server.Page;
 import com.vaadin.spring.annotation.SpringComponent;
 import com.vaadin.spring.annotation.ViewScope;
 import com.vaadin.ui.*;
-import com.vaadin.ui.themes.ValoTheme;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.vaadin.addon.oauthpopup.OAuthListener;

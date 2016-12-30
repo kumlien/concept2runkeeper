@@ -1,5 +1,8 @@
 package se.kumliens.concept2runkeeper.repos;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import se.kumliens.concept2runkeeper.domain.events.AbstractApplicationEvent;
 
@@ -13,4 +16,6 @@ public interface EventRepo extends MongoRepository<AbstractApplicationEvent, Str
     List<AbstractApplicationEvent> findByUserId(String email);
 
     void deleteByUserId(String email);
+
+    Page findAllByUserId(String email, Pageable pageRequest);
 }

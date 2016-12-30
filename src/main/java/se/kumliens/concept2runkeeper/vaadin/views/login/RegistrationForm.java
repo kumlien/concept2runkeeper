@@ -1,6 +1,7 @@
 package se.kumliens.concept2runkeeper.vaadin.views.login;
 
 import com.vaadin.data.Validator;
+import com.vaadin.data.validator.BeanValidator;
 import com.vaadin.data.validator.EmailValidator;
 import com.vaadin.data.validator.StringLengthValidator;
 import com.vaadin.event.FieldEvents;
@@ -29,14 +30,14 @@ import static se.kumliens.concept2runkeeper.vaadin.views.login.LoginView.DEFAULT
  * Created by svante2 on 2016-04-28.
  */
 @Slf4j
-public class RegisterForm extends AbstractForm<User> {
+public class RegistrationForm extends AbstractForm<User> {
 
 
-    private EmailField email = (EmailField) new EmailField("E-mail").withWidth(DEFAULT_FORM_FIELD_WIDTH).withValidator(new EmailValidator("Not a valid email address...")).withValidator(new StringLengthValidator("Please specify your first name", 2, 32, false));
-    private MTextField firstName = new MTextField("First name").withWidth(DEFAULT_FORM_FIELD_WIDTH).withValidator(new StringLengthValidator("Please specify your first name", 2, 32, false));
-    private MTextField lastName = new MTextField("Last name").withWidth(DEFAULT_FORM_FIELD_WIDTH).withValidator(new StringLengthValidator("Please specify your last name", 2, 32, false));
-    private MPasswordField password = new MPasswordField("Password").withWidth(DEFAULT_FORM_FIELD_WIDTH).withValidator(new StringLengthValidator("Must contain at least six characters", 6, 32, false));
-    private MPasswordField password2 = new MPasswordField("Password").withWidth(DEFAULT_FORM_FIELD_WIDTH).withValidator(new StringLengthValidator("Must contain at least six characters", 6, 32, false));
+    private EmailField email = (EmailField) new EmailField("E-mail").withWidth(DEFAULT_FORM_FIELD_WIDTH);//.withValidator(new BeanValidator(User.class, "email"));
+    private MTextField firstName = new MTextField("First name").withWidth(DEFAULT_FORM_FIELD_WIDTH);//.withValidator(new BeanValidator(User.class, "firstName"));
+    private MTextField lastName = new MTextField("Last name").withWidth(DEFAULT_FORM_FIELD_WIDTH);//.withValidator(new BeanValidator(User.class, "lastName"));
+    private MPasswordField password = new MPasswordField("Password").withWidth(DEFAULT_FORM_FIELD_WIDTH);//.withValidator(new BeanValidator(User.class, "password"));
+    private MPasswordField password2 = new MPasswordField("Password").withWidth(DEFAULT_FORM_FIELD_WIDTH);//.withValidator(new BeanValidator(User.class, "password"));
 
     private FieldEvents.BlurListener pwdChecker = blurEvent -> {
         String pwd1 = password.getValue();
@@ -47,16 +48,16 @@ public class RegisterForm extends AbstractForm<User> {
         getSaveButton().setEnabled(pwd1.equals(pwd2));
     };
 
-    public RegisterForm() {
-        setEntity(new User());
+    public RegistrationForm() {
+        setEntity(new User()).hideInitialEmpyFieldValidationErrors();
         email.setIcon(ENVELOPE);
         email.setRequired(true);
-        email.setNullRepresentation("a.b@c.de");
+        email.setNullRepresentation("");
         email.setNullSettingAllowed(false);
         firstName.setIcon(TAG);
-        firstName.setNullRepresentation("Your first name");
+        firstName.setNullRepresentation("");
         lastName.setIcon(TAG);
-        lastName.setNullRepresentation("Your last name");
+        lastName.setNullRepresentation("");
         password.setIcon(LOCK);
         password.addBlurListener(pwdChecker);
 
@@ -79,5 +80,6 @@ public class RegisterForm extends AbstractForm<User> {
                 new MFormLayout(email,firstName, lastName, password, password2),
                 getToolbar()
         );
+
     }
 }

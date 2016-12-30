@@ -19,11 +19,11 @@ import static se.kumliens.concept2runkeeper.vaadin.views.login.LoginView.DEFAULT
  */
 public class LoginForm extends AbstractForm<LoginCredentials> {
 
-    private EmailField username = (EmailField) new EmailField("Email").withWidth(DEFAULT_FORM_FIELD_WIDTH).withValidator(new EmailValidator("That is not a valid email address"));
+    private EmailField username = (EmailField) new EmailField("Email").withWidth(DEFAULT_FORM_FIELD_WIDTH);
     private MPasswordField password = new MPasswordField("Password").withWidth(DEFAULT_FORM_FIELD_WIDTH);
 
     public LoginForm() {
-        setEntity(new LoginCredentials());
+        setEntity(new LoginCredentials()).hideInitialEmpyFieldValidationErrors();
         username.setIcon(USER);
         password.setIcon(LOCK);
         getSaveButton().addStyleName(ValoTheme.BUTTON_HUGE);

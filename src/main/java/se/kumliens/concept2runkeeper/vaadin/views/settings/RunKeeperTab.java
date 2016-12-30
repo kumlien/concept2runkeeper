@@ -174,9 +174,10 @@ public class RunKeeperTab extends AbstractSettingsTab {
         OAuthPopupButton popupButton = getRunkeeperAuthButton();
         MLabel label = new MLabel("You are not yet connected to RunKeeper. </br>" +
                 "Login to RunKeeper by clicking the button below and allow us to post new activities on your behalf.").withContentMode(HTML);
-        addComponent(label);
-        addComponent(popupButton);
-        setExpandRatio(popupButton, 1.0f);
+
+        MVerticalLayout layout = new MVerticalLayout(label, popupButton).withSpacing(true).withMargin(true);
+        Panel panel = new MPanel("Time to set-up your RunKeeper connection").withContent(layout);
+        addComponent(panel);
         tab.setIcon(EXCLAMATION_CIRCLE);
     }
 
@@ -198,10 +199,9 @@ public class RunKeeperTab extends AbstractSettingsTab {
                     notification.setDelayMsec(2500);
                     notification.show(Page.getCurrent());
 
-                    popupButton.setVisible(false);
                     OAuth2AccessToken oAuth2AccessToken = (OAuth2AccessToken) token;
                     ExternalRunkeeperData externalRunkeeperData = runkeeperService.getAllData(oAuth2AccessToken.getAccessToken()).build();
-                    InternalRunKeeperData internalRunKeeperData = InternalRunKeeperData.builder().token(oAuth2AccessToken.getAccessToken()).firstConnected(Instant.now()).lastTimeConnected(Instant.now()).build();
+                    InternalRunKeeperData internalRunKeeperData = InternalRunKeeperData.builder().token(oAuth2AccessToken.getAccessToken()).firstConnected(Instant.now()).lastTimeConnected(Instant.now()).defaultComment(DEFAULT_ACTIVITY_COMMENT).build();
                     user.setInternalRunKeeperData(internalRunKeeperData);
                     user.setExternalRunkeeperData(externalRunkeeperData);
                     user = userRepo.save(user);

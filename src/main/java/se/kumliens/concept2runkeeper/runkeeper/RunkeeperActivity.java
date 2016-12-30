@@ -34,7 +34,7 @@ public class RunkeeperActivity implements ExternalActivity {
     public static final String DURATION = "duration";
 
     @JsonProperty("uri")
-    private URI uri;
+    private String uri;
 
     @JsonProperty("userID")
     private Integer userID;

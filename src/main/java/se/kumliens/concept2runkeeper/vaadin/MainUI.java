@@ -1,9 +1,12 @@
 package se.kumliens.concept2runkeeper.vaadin;
 
+import com.github.wolfie.history.HistoryExtension;
 import com.vaadin.annotations.*;
+import com.vaadin.navigator.NavigationStateManager;
 import com.vaadin.navigator.View;
 import com.vaadin.server.ExternalResource;
 import com.vaadin.server.VaadinRequest;
+import com.vaadin.shared.Position;
 import com.vaadin.shared.communication.PushMode;
 import com.vaadin.spring.annotation.SpringUI;
 import com.vaadin.spring.navigator.SpringNavigator;
@@ -11,6 +14,7 @@ import com.vaadin.spring.navigator.SpringViewProvider;
 import com.vaadin.ui.*;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.context.ApplicationContext;
 import org.vaadin.dialogs.ConfirmDialog;
 import org.vaadin.spring.events.EventBus;
 import org.vaadin.spring.events.annotation.EventBusListenerMethod;
@@ -18,6 +22,7 @@ import org.vaadin.viritin.button.MButton;
 import org.vaadin.viritin.label.Header;
 import org.vaadin.viritin.layouts.MHorizontalLayout;
 import org.vaadin.viritin.layouts.MVerticalLayout;
+import org.vaadin.viritin.ui.MNotification;
 import se.kumliens.concept2runkeeper.domain.User;
 import se.kumliens.concept2runkeeper.services.EventService;
 import se.kumliens.concept2runkeeper.vaadin.events.*;
@@ -56,6 +61,10 @@ public class MainUI extends UI {
 
     private final EventService eventService;
 
+    private final SpringViewProvider springViewProvider;
+
+    private final ApplicationContext applicationContext;
+
     private Image avatar = new Image(null, RUNKEEPER_DEFAULT_PROFILE_ICON);
 
     private Button loginLink; //displayed for non logged in users
@@ -66,12 +75,16 @@ public class MainUI extends UI {
 
     private Button settingsLink; //displayed for logged in users
 
-    public MainUI(MainViewDisplay mainContent, SpringNavigator navigator, EventBus.UIEventBus eventBus, SpringViewProvider springViewProvider, EventService eventService) {
+    private Button historyLink; //displayed for logged in users
+
+    public MainUI(MainViewDisplay mainContent, SpringNavigator navigator, EventBus.UIEventBus eventBus, SpringViewProvider springViewProvider, EventService eventService, ApplicationContext applicationContext) {
         this.mainViewDisplay = mainContent;
         this.eventBus = eventBus;
         this.eventService = eventService;
         navigator.setErrorView(ErrorView.class);
+        this.springViewProvider = springViewProvider;
         springViewProvider.setAccessDeniedViewClass(IndexView.class);
+        this.applicationContext = applicationContext;
     }
 
     @PreDestroy
@@ -81,6 +94,7 @@ public class MainUI extends UI {
 
     @Override
     protected void init(VaadinRequest vaadinRequest) {
+
         final Header header = new Header("Keeping your workouts in sync");
         header.setSizeUndefined();
         eventBus.subscribe(this);
@@ -122,6 +136,10 @@ public class MainUI extends UI {
         settingsLink = createNavButton("Settings", SettingsView.class);
         settingsLink.setVisible(false);
         links.addComponent(settingsLink);
+
+        historyLink = createNavButton("History", HistoryView.class);
+        historyLink.setVisible(false);
+        //links.addComponent(historyLink);
 
         logoutLink = createButton("Logout");
         logoutLink.addClickListener(clk -> {
@@ -213,6 +231,7 @@ public class MainUI extends UI {
         syncLink.setVisible(loggedIn);
         logoutLink.setVisible(loggedIn);
         settingsLink.setVisible(loggedIn);
+        historyLink.setVisible(loggedIn);
         if (loggedIn) {
             URL rkImg = getUser().getAnyRunkeeperProfileImage();
             if (rkImg != null) {

@@ -1,5 +1,6 @@
 package se.kumliens.concept2runkeeper.vaadin.views.settings;
 
+import com.vaadin.server.FontAwesome;
 import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.spring.annotation.SpringComponent;
 import com.vaadin.spring.annotation.ViewScope;
@@ -39,6 +40,7 @@ public class AccountSettingsTab extends AbstractSettingsTab {
 
     @Override
     protected void doInit() {
+        tab.setIcon(FontAwesome.USER);
         MLabel label = new MLabel("You can at any time delete your account here. This action will not delete or even access any data at RunKeeper or Concept2. <br>" +
                 "It will delete all your data here at concept2runkeeper such as login credentials and records of synced activities.").withContentMode(HTML).withStyleName(ValoTheme.LABEL_BOLD);
         MButton deleteAccountButton = new MButton("Delete my account!").withStyleName(ValoTheme.BUTTON_DANGER).withStyleName(ValoTheme.BUTTON_LARGE).addClickListener(() -> {

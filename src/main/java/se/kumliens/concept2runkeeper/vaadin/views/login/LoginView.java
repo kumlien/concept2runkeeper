@@ -1,32 +1,24 @@
 package se.kumliens.concept2runkeeper.vaadin.views.login;
 
-import com.vaadin.data.util.filter.Not;
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener;
-import com.vaadin.server.FontAwesome;
 import com.vaadin.spring.annotation.SpringView;
 import com.vaadin.ui.*;
-import com.vaadin.ui.themes.ValoTheme;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.vaadin.spring.events.EventBus;
-import org.vaadin.spring.events.EventScope;
 import org.vaadin.viritin.layouts.MPanel;
 import org.vaadin.viritin.layouts.MVerticalLayout;
 import org.vaadin.viritin.ui.MNotification;
 import se.kumliens.concept2runkeeper.domain.User;
 import se.kumliens.concept2runkeeper.security.Authorities;
 import se.kumliens.concept2runkeeper.security.MongoUserDetailsService;
-import se.kumliens.concept2runkeeper.vaadin.MainUI;
 
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 import se.kumliens.concept2runkeeper.vaadin.events.UserLoggedInEvent;
 import se.kumliens.concept2runkeeper.vaadin.events.UserRegisteredEvent;
 
@@ -69,7 +61,7 @@ public class LoginView extends VerticalLayout implements View {
         LoginForm loginForm = new LoginForm();
         loginForm.setSavedHandler(this::onLogin);
 
-        RegisterForm registerForm = new RegisterForm();
+        RegistrationForm registerForm = new RegistrationForm();
         registerForm.setSavedHandler(this::onRegister);
         registerForm.setWidth("100%");
 
@@ -97,7 +89,7 @@ public class LoginView extends VerticalLayout implements View {
         try {
             user.addAuthority(new SimpleGrantedAuthority(Authorities.USER.role));
             userDetailsService.createUser(user);
-            new MNotification("Welcome to concept2runkeeper!<br>Now it's time to configure your connections.").withHtmlContentAllowed(true).withStyleName(NOTIFICATION_SUCCESS).withDelayMsec(2500).display();
+            new MNotification("Welcome to concept2runkeeper!<br>Now it's time to configure your connections to RunKeeper and Concept2.").withHtmlContentAllowed(true).withStyleName(NOTIFICATION_SUCCESS).withDelayMsec(2500).display();
             eventBus.publish(SESSION, this, new UserRegisteredEvent(user));
         } catch (Exception e) {
             log.warn("Exception...", e);

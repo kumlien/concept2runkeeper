@@ -1,33 +1,19 @@
 package se.kumliens.concept2runkeeper.vaadin.views.login;
 
+import lombok.Data;
 import org.hibernate.validator.constraints.NotBlank;
+
+import javax.validation.constraints.NotNull;
 
 /**
  * Created by svante2 on 2016-04-28.
  */
+@Data
 public class LoginCredentials {
 
-    @NotBlank(message = "Your username goes here")
+    @NotNull
     private String username;
 
-    @NotBlank(message = "Your password goes here")
+    @NotNull
     private String password;
-
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
 }

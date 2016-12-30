@@ -1,6 +1,7 @@
 package se.kumliens.concept2runkeeper.domain.events;
 
 
+import lombok.Getter;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -12,6 +13,7 @@ import java.time.Instant;
  * Created by svante2 on 2016-12-29.
  */
 @Document(collection = "ApplicationEvents")
+@Getter
 public abstract class AbstractApplicationEvent {
 
     //The id (email-address) of the user involved

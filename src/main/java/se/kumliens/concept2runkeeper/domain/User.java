@@ -4,6 +4,9 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import lombok.Data;
 
+import org.hibernate.validator.constraints.Email;
+import org.hibernate.validator.constraints.Length;
+import org.hibernate.validator.constraints.NotBlank;
 import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -13,6 +16,8 @@ import org.springframework.util.StringUtils;
 import se.kumliens.concept2runkeeper.runkeeper.ExternalRunkeeperData;
 import se.kumliens.concept2runkeeper.runkeeper.InternalRunKeeperData;
 
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Collections;
@@ -30,12 +35,19 @@ public class User implements UserDetails {
     private String id;
 
     @Indexed(unique = true)
+    @Email
     private String email;
 
+    @NotNull
+    @Size(min = 6, max = 128, message = "Your password must contain between 6 and 128 characters")
     private String password;
 
+    @NotNull
+    @Size(min = 2, max = 32, message = "Your first name must contain 2-32 characters")
     private String firstName;
 
+    @NotNull
+    @Size(min = 2, max = 32, message = "Your last name must contain 2-32 characters")
     private String lastName;
 
     private InternalRunKeeperData internalRunKeeperData;

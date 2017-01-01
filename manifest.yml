@@ -1,0 +1,14 @@
+---
+applications:
+  - name: concept2runkeeper
+    buildpack: java_buildpack
+    path: target/concept2runkeeper-0.0.1-SNAPSHOT.jar
+    instances: 1
+    # domain: concept2runkeeper.com
+    # env:
+      #runkeeper.oauth2-client-id:
+      #runkeeper.oauth2-client-secret:
+    services:
+      - mongo
+      - sendgrid
+      - C2RConfig

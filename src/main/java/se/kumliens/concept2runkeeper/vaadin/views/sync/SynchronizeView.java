@@ -10,7 +10,9 @@ import com.vaadin.spring.annotation.SpringView;
 import com.vaadin.ui.*;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.Panel;
 import com.vaadin.ui.themes.ValoTheme;
+import javafx.scene.layout.Pane;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
@@ -21,6 +23,7 @@ import org.vaadin.viritin.grid.MGrid;
 import org.vaadin.viritin.label.Header;
 import org.vaadin.viritin.label.MLabel;
 import org.vaadin.viritin.layouts.MHorizontalLayout;
+import org.vaadin.viritin.layouts.MPanel;
 import org.vaadin.viritin.layouts.MVerticalLayout;
 import org.vaadin.viritin.layouts.MWindow;
 import org.vaadin.viritin.ui.MNotification;
@@ -65,7 +68,7 @@ import static se.kumliens.concept2runkeeper.vaadin.MainUI.link;
 @SpringView
 @RequiredArgsConstructor
 @Slf4j
-public class SyncView extends MVerticalLayout implements View {
+public class SynchronizeView extends MVerticalLayout implements View {
 
     private final MainUI ui;
 
@@ -95,33 +98,32 @@ public class SyncView extends MVerticalLayout implements View {
 
     @PostConstruct
     public void init() {
-        Label label = new Label("For now we only support synchronizing from <a href=\"http://log.concept2.com/\">Concept2</a> to " +
+        Label label = new MLabel("For now we only support synchronizing from <a href=\"http://log.concept2.com/\">Concept2</a> to " +
                 "<a href=\"http://www.runkeeper.com/\">RunKeeper</a>.");
         label.setContentMode(HTML);
         label.setSizeUndefined();
-        add(label, TOP_CENTER);
 
-        MVerticalLayout fromContent = createFromContent().withMargin(false).withSpacing(false);
+        Panel fromContent = createFromContent();
         fromContent.setSizeFull();
 
-        MVerticalLayout toContent = createToContent().withMargin(false).withSpacing(false);
+        Panel toContent = createToContent();
         toContent.setSizeFull();
-        Component splitPanel = new VerticalSplitPanel(fromContent, toContent);
+
+        VerticalSplitPanel splitPanel = new VerticalSplitPanel(fromContent, toContent);
         splitPanel.setSizeFull();
 
-        MHorizontalLayout allContent = new MHorizontalLayout(splitPanel);
+        MHorizontalLayout allContent = new MHorizontalLayout(splitPanel).withMargin(true).withSpacing(true);
         allContent.setSizeFull();
         expand(allContent);
-        withMargin(true);
+        withMargin(false);
         withSpacing(true);
     }
 
 
     //Create the content representing where we synchronize to
-    private MVerticalLayout createToContent() {
-        Header header = new Header("RunKeeper").setHeaderLevel(3);
-        MVerticalLayout layout = new MVerticalLayout();
-        layout.add(header, MIDDLE_LEFT);
+    private Panel createToContent() {
+        //Label label = new MLabel("RunKeeper activities (for now we only support synchronizing to <a href=\"http://www.runkeeper.com/\">RunKeeper</a>)").withContentMode(HTML);
+        MVerticalLayout layout = new MVerticalLayout().withSpacing(true).withMargin(true);
 
         MGrid<RunkeeperActivity> grid = new MGrid<>(RunkeeperActivity.class).withFullHeight().withFullWidth();
         grid.setSelectionMode(SINGLE);
@@ -133,19 +135,18 @@ public class SyncView extends MVerticalLayout implements View {
         grid.addColumn(RunkeeperActivity.TYPE).setHeaderCaption("(RunKeeper-) Type");
 
         layout.expand(grid);
-        return layout;
+        return new MPanel("Your RunKeeper activities goes here").withContent(layout);
     }
 
 
     //Create the content representing where we synchronize from. Hardwire to concept2 for now
-    private MVerticalLayout createFromContent() {
-        Header header = new Header("Concept2").setHeaderLevel(3);
-        header.setSizeUndefined();
+    private Panel createFromContent() {
+        Label label = new MLabel("Concept2 activities (for now we only support synchronizing from <a href=\"http://log.concept2.com/\">Concept2</a>)").withContentMode(HTML);
 
         MVerticalLayout fromContent = new MVerticalLayout();
-        MHorizontalLayout topLayout = new MHorizontalLayout(header).withSpacing(true).withFullWidth();
-        topLayout.withAlign(header, MIDDLE_LEFT);
-        fromContent.add(topLayout);
+        MHorizontalLayout topLayout = new MHorizontalLayout(label).withSpacing(true);
+        //topLayout.withAlign(header, MIDDLE_LEFT);
+        //fromContent.add(topLayout);
 
         //Create the tab sheet
         TabSheet concept2TabSheet = new TabSheet();
@@ -207,7 +208,8 @@ public class SyncView extends MVerticalLayout implements View {
         csvTabLayout.setExpandRatio(dropArea, 1.0f);
 
         fromContent.expand(concept2TabSheet);
-        return fromContent;
+
+        return new MPanel("Your Concept2 activities goes here").withContent(fromContent);
 }
 
 

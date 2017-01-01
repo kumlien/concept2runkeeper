@@ -6,9 +6,12 @@ import com.vaadin.data.validator.EmailValidator;
 import com.vaadin.data.validator.StringLengthValidator;
 import com.vaadin.event.FieldEvents;
 import com.vaadin.event.FieldEvents.BlurEvent;
+import com.vaadin.event.ShortcutAction;
 import com.vaadin.server.FontAwesome;
 import com.vaadin.ui.Component;
+import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.themes.ValoTheme;
+import javafx.scene.input.KeyCode;
 import org.vaadin.viritin.MBeanFieldGroup;
 import org.vaadin.viritin.fields.EmailField;
 import org.vaadin.viritin.fields.MPasswordField;
@@ -22,6 +25,7 @@ import se.kumliens.concept2runkeeper.domain.User;
 
 import java.util.function.Consumer;
 
+import static com.vaadin.event.ShortcutAction.KeyCode.*;
 import static com.vaadin.server.FontAwesome.*;
 import static com.vaadin.ui.themes.ValoTheme.BUTTON_HUGE;
 import static se.kumliens.concept2runkeeper.vaadin.views.login.LoginView.DEFAULT_FORM_FIELD_WIDTH;
@@ -42,13 +46,13 @@ public class RegistrationForm extends AbstractForm<User> {
     private FieldEvents.BlurListener pwdChecker = blurEvent -> {
         String pwd1 = password.getValue();
         String pwd2 = password2.getValue();
-        if(!getFieldGroup().isValid()) {
+        if (!getFieldGroup().isValid()) {
             return;
         }
         getSaveButton().setEnabled(pwd1.equals(pwd2));
     };
 
-    public RegistrationForm() {
+    public RegistrationForm(TabSheet tabSheet) {
         setEntity(new User()).hideInitialEmpyFieldValidationErrors();
         email.setIcon(ENVELOPE);
         email.setRequired(true);
@@ -67,6 +71,14 @@ public class RegistrationForm extends AbstractForm<User> {
         getSaveButton().addStyleName(BUTTON_HUGE);
         getResetButton().addStyleName(BUTTON_HUGE);
         email.focus();
+
+        tabSheet.addSelectedTabChangeListener(evt -> {
+            if (evt.getComponent().equals(this)) {
+                getSaveButton().setClickShortcut(ENTER);
+            } else {
+                getSaveButton().removeClickShortcut();
+            }
+        });
     }
 
 
@@ -77,7 +89,7 @@ public class RegistrationForm extends AbstractForm<User> {
         getSaveButton().setIcon(FontAwesome.CHECK_CIRCLE);
         getResetButton().setIcon(FontAwesome.CLOSE);
         return new MVerticalLayout(
-                new MFormLayout(email,firstName, lastName, password, password2),
+                new MFormLayout(email, firstName, lastName, password, password2),
                 getToolbar()
         );
 

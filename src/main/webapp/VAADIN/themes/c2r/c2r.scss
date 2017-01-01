@@ -1,14 +1,34 @@
+@import "../valo/valo";
+
+// Optimize the CSS output
+$v-included-components: remove($v-included-components, accordion);
+$v-included-components: remove($v-included-components, colorpicker);
+$v-included-components: remove($v-included-components, popupview);
+$v-included-components: remove($v-included-components, slider);
+$v-included-components: remove($v-included-components, tree);
+$v-included-components: remove($v-included-components, treetable);
+$v-included-components: remove($v-included-components, twincolselect);
 
 //$v-font-size: 20px;
 $v-app-loading-text: "Loading concept2runkeeper for you...";
 $v-unit-size: 30px; //Default is 37px
-//$v-background-color: hsl(210deg, 0%, 50%);
 //$v-gradient: v-linear 10%;
 
 
+// Main layout padding
+$view-padding: round($v-unit-size / 1.5) !default;
 
-@import "../valo/valo";
+// The menu background-color
+$valo-menu-background-color: #ead888;
+$v-app-background-color: #fffcf2;
+$v-background-color: #fffcf2;
 
+
+@include keyframes(animate-in-scale-up) {
+  0% {
+    @include transform(scale(0));
+  }
+}
 
 @mixin c2r {
     @include valo;
@@ -16,4 +36,220 @@ $v-unit-size: 30px; //Default is 37px
     .v-button-loginButton {
       @include valo-button-style($background-color: #555);
     }
+
+    .valo-menu {
+        border-right: none;
+
+        .v-ddwrapper {
+          display: block;
+        }
+      }
+
+    .valo-menu-item {
+        overflow: hidden;
+      }
+
+      .v-ui[width-range~="0-800px"] {
+        .valo-menu-title {
+          @include valo-gradient($color: $valo-menu-background-color);
+          border-bottom-color: first-color(valo-border($color: $valo-menu-background-color));
+        }
+        .valo-menu .v-menubar-user-menu {
+          color: inherit;
+        }
+      }
+
+      .v-ui[width-range~="801px-"] {
+        .valo-menu {
+          @include animation(valo-animate-in-slide-right 700ms 700ms backwards);
+        }
+
+        .valo-menu-title {
+          background: transparent;
+          @include box-shadow(none);
+          border-bottom: none;
+        }
+      }
+
+      .valo-menu-title {
+        line-height: 1.2;
+      }
+
+      .v-menubar-user-menu:after {
+        display: none;
+      }
+
+      .v-menubar-user-menu > .v-menubar-menuitem {
+        display: block;
+        padding: 0;
+        max-width: 90%;
+        margin: 0 auto;
+
+        .v-menubar-menuitem-caption:after {
+          margin-right: -1em;
+        }
+
+        img.v-icon {
+          @if is-dark-color($valo-menu-background-color) {
+            border: none;
+          }
+        }
+      }
+
+      .v-ui[width-range~="0-800px"] {
+        .v-menubar-user-menu > .v-menubar-menuitem {
+          max-width: none;
+          margin-right: .5em;
+
+          .v-menubar-menuitem-caption:after {
+            margin-right: 0;
+          }
+        }
+      }
+
+      .valo-menu .v-button-caption {
+          position: absolute;
+          right: round($v-unit-size/3);
+          font-size: round($v-font-size * 0.9);
+          pointer-events: none;
+        }
+
+      .v-button-captionXXX {
+          display: block;
+          top: round($v-unit-size / -5);
+          right: round($v-unit-size / -5);
+          display: block;
+          z-index: 1;
+        }
+
+      @include width-range($max: 600px) {
+        .v-tabsheet-content > div > .v-scrollable > .v-layout {
+        padding-left: round($v-layout-margin-left / 2);
+        padding-right: round($v-layout-margin-left / 2);
+              }
+              .v-formlayout > table,
+              .v-formlayout > table > tbody,
+              .v-formlayout-row {
+                display: block;
+              }
+              .v-formlayout > table > tbody {
+                .v-formlayout-captioncell,
+                .v-formlayout-errorcell,
+                .v-formlayout-contentcell {
+                  display: inline-block;
+                  height: auto;
+                }
+                .v-formlayout-captioncell,
+                .v-formlayout-errorcell {
+                  border-bottom: none;
+                  line-height: 1;
+                  padding-left: 0;
+                  padding-top: $v-layout-spacing-vertical;
+                  text-align: left;
+                }
+                .v-caption-h4 {
+                  height: 0;
+                }
+                .v-label-h4 {
+                  position: static;
+                }
+                .v-horizontallayout {
+                  height: auto !important;
+                }
+              }
+            }
+
+     .viewheader {
+         padding-bottom: $view-padding;
+         width: 100%;
+         text-align: right;
+         white-space: normal;
+
+         .v-slot-h1 {
+           float: left;
+         }
+
+         .h1 {
+           white-space: normal;
+         }
+
+         @include width-range($max: 700px) {
+           padding-bottom: round($v-unit-size / 2);
+           text-align: left;
+
+           .v-slot-h1 {
+             float: none;
+           }
+
+           .h1 {
+             font-size: round($v-font-size--h1 * 0.8);
+           }
+
+           > .v-slot {
+             display: block;
+           }
+
+           .toolbar {
+             white-space: normal;
+
+             > .v-spacing {
+               height: round($v-unit-size / 4);
+             }
+           }
+         }
+       }
+
+     .v-caption.v-caption-caption-on-left {
+         display: inline-block;
+         vertical-align: middle;
+         line-height: 37px;
+         margin-right: $v-layout-spacing-horizontal;
+       }
+
+    // iOS7 & iOS8 status bar needs more space
+      .v-ios7,
+      .v-ios8 {
+        .v-ui {
+          @include box-sizing(border-box);
+          padding-top: 20px;
+          background-color: $valo-menu-background-color;
+
+          > .v-widget {
+            position: relative !important;
+          }
+        }
+        .valo-menu-title {
+          padding-top: 10px;
+        }
+        .view-content {
+          border-top-left-radius: $v-border-radius;
+          background-color: $v-app-background-color;
+        }
+      }
+
+      .v-ios7 & .v-ui[width-range~="0-800px"],
+      .v-ios8 & .v-ui[width-range~="0-800px"] {
+        padding-top: 20px + $v-unit-size;
+
+        .v-loading-indicator {
+          top: 20px + $v-unit-size - 3px;
+          height: 3px;
+        }
+
+        .valo-menu-title {
+          height: 20px + $v-unit-size !important;
+          padding-top: 20px;
+        }
+        .valo-menu-toggle,
+        .user-menu {
+          margin-top: 20px;
+        }
+        .valo-menuitems {
+          top: 20px + $v-unit-size;
+        }
+        .view-content {
+          border-radius: 0;
+        }
+      }
+
 }

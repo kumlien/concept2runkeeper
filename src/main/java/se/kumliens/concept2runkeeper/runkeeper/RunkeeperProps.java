@@ -2,6 +2,7 @@ package se.kumliens.concept2runkeeper.runkeeper;
 
 import lombok.Data;
 import lombok.ToString;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
@@ -17,10 +18,15 @@ import java.net.URL;
 @ToString
 public class RunkeeperProps {
 
+    @Value("${runkeeper.oauth2-client-id}")
     private String oauth2ClientId;
+
+    @Value("${runkeeper.oauth2-client-secret}")
     private String oauth2ClientSecret;
     private URI userResource;
     private URI profileResource;
     private URI fitnessActivityResource;
     private URI baseUrl;
+
+
 }

@@ -44,7 +44,7 @@ import static se.kumliens.concept2runkeeper.vaadin.MainUI.link;
  */
 @UIScope
 @SpringView
-public class IndexView extends MVerticalLayout implements View {
+public class HomeView extends MVerticalLayout implements View {
 
     private static URL C2_URL;
     private static URL RK_URL;
@@ -74,8 +74,8 @@ public class IndexView extends MVerticalLayout implements View {
 
         MHorizontalLayout body = new MHorizontalLayout();
 
-        MLabel left = new MLabel("This is a tool where you can synchronize your activities from your " + link("Concept2 logbook", "http://log.concept2.com/log") +
-                " to you " + link("RunKeeper account", "https://runkeeper.com/home") + ". Start by " +link("register", "#!login") +
+        MLabel left = new MLabel("This is a tool where you can synchronize your " + link("Concept2 logbook", "http://log.concept2.com/log") + " activities" +
+                " with your " + link("RunKeeper account", "https://runkeeper.com/home") + ". Start by " +link("register", "#!login") +
                 " yourself as a user. Then you can give us authorization to read activities from Concept2 and add them as new activites at RunKeeper.").withStyleName(TEXTFIELD_HUGE).withContentMode(HTML);
 
         MLabel right = new MLabel("This service is still at a very early stage! We currently do not have the possibility to fetch activities" +
@@ -92,7 +92,7 @@ public class IndexView extends MVerticalLayout implements View {
                 new MVerticalLayout(right,rkLink).withAlign(rkLink, BOTTOM_CENTER).withHeight("100%"));
         body.withWidth("100%").withHeight("100%");
         MPanel panel = new MPanel(body);
-        panel.setWidth("90%");
+        panel.setWidth("100%");
 
         add(top);
         expand(panel);

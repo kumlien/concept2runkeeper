@@ -7,6 +7,8 @@ import com.vaadin.ui.*;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.mail.MailSender;
+import org.springframework.mail.SimpleMailMessage;
 import org.vaadin.spring.events.EventBus;
 import org.vaadin.viritin.layouts.MPanel;
 import org.vaadin.viritin.layouts.MVerticalLayout;
@@ -50,6 +52,8 @@ public class LoginView extends VerticalLayout implements View {
 
     private final EventBus.UIEventBus eventBus;
 
+    private final MailSender mailSender;
+
 
     @Override
     public void enter(ViewChangeListener.ViewChangeEvent event) {
@@ -58,22 +62,22 @@ public class LoginView extends VerticalLayout implements View {
 
     @PostConstruct
     public void setup() {
-        LoginForm loginForm = new LoginForm();
+        TabSheet tabSheet = new TabSheet();
+
+        LoginForm loginForm = new LoginForm(tabSheet);
         loginForm.setSavedHandler(this::onLogin);
 
-        RegistrationForm registerForm = new RegistrationForm();
+        RegistrationForm registerForm = new RegistrationForm(tabSheet);
         registerForm.setSavedHandler(this::onRegister);
         registerForm.setWidth("100%");
 
-        TabSheet tabSheet = new TabSheet();
         tabSheet.addStyleName(TABSHEET_FRAMED);
         tabSheet.addStyleName(TABSHEET_PADDED_TABBAR);
         tabSheet.addTab(registerForm, "Sign up").setIcon(USER_PLUS);
         tabSheet.addTab(loginForm, "Login").setIcon(USER);
         tabSheet.setWidth("100%");
 
-
-        MPanel panel = new MPanel("Login here or sign up if you are new to our service").withWidth("80%").withHeight("80%");
+        MPanel panel = new MPanel("Login here or sign up if you are new").withWidth("80%").withHeight("80%");
         panel.setContent(new MVerticalLayout(tabSheet));
 
         addComponent(panel);
@@ -103,6 +107,12 @@ public class LoginView extends VerticalLayout implements View {
             final User userDetails = (User) userDetailsService.loadUserByUsername(credentials.getUsername());
             eventBus.publish(SESSION, this, new UserLoggedInEvent(userDetails));
             new MNotification("Welcome " + userDetails.getFirstName(), TRAY_NOTIFICATION ).withDelayMsec(2500);
+            SimpleMailMessage msg = new SimpleMailMessage();
+            msg.setTo(userDetails.getEmail());
+            msg.setFrom("info@concept2runkeeper.com");
+            msg.setText("Nice login " + userDetails.getFirstName() + "!");
+            msg.setSubject("Login");
+            mailSender.send(msg);
         } catch (AuthenticationException ae) {
             log.debug("Authentication failed...");
             Notification.show("Sorry, no such username/password combo found", WARNING_MESSAGE);

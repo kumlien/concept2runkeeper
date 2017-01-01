@@ -4,7 +4,7 @@ import com.vaadin.spring.access.ViewAccessControl;
 import com.vaadin.spring.annotation.SpringComponent;
 import com.vaadin.ui.UI;
 import org.vaadin.addon.oauthpopup.OAuthPopupUI;
-import se.kumliens.concept2runkeeper.vaadin.views.IndexView;
+import se.kumliens.concept2runkeeper.vaadin.views.HomeView;
 import se.kumliens.concept2runkeeper.vaadin.views.login.LoginView;
 
 /**
@@ -23,7 +23,7 @@ public class UserLoggedInAccessController implements ViewAccessControl {
             return true;
         }
 
-        if(IndexView.class.getSimpleName().toLowerCase().equals(beanName.toLowerCase())) {
+        if(HomeView.class.getSimpleName().toLowerCase().equals(beanName.toLowerCase())) {
             return true;
         }
 

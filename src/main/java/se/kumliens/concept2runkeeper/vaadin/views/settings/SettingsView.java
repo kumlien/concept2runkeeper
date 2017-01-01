@@ -10,7 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.vaadin.viritin.label.Header;
 import org.vaadin.viritin.layouts.MVerticalLayout;
 import se.kumliens.concept2runkeeper.vaadin.MainUI;
-import se.kumliens.concept2runkeeper.vaadin.views.IndexView;
+import se.kumliens.concept2runkeeper.vaadin.views.HomeView;
 
 import javax.annotation.PostConstruct;
 
@@ -37,17 +37,17 @@ public class SettingsView extends MVerticalLayout implements View {
 
     @Override
     public void enter(ViewChangeListener.ViewChangeEvent event) {
-        log.info("Entering settings view...");
+
     }
 
     @PostConstruct
     public void setUp() {
         if (ui.getUser() == null) {
-            UI.getCurrent().getNavigator().navigateTo(MainUI.getNavigatorViewNameBasedOnView(IndexView.class));
+            UI.getCurrent().getNavigator().navigateTo(MainUI.getNavigatorViewNameBasedOnView(HomeView.class));
             return;
         }
 
-        Header header = new Header("Manage your concept2runkeeper settings");
+        Header header = new Header("Preferences").withStyleName("viewheader");
         header.setHeaderLevel(2);
         add(header).withAlign(header, TOP_CENTER);
 

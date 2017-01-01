@@ -24,7 +24,7 @@ public class ErrorView extends VerticalLayout implements View {
     @Override
     public void enter(ViewChangeListener.ViewChangeEvent event) {
         if(!StringUtils.hasText(event.getViewName())) {
-            UI.getCurrent().getNavigator().navigateTo("index");
+            UI.getCurrent().getNavigator().navigateTo(C2RViewType.HOME.getViewName());
         } else {
             message.setValue("Sorry, no view matching viewname '" + event.getViewName() + "'");
         }

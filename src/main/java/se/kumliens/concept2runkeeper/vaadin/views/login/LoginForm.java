@@ -3,6 +3,7 @@ package se.kumliens.concept2runkeeper.vaadin.views.login;
 import com.vaadin.data.validator.EmailValidator;
 import com.vaadin.server.FontAwesome;
 import com.vaadin.ui.Component;
+import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.themes.ValoTheme;
 import org.vaadin.viritin.fields.EmailField;
 import org.vaadin.viritin.fields.MPasswordField;
@@ -11,6 +12,7 @@ import org.vaadin.viritin.form.AbstractForm;
 import org.vaadin.viritin.layouts.MFormLayout;
 import org.vaadin.viritin.layouts.MVerticalLayout;
 
+import static com.vaadin.event.ShortcutAction.KeyCode.ENTER;
 import static com.vaadin.server.FontAwesome.*;
 import static se.kumliens.concept2runkeeper.vaadin.views.login.LoginView.DEFAULT_FORM_FIELD_WIDTH;
 
@@ -22,12 +24,21 @@ public class LoginForm extends AbstractForm<LoginCredentials> {
     private EmailField username = (EmailField) new EmailField("Email").withWidth(DEFAULT_FORM_FIELD_WIDTH);
     private MPasswordField password = new MPasswordField("Password").withWidth(DEFAULT_FORM_FIELD_WIDTH);
 
-    public LoginForm() {
+    public LoginForm(TabSheet tabSheet) {
         setEntity(new LoginCredentials()).hideInitialEmpyFieldValidationErrors();
         username.setIcon(USER);
         password.setIcon(LOCK);
         getSaveButton().addStyleName(ValoTheme.BUTTON_HUGE);
         getResetButton().addStyleName(ValoTheme.BUTTON_HUGE);
+        getSaveButton().addStyleName(ValoTheme.BUTTON_PRIMARY);
+
+        tabSheet.addSelectedTabChangeListener(evt -> {
+            if (evt.getComponent().equals(this)) {
+                getSaveButton().setClickShortcut(ENTER);
+            } else {
+                getSaveButton().removeClickShortcut();
+            }
+        });
     }
 
     @Override

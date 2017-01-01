@@ -23,6 +23,7 @@ import static com.vaadin.ui.themes.ValoTheme.LAYOUT_WELL;
 public class MainViewDisplay extends MHorizontalLayout implements ViewDisplay {
 
     public MainViewDisplay() {
+        addStyleName("mainview");
         setHeight(100, Unit.PERCENTAGE);
     }
 

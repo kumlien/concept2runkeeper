@@ -1,17 +1,17 @@
 package se.kumliens.concept2runkeeper.vaadin;
 
-import com.github.wolfie.history.HistoryExtension;
 import com.vaadin.annotations.*;
-import com.vaadin.navigator.NavigationStateManager;
 import com.vaadin.navigator.View;
+import com.vaadin.navigator.ViewChangeListener;
 import com.vaadin.server.ExternalResource;
+import com.vaadin.server.Responsive;
 import com.vaadin.server.VaadinRequest;
-import com.vaadin.shared.Position;
 import com.vaadin.shared.communication.PushMode;
 import com.vaadin.spring.annotation.SpringUI;
 import com.vaadin.spring.navigator.SpringNavigator;
 import com.vaadin.spring.navigator.SpringViewProvider;
 import com.vaadin.ui.*;
+import com.vaadin.ui.themes.ValoTheme;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.context.ApplicationContext;
@@ -19,17 +19,15 @@ import org.vaadin.dialogs.ConfirmDialog;
 import org.vaadin.spring.events.EventBus;
 import org.vaadin.spring.events.annotation.EventBusListenerMethod;
 import org.vaadin.viritin.button.MButton;
-import org.vaadin.viritin.label.Header;
 import org.vaadin.viritin.layouts.MHorizontalLayout;
 import org.vaadin.viritin.layouts.MVerticalLayout;
-import org.vaadin.viritin.ui.MNotification;
 import se.kumliens.concept2runkeeper.domain.User;
 import se.kumliens.concept2runkeeper.services.EventService;
 import se.kumliens.concept2runkeeper.vaadin.events.*;
 import se.kumliens.concept2runkeeper.vaadin.views.*;
 import se.kumliens.concept2runkeeper.vaadin.views.settings.SettingsView;
 import se.kumliens.concept2runkeeper.vaadin.views.login.LoginView;
-import se.kumliens.concept2runkeeper.vaadin.views.sync.SyncView;
+import se.kumliens.concept2runkeeper.vaadin.views.sync.SynchronizeView;
 
 import javax.annotation.PreDestroy;
 
@@ -37,7 +35,6 @@ import java.net.URL;
 
 import static com.vaadin.server.Sizeable.Unit.PIXELS;
 import static com.vaadin.shared.ui.ui.Transport.WEBSOCKET_XHR;
-import static com.vaadin.ui.Alignment.TOP_CENTER;
 import static com.vaadin.ui.Notification.Type.WARNING_MESSAGE;
 import static com.vaadin.ui.themes.ValoTheme.*;
 import static se.kumliens.concept2runkeeper.vaadin.C2RThemeResources.RUNKEEPER_DEFAULT_PROFILE_ICON;
@@ -53,6 +50,8 @@ import static se.kumliens.concept2runkeeper.vaadin.C2RThemeResources.RUNKEEPER_D
 @Slf4j
 public class MainUI extends UI {
 
+    private static final boolean NEW_MENU = true;
+
     private static final String SESSION_ATTR_USER = "theUserObject";
 
     private final MainViewDisplay mainViewDisplay;
@@ -61,9 +60,7 @@ public class MainUI extends UI {
 
     private final EventService eventService;
 
-    private final SpringViewProvider springViewProvider;
-
-    private final ApplicationContext applicationContext;
+    private final C2RMenu menu;
 
     private Image avatar = new Image(null, RUNKEEPER_DEFAULT_PROFILE_ICON);
 
@@ -77,14 +74,24 @@ public class MainUI extends UI {
 
     private Button historyLink; //displayed for logged in users
 
-    public MainUI(MainViewDisplay mainContent, SpringNavigator navigator, EventBus.UIEventBus eventBus, SpringViewProvider springViewProvider, EventService eventService, ApplicationContext applicationContext) {
+    public MainUI(MainViewDisplay mainContent, SpringNavigator navigator, EventBus.UIEventBus eventBus, SpringViewProvider springViewProvider, EventService eventService, ApplicationContext applicationContext, C2RMenu menu) {
         this.mainViewDisplay = mainContent;
         this.eventBus = eventBus;
         this.eventService = eventService;
+        this.menu = menu;
         navigator.setErrorView(ErrorView.class);
-        this.springViewProvider = springViewProvider;
-        springViewProvider.setAccessDeniedViewClass(IndexView.class);
-        this.applicationContext = applicationContext;
+        springViewProvider.setAccessDeniedViewClass(HomeView.class);
+        navigator.addViewChangeListener(new ViewChangeListener() {
+            @Override
+            public boolean beforeViewChange(ViewChangeEvent event) {
+                return true;
+            }
+
+            @Override
+            public void afterViewChange(ViewChangeEvent event) {
+                eventBus.publish(this, new ViewChangedEvent(C2RViewType.getByViewName(event.getViewName())));
+            }
+        });
     }
 
     @PreDestroy
@@ -94,20 +101,19 @@ public class MainUI extends UI {
 
     @Override
     protected void init(VaadinRequest vaadinRequest) {
-
-        final Header header = new Header("Keeping your workouts in sync");
-        header.setSizeUndefined();
+        Responsive.makeResponsive(this);
+        addStyleName(ValoTheme.UI_WITH_MENU);
         eventBus.subscribe(this);
+
         MHorizontalLayout center = new MHorizontalLayout()
-                .add(createNavigationBar())
+                .add(menu.setup(this))
                 .expand(mainViewDisplay)
                 .withStyleName(LAYOUT_WELL);
         center.setSizeFull();
 
         setContent(
-                new MVerticalLayout(header)
+                new MVerticalLayout()
                         .expand(center)
-                        .withAlign(header, TOP_CENTER)
                         .withStyleName(LAYOUT_WELL)
                         .withMargin(true)
                         .withSpacing(true)
@@ -123,13 +129,13 @@ public class MainUI extends UI {
         avatar.setWidth(70, PIXELS);
         links.add(avatar, Alignment.TOP_CENTER);
 
-        Button welcomeLink = createNavButton("Welcome", IndexView.class);
+        Button welcomeLink = createNavButton("Welcome", HomeView.class);
         links.addComponent(welcomeLink);
 
         loginLink = createNavButton("Login", LoginView.class);
         links.addComponent(loginLink);
 
-        syncLink = createNavButton("Synchronzie", SyncView.class);
+        syncLink = createNavButton("Synchronzie", SynchronizeView.class);
         syncLink.setVisible(false);
         links.addComponent(syncLink);
 
@@ -176,7 +182,7 @@ public class MainUI extends UI {
         if (userLoggedInEvent.user.lacksPermissions()) {
             getNavigator().navigateTo(getNavigatorViewNameBasedOnView(SettingsView.class));
         } else {
-            getNavigator().navigateTo(getNavigatorViewNameBasedOnView(SyncView.class));
+            getNavigator().navigateTo(getNavigatorViewNameBasedOnView(SynchronizeView.class));
         }
     }
 
@@ -192,11 +198,12 @@ public class MainUI extends UI {
 
     @EventBusListenerMethod
     private void onLoggedOutEvent(org.vaadin.spring.events.Event<UserLoggedOutEvent> event) {
+        setUserInSession(null);
         UserLoggedOutEvent userLoggedOutEvent = event.getPayload();
         log.info("User {} logged out", userLoggedOutEvent.user);
         eventService.onUserLogOut(userLoggedOutEvent.user);
         adjustLinks(false);
-        getNavigator().navigateTo(getNavigatorViewNameBasedOnView(IndexView.class));
+        getNavigator().navigateTo(getNavigatorViewNameBasedOnView(HomeView.class));
     }
 
     @EventBusListenerMethod
@@ -206,7 +213,7 @@ public class MainUI extends UI {
         eventService.onUserAccountDeleted(userAccountDeletedEvent.user);
         getSession().setAttribute(SESSION_ATTR_USER, null);
         adjustLinks(false);
-        getNavigator().navigateTo(getNavigatorViewNameBasedOnView(IndexView.class));
+        getNavigator().navigateTo(getNavigatorViewNameBasedOnView(HomeView.class));
     }
 
     @EventBusListenerMethod
@@ -227,6 +234,7 @@ public class MainUI extends UI {
 
 
     private void adjustLinks(boolean loggedIn) {
+        if(NEW_MENU) return;
         loginLink.setVisible(!loggedIn);
         syncLink.setVisible(loggedIn);
         logoutLink.setVisible(loggedIn);

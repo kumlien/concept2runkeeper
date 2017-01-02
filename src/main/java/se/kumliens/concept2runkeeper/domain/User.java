@@ -38,6 +38,8 @@ public class User implements UserDetails {
     @Email
     private String email;
 
+    private boolean emailConfirmed = false;
+
     @NotNull
     @Size(min = 6, max = 128, message = "Your password must contain between 6 and 128 characters")
     private String password;
@@ -61,7 +63,7 @@ public class User implements UserDetails {
     private Collection<GrantedAuthority> authorities = new HashSet<>();
 
     @PersistenceConstructor
-    public User(String email, String firstName, String lastName, String password, String id, Collection<GrantedAuthority> authorities, InternalRunKeeperData internalRunKeeperData, ExternalRunkeeperData externalRunkeeperData, String concept2AccessToken, String concept2ConnectDate) {
+    public User(String email, String firstName, String lastName, String password, String id, boolean emailConfirmed, Collection<GrantedAuthority> authorities, InternalRunKeeperData internalRunKeeperData, ExternalRunkeeperData externalRunkeeperData, String concept2AccessToken, String concept2ConnectDate) {
         this.email = email;
         this.firstName = firstName;
         this.lastName = lastName;
@@ -72,6 +74,7 @@ public class User implements UserDetails {
         this.concept2ConnectDate = concept2ConnectDate;
         this.id = id;
         this.authorities = authorities;
+        this.emailConfirmed = emailConfirmed;
     }
 
     public User() {

@@ -5,6 +5,7 @@ import com.vaadin.navigator.ViewChangeListener;
 import com.vaadin.spring.annotation.SpringView;
 import com.vaadin.ui.*;
 
+import com.vaadin.ui.themes.ValoTheme;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.mail.MailSender;
@@ -73,11 +74,11 @@ public class LoginView extends VerticalLayout implements View {
 
         tabSheet.addStyleName(TABSHEET_FRAMED);
         tabSheet.addStyleName(TABSHEET_PADDED_TABBAR);
-        tabSheet.addTab(registerForm, "Sign up").setIcon(USER_PLUS);
         tabSheet.addTab(loginForm, "Login").setIcon(USER);
+        tabSheet.addTab(registerForm, "Sign up").setIcon(USER_PLUS);
         tabSheet.setWidth("100%");
 
-        MPanel panel = new MPanel("Login here or sign up if you are new").withWidth("80%").withHeight("80%");
+        MPanel panel = new MPanel("Login here or sign up!").withWidth("80%").withHeight("80%");
         panel.setContent(new MVerticalLayout(tabSheet));
 
         addComponent(panel);
@@ -93,7 +94,7 @@ public class LoginView extends VerticalLayout implements View {
         try {
             user.addAuthority(new SimpleGrantedAuthority(Authorities.USER.role));
             userDetailsService.createUser(user);
-            new MNotification("Welcome to concept2runkeeper!<br>Now it's time to configure your connections to RunKeeper and Concept2.").withHtmlContentAllowed(true).withStyleName(NOTIFICATION_SUCCESS).withDelayMsec(2500).display();
+            new MNotification("Welcome to concept2runkeeper" + user.getFirstName() + "!").withHtmlContentAllowed(true).withStyleName(NOTIFICATION_SUCCESS).withDelayMsec(2500).display();
             eventBus.publish(SESSION, this, new UserRegisteredEvent(user));
         } catch (Exception e) {
             log.warn("Exception...", e);
@@ -106,13 +107,13 @@ public class LoginView extends VerticalLayout implements View {
             authenticationProvider.authenticate(new UsernamePasswordAuthenticationToken(credentials.getUsername(), credentials.getPassword()));
             final User userDetails = (User) userDetailsService.loadUserByUsername(credentials.getUsername());
             eventBus.publish(SESSION, this, new UserLoggedInEvent(userDetails));
-            new MNotification("Welcome " + userDetails.getFirstName(), TRAY_NOTIFICATION ).withDelayMsec(2500);
-            SimpleMailMessage msg = new SimpleMailMessage();
-            msg.setTo(userDetails.getEmail());
-            msg.setFrom("info@concept2runkeeper.com");
-            msg.setText("Nice login " + userDetails.getFirstName() + "!");
-            msg.setSubject("Login");
-            mailSender.send(msg);
+            new MNotification("Welcome " + userDetails.getFirstName(), TRAY_NOTIFICATION ).withStyleName(NOTIFICATION_SUCCESS).withDelayMsec(2500).display();
+//            SimpleMailMessage msg = new SimpleMailMessage();
+//            msg.setTo(userDetails.getEmail());
+//            msg.setFrom("info@concept2runkeeper.com");
+//            msg.setText("Nice login " + userDetails.getFirstName() + "!");
+//            msg.setSubject("Login");
+//            mailSender.send(msg);
         } catch (AuthenticationException ae) {
             log.debug("Authentication failed...");
             Notification.show("Sorry, no such username/password combo found", WARNING_MESSAGE);

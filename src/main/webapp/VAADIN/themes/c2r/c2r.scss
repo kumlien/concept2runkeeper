@@ -85,6 +85,14 @@ $v-background-color: #fffcf2;
         max-width: 90%;
         margin: 0 auto;
 
+        gridmenu {
+            white-space: nowrap;
+            float: left;
+            color: red;
+        }
+
+
+
         .v-menubar-menuitem-caption:after {
           margin-right: -1em;
         }

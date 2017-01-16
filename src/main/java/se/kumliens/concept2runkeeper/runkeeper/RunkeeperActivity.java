@@ -1,18 +1,15 @@
 package se.kumliens.concept2runkeeper.runkeeper;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 import se.kumliens.concept2runkeeper.domain.ExternalActivity;
 
 import java.net.URI;
+import java.util.List;
 
 /**
  * Created by svante2 on 2016-12-17.
  */
-@RequiredArgsConstructor
 @Getter
 @ToString
 @EqualsAndHashCode(of = {"uri"})
@@ -32,6 +29,10 @@ public class RunkeeperActivity implements ExternalActivity {
     public static final String DISTANCE = "distance";
 
     public static final String DURATION = "duration";
+
+    public static final String HEART_RATE = "heartRate";
+
+    public static final String DISTANCES = "distances";
 
     @JsonProperty("uri")
     private String uri;
@@ -53,4 +54,10 @@ public class RunkeeperActivity implements ExternalActivity {
 
     @JsonProperty("duration")
     private String duration;
+
+    @JsonProperty("heartRate")
+    private List<RunKeeperHeartRate> heartRates;
+
+    @JsonProperty("distance")
+    private List<RunKeeperDistance> distances;
 }

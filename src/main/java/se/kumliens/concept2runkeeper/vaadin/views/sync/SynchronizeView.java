@@ -3,24 +3,28 @@ package se.kumliens.concept2runkeeper.vaadin.views.sync;
 import com.google.common.base.MoreObjects;
 import com.vaadin.data.Item;
 import com.vaadin.data.util.BeanItemContainer;
+import com.vaadin.data.util.GeneratedPropertyContainer;
+import com.vaadin.data.util.PropertyValueGenerator;
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener;
 import com.vaadin.server.FontAwesome;
+import com.vaadin.server.FontIcon;
+import com.vaadin.server.Resource;
 import com.vaadin.spring.annotation.SpringView;
 import com.vaadin.ui.*;
-import com.vaadin.ui.Component;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Panel;
+import com.vaadin.ui.renderers.ClickableRenderer;
+import com.vaadin.ui.renderers.ImageRenderer;
 import com.vaadin.ui.themes.ValoTheme;
-import javafx.scene.layout.Pane;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
+import org.vaadin.grid.cellrenderers.view.SparklineRenderer;
 import org.vaadin.spring.events.EventBus;
 import org.vaadin.viritin.button.MButton;
 import org.vaadin.viritin.fields.MCheckBox;
 import org.vaadin.viritin.grid.MGrid;
-import org.vaadin.viritin.label.Header;
 import org.vaadin.viritin.label.MLabel;
 import org.vaadin.viritin.layouts.MHorizontalLayout;
 import org.vaadin.viritin.layouts.MPanel;
@@ -38,7 +42,9 @@ import se.kumliens.concept2runkeeper.vaadin.events.ActivitySyncEvent;
 
 import javax.annotation.PostConstruct;
 
-import java.awt.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.net.URI;
 import java.text.ParseException;
 import java.time.Instant;
@@ -50,13 +56,13 @@ import static com.google.common.base.MoreObjects.firstNonNull;
 import static com.vaadin.server.FontAwesome.*;
 import static com.vaadin.server.Sizeable.Unit.EM;
 import static com.vaadin.shared.ui.label.ContentMode.HTML;
-import static com.vaadin.ui.Alignment.*;
 import static com.vaadin.ui.Grid.SelectionMode.MULTI;
 import static com.vaadin.ui.Grid.SelectionMode.SINGLE;
 import static com.vaadin.ui.themes.ValoTheme.*;
 import static java.util.stream.Collectors.joining;
 import static se.kumliens.concept2runkeeper.domain.Provider.CONCEPT2;
 import static se.kumliens.concept2runkeeper.domain.Provider.RUNKEEPER;
+import static se.kumliens.concept2runkeeper.vaadin.C2RThemeResources.HEART_RATE;
 import static se.kumliens.concept2runkeeper.vaadin.MainUI.link;
 
 /**
@@ -122,17 +128,80 @@ public class SynchronizeView extends MVerticalLayout implements View {
 
     //Create the content representing where we synchronize to
     private Panel createToContent() {
-        //Label label = new MLabel("RunKeeper activities (for now we only support synchronizing to <a href=\"http://www.runkeeper.com/\">RunKeeper</a>)").withContentMode(HTML);
         MVerticalLayout layout = new MVerticalLayout().withSpacing(true).withMargin(true);
 
-        MGrid<RunkeeperActivity> grid = new MGrid<>(RunkeeperActivity.class).withFullHeight().withFullWidth();
+        GeneratedPropertyContainer generatedPropertyContainer = new GeneratedPropertyContainer(rkContainer);
+
+        //Add a generated column for the heart rate
+        generatedPropertyContainer.addGeneratedProperty(RunkeeperActivity.HEART_RATE, new PropertyValueGenerator<Number[]>() {
+            @Override
+            public Number[] getValue(Item item, Object itemId, Object propertyId) {
+                return new Number[]{1, 2, 3, 2, 2, 4, 5, 4, 2, 1, 2, 5, 4, 5, 5, 2, 3, 2, 3, 4, 5};
+            }
+
+            @Override
+            public Class<Number[]> getType() {
+                return Number[].class;
+            }
+        });
+
+        //Add a generated column with the button to add stroke data
+        generatedPropertyContainer.addGeneratedProperty("addStrokeData", new PropertyValueGenerator<Resource>() {
+            @Override
+            public Resource getValue(Item item, Object itemId, Object propertyId) {
+                return HEART_RATE;
+            }
+
+            @Override
+            public Class<Resource> getType() {
+                return Resource.class;
+            }
+        });
+
+        Grid grid = new Grid(generatedPropertyContainer);
+        grid.setWidth("100%");
+        grid.setHeight("100%");
         grid.setSelectionMode(SINGLE);
-        grid.setContainerDataSource(rkContainer);
+        grid.setContainerDataSource(generatedPropertyContainer);
         grid.removeAllColumns();
-        grid.addColumn(RunkeeperActivity.START_TIME).setHeaderCaption("Date").setConverter(new RunKeeperDateConverter());
-        grid.addColumn(RunkeeperActivity.DISTANCE).setHeaderCaption("Distance").setConverter(new RunKeeperDistanceConverter());
-        grid.addColumn(RunkeeperActivity.DURATION).setHeaderCaption("Time").setConverter(new RunKeeperDurationConverter());
-        grid.addColumn(RunkeeperActivity.TYPE).setHeaderCaption("(RunKeeper-) Type");
+        grid.addColumn(RunkeeperActivity.START_TIME).setHeaderCaption("Date").setConverter(new RunKeeperDateConverter()).setExpandRatio(1);
+        grid.addColumn(RunkeeperActivity.DISTANCE).setHeaderCaption("Distance").setConverter(new RunKeeperDistanceConverter()).setExpandRatio(1);
+        grid.addColumn(RunkeeperActivity.DURATION).setHeaderCaption("Time").setConverter(new RunKeeperDurationConverter()).setExpandRatio(1);
+        grid.addColumn(RunkeeperActivity.TYPE).setHeaderCaption("(RunKeeper-) Type").setExpandRatio(1);
+        grid.addColumn(RunkeeperActivity.HEART_RATE).setRenderer(new SparklineRenderer()).setExpandRatio(2);
+        grid.addColumn("addStrokeData").setRenderer(new ImageRenderer((ClickableRenderer.RendererClickListener) e -> {
+            RunkeeperActivity rk = (RunkeeperActivity) e.getItemId();
+            Upload upload = new Upload("", (filename, mimetype) -> {
+                File tempFile = null;
+                FileOutputStream fout = null;
+                try {
+                    tempFile = File.createTempFile("temp", ".csv");
+                    fout = new FileOutputStream(tempFile);
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
+                return fout;
+            });
+            upload.addFinishedListener(finishedEvent -> {
+                new MNotification("Upload finished..." + finishedEvent.getLength()).display();
+            });
+
+            MWindow uploadwindow = new MWindow("Add stroke data")
+                    .withContent(
+                            new MPanel("Upload your Concept2 result file with stroke data for this activity",
+                                    new MHorizontalLayout(upload).withMargin(true).withSpacing(true).space()))
+                    .withModal(true);
+            ui.addWindow(uploadwindow);
+        })).setExpandRatio(1);
+
+
+        c2RActivityRepo.findByUserIdAndSource(ui.getUser().getEmail(), CONCEPT2).stream()
+                .peek(o -> System.out.println(o))
+                .map(c2rActivity -> c2rActivity.getSynchronizations().stream().filter(synchronization -> synchronization.getTarget() == RUNKEEPER).findFirst())
+                .filter(Optional::isPresent)
+                .map(optional -> optional.get())
+                .map(synchronization -> synchronization.getTargetActivity())
+                .forEach(rkContainer::addItem);
 
         layout.expand(grid);
         return new MPanel("Your RunKeeper activities goes here").withContent(layout);
@@ -145,8 +214,7 @@ public class SynchronizeView extends MVerticalLayout implements View {
 
         MVerticalLayout fromContent = new MVerticalLayout();
         MHorizontalLayout topLayout = new MHorizontalLayout(label).withSpacing(true);
-        //topLayout.withAlign(header, MIDDLE_LEFT);
-        //fromContent.add(topLayout);
+        ;
 
         //Create the tab sheet
         TabSheet concept2TabSheet = new TabSheet();
@@ -168,16 +236,16 @@ public class SynchronizeView extends MVerticalLayout implements View {
         MButton howToBtn = new MButton().withStyleName(BUTTON_BORDERLESS).withIcon(QUESTION_CIRCLE);
         howToBtn.addClickListener(evt ->
                 new MNotification(
-                "Here you can sync your Concept2 activities using the file export functionality from Concept2.<br>" +
-                        "<ol>" +
-                        "<li>Export your activities as a .csv file from the Concept2 <a href=\"http://log.concept2.com/history\">history tab</a></li>" +
-                        "<li>Drop the file on the table below, select some activities and push the button.</li>" +
-                        "<li>Any activities not already synced with RunKeeper will be sent to RunKeeper.</li>" +
-                        "<li>Use the check-box to the right if you want to force sync of already synced activities.</li></ol>")
-                .withDelayMsec(15000).withStyleName(NOTIFICATION_SMALL).withStyleName(NOTIFICATION_CLOSABLE).withHtmlContentAllowed(true).display());
+                        "Here you can sync your Concept2 activities using the file export functionality from Concept2.<br>" +
+                                "<ol>" +
+                                "<li>Export your activities as a .csv file from the Concept2 <a href=\"http://log.concept2.com/history\">history tab</a></li>" +
+                                "<li>Drop the file on the table below, select some activities and push the button.</li>" +
+                                "<li>Any activities not already synced with RunKeeper will be sent to RunKeeper.</li>" +
+                                "<li>Use the check-box to the right if you want to force sync of already synced activities.</li></ol>")
+                        .withDelayMsec(15000).withStyleName(NOTIFICATION_SMALL).withStyleName(NOTIFICATION_CLOSABLE).withHtmlContentAllowed(true).display());
 
         forceSync = new MCheckBox("Force sync of activities already synced").withValueChangeListener(evt -> {
-            if(((CheckBox)evt.getProperty()).getValue()) {
+            if (((CheckBox) evt.getProperty()).getValue()) {
                 new MNotification("We try to make sure a given activity in only synced once.<br>" +
                         "By using 'Force' you bypass this check and every activity will be synced.<br>" +
                         "This might lead to duplicate activities at your RunKeeper account.<br>" +
@@ -210,7 +278,7 @@ public class SynchronizeView extends MVerticalLayout implements View {
         fromContent.expand(concept2TabSheet);
 
         return new MPanel("Your Concept2 activities goes here").withContent(fromContent);
-}
+    }
 
 
     //Handle the actual sync process to RunKeeper
@@ -231,7 +299,7 @@ public class SynchronizeView extends MVerticalLayout implements View {
                     .withModal(true).withCenter().withContent(new MVerticalLayout().expand(progressBar).withWidth("100%")).withClosable(false).withWidth(40, EM).withHeight(4, EM);
             ui.addWindow(progressWindow);
 
-            new Thread(() -> {
+            new Thread(() -> { //new Thread(), really...? or Flowable from the rows. would also allow for nice cancel-button in mid-process
                 InternalRunKeeperData internalRunKeeperData = ui.getUser().getInternalRunKeeperData();
                 ExternalRunkeeperData externalRunkeeperData = ui.getUser().getExternalRunkeeperData();
                 List<String> newLocations = new ArrayList<>();

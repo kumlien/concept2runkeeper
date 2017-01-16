@@ -28,6 +28,7 @@ import java.util.function.Consumer;
 import static com.vaadin.event.ShortcutAction.KeyCode.*;
 import static com.vaadin.server.FontAwesome.*;
 import static com.vaadin.ui.themes.ValoTheme.BUTTON_HUGE;
+import static com.vaadin.ui.themes.ValoTheme.BUTTON_LARGE;
 import static se.kumliens.concept2runkeeper.vaadin.views.login.LoginView.DEFAULT_FORM_FIELD_WIDTH;
 
 /**
@@ -68,8 +69,8 @@ public class RegistrationForm extends AbstractForm<User> {
         password2.setIcon(LOCK);
         password2.addBlurListener(pwdChecker);
 
-        getSaveButton().addStyleName(BUTTON_HUGE);
-        getResetButton().addStyleName(BUTTON_HUGE);
+        getSaveButton().addStyleName(BUTTON_LARGE);
+        getResetButton().addStyleName(BUTTON_LARGE);
         email.focus();
 
         tabSheet.addSelectedTabChangeListener(evt -> {

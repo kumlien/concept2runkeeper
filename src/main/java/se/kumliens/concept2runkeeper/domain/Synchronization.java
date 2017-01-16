@@ -2,6 +2,7 @@ package se.kumliens.concept2runkeeper.domain;
 
 import lombok.Builder;
 import lombok.Getter;
+import lombok.ToString;
 
 import java.time.Instant;
 
@@ -12,6 +13,7 @@ import java.time.Instant;
  */
 @Builder
 @Getter
+@ToString
 public class Synchronization {
 
     private Provider source;

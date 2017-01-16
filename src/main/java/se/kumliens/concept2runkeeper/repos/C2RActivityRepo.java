@@ -2,8 +2,10 @@ package se.kumliens.concept2runkeeper.repos;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
 import se.kumliens.concept2runkeeper.domain.C2RActivity;
+import se.kumliens.concept2runkeeper.domain.Provider;
 import se.kumliens.concept2runkeeper.domain.User;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -14,4 +16,6 @@ public interface C2RActivityRepo extends MongoRepository<C2RActivity, String> {
     C2RActivity findBySourceId(String sourceId);
 
     void deleteByUserId(String email);
+
+    List<C2RActivity> findByUserIdAndSource(String email, Provider source);
 }

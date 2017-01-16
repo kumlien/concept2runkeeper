@@ -115,11 +115,10 @@ public class MainUI extends UI {
                 new MVerticalLayout()
                         .expand(center)
                         .withStyleName(LAYOUT_WELL)
-                        .withMargin(true)
+                        .withMargin(false)
                         .withSpacing(true)
                         .withFullHeight()
                         .withFullWidth()
-                        .withCaption("Content")
         );
     }
 

@@ -13,4 +13,6 @@ public class C2RThemeResources {
     public static final ThemeResource RUNKEEPER_DEFAULT_PROFILE_ICON = new ThemeResource("img/rk-no-profile-pic.jpg");
 
     public static final ThemeResource CONCEPT2_LOGO = new ThemeResource("img/concept2-logo.png");
+
+    public static final ThemeResource HEART_RATE = new ThemeResource("img/heart_rate.png");
 }

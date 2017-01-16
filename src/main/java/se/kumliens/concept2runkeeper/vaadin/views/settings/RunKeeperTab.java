@@ -113,7 +113,7 @@ public class RunKeeperTab extends AbstractSettingsTab {
             postToTwitter.setDescription("This option is disabled since you haven't connected your RunKeeper account to Twitter");
         }
 
-        MButton save = new MButton(CHECK_CIRCLE_O, "Save", clk -> {
+        MButton save = new MButton(CHECK_CIRCLE, "Save", clk -> {
             user.getInternalRunKeeperData().setDefaultComment(defaultComment.getValue());
             user.getInternalRunKeeperData().setPostToFacebookOverride(postToFacebook.isChecked());
             user.getInternalRunKeeperData().setPostToTwitterOverride(postToTwitter.isChecked());

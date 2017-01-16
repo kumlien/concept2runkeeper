@@ -107,9 +107,6 @@ public class C2RMenu extends com.vaadin.ui.CustomComponent {
             avatarResource = rkImg == null ? avatarResource : new ExternalResource(rkImg);
             settingsItem = settings.addItem("", avatarResource, null);
             profileUpdated();
-//            settingsItem.addItem("Edit Profile", (MenuBar.Command) selectedItem -> {
-
-//            });
             settingsItem.addItem("Preferences", (MenuBar.Command) selectedItem -> {
                 ui.getNavigator().navigateTo(C2RViewType.SETTINGS.getViewName());
             });

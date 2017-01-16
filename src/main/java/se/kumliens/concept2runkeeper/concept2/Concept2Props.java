@@ -1,4 +1,4 @@
-package se.kumliens.concept2runkeeper.runkeeper;
+package se.kumliens.concept2runkeeper.concept2;
 
 import lombok.Data;
 import lombok.ToString;
@@ -7,21 +7,20 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
-import java.net.URL;
 
 /**
- * Created by svante2 on 2016-11-28.
+ * Created by svante2 on 2017-01-16.
  */
 @Component
-@ConfigurationProperties(prefix = "runkeeper", locations = "file:/data/c2r/config/application.properties", ignoreUnknownFields = false)
+@ConfigurationProperties(prefix = "concept2", locations = "file:/data/c2r/config/application.properties", ignoreUnknownFields = false)
 @Data
 @ToString
-public class RunkeeperProps {
+public class Concept2Props {
 
-    @Value("${runkeeper.oauth2-client-id}") //When deploying on pws there is no /data...
+    @Value("${concept2.oauth2-client-id}") //When deploying on pws there is no /data...
     private String oauth2ClientId;
 
-    @Value("${runkeeper.oauth2-client-secret}")
+    @Value("${concept2.oauth2-client-secret}")
     private String oauth2ClientSecret;
     private URI userResource;
     private URI profileResource;

@@ -28,8 +28,8 @@ public class LoginForm extends AbstractForm<LoginCredentials> {
         setEntity(new LoginCredentials()).hideInitialEmpyFieldValidationErrors();
         username.setIcon(USER);
         password.setIcon(LOCK);
-        getSaveButton().addStyleName(ValoTheme.BUTTON_HUGE);
-        getResetButton().addStyleName(ValoTheme.BUTTON_HUGE);
+        getSaveButton().addStyleName(ValoTheme.BUTTON_LARGE);
+        getResetButton().addStyleName(ValoTheme.BUTTON_LARGE);
         getSaveButton().addStyleName(ValoTheme.BUTTON_PRIMARY);
 
         tabSheet.addSelectedTabChangeListener(evt -> {

@@ -11,4 +11,3 @@ applications:
     services:
       - mongo
       - sendgrid
-      - C2RConfig

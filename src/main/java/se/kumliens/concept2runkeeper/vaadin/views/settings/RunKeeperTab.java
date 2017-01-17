@@ -171,7 +171,7 @@ public class RunKeeperTab extends AbstractSettingsTab {
 
     protected void setUpWithMissingAuth() {
         removeAllComponents();
-        OAuthPopupButton popupButton = getRunkeeperAuthButton();
+        OAuthPopupButton popupButton = getAuthButton();
         MLabel label = new MLabel("You are not yet connected to RunKeeper. </br>" +
                 "Login to RunKeeper by clicking the button below and allow us to post new activities on your behalf.").withContentMode(HTML);
 
@@ -183,7 +183,7 @@ public class RunKeeperTab extends AbstractSettingsTab {
 
 
     //Create the runkeeper auth button
-    private OAuthPopupButton getRunkeeperAuthButton() {
+    private OAuthPopupButton getAuthButton() {
         //https://developer.mozilla.org/en-US/docs/Web/API/Window/open#Position_and_size_features
         OAuthPopupButton popupButton = new URLBasedButton(new RunKeeperOAuthApi(), OAuthPopupConfig.getStandardOAuth20Config(runkeeperProps.getOauth2ClientId(), runkeeperProps.getOauth2ClientSecret()));
         popupButton.setPopupWindowFeatures("resizable,width=400,height=650,left=150,top=150");

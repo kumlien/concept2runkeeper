@@ -17,7 +17,7 @@ import java.net.URI;
 @ToString
 public class Concept2Props {
 
-    @Value("${concept2.oauth2-client-id}") //When deploying on pws there is no /data...
+    @Value("${concept2.oauth2-client-id}") //When deploying on pws there is no /data directory
     private String oauth2ClientId;
 
     @Value("${concept2.oauth2-client-secret}")

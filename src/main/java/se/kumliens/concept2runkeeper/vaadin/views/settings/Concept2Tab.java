@@ -1,17 +1,41 @@
 package se.kumliens.concept2runkeeper.vaadin.views.settings;
 
+import com.github.scribejava.core.model.OAuth2AccessToken;
+import com.github.scribejava.core.model.SignatureType;
+import com.github.scribejava.core.model.Token;
+import com.vaadin.server.Page;
 import com.vaadin.spring.annotation.SpringComponent;
 import com.vaadin.spring.annotation.ViewScope;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.Panel;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
+import org.vaadin.addon.oauthpopup.*;
+import org.vaadin.spring.events.EventBus;
 import org.vaadin.viritin.label.MLabel;
 import org.vaadin.viritin.layouts.MHorizontalLayout;
 import org.vaadin.viritin.layouts.MPanel;
+import org.vaadin.viritin.layouts.MVerticalLayout;
+import se.kumliens.concept2runkeeper.concept2.Concept2OAuthApi;
+import se.kumliens.concept2runkeeper.concept2.Concept2Props;
+import se.kumliens.concept2runkeeper.runkeeper.ExternalRunkeeperData;
+import se.kumliens.concept2runkeeper.runkeeper.InternalRunKeeperData;
+import se.kumliens.concept2runkeeper.runkeeper.RunKeeperOAuthApi;
+import se.kumliens.concept2runkeeper.vaadin.MainUI;
+import se.kumliens.concept2runkeeper.vaadin.events.Concept2AuthArrivedEvent;
+import se.kumliens.concept2runkeeper.vaadin.events.RunkeeperAuthArrivedEvent;
+
+import java.time.Instant;
 
 import static com.vaadin.server.FontAwesome.CHECK_SQUARE_O;
 import static com.vaadin.server.FontAwesome.EXCLAMATION_CIRCLE;
 import static com.vaadin.shared.ui.label.ContentMode.HTML;
+import static com.vaadin.ui.themes.ValoTheme.BUTTON_BORDERLESS;
+import static com.vaadin.ui.themes.ValoTheme.NOTIFICATION_ERROR;
+import static com.vaadin.ui.themes.ValoTheme.NOTIFICATION_SUCCESS;
+import static se.kumliens.concept2runkeeper.vaadin.C2RThemeResources.CONCEPT2_ARROW;
+import static se.kumliens.concept2runkeeper.vaadin.C2RThemeResources.CONNECT_TO_RUNKEEPER;
 
 /**
  * Created by svante2 on 2016-12-08.
@@ -21,6 +45,12 @@ import static com.vaadin.shared.ui.label.ContentMode.HTML;
 @Slf4j
 @RequiredArgsConstructor
 public class Concept2Tab extends AbstractSettingsTab {
+
+    private final Concept2Props props;
+
+    private final MainUI ui;
+
+    private final EventBus.ApplicationEventBus applicationEventBus;
 
 
     protected void doInit() {
@@ -40,12 +70,73 @@ public class Concept2Tab extends AbstractSettingsTab {
     @Override
     protected void setUpWithMissingAuth() {
         tab.setIcon(EXCLAMATION_CIRCLE);
-        addComponent(new MPanel("Concept2 settings").withContent(
-                new MHorizontalLayout(new MLabel(
-                "We are still waiting to get access to the Concept2 api, hopefully it won't take too long." +
-                        "</br>In the meantime you can use the file export utility from Concept2 and synchronize your</br>" +
-                        "activities using the generated file. Just make sure you have your RunKeeper connection set up first" +
-                        "</br>and then click on Synchronize in the menu bar.").withContentMode(HTML)).withMargin(true)));
+        removeAllComponents();
+        OAuthPopupButton popupButton = getAuthButton();
+        MLabel label = new MLabel("You are not yet connected to RunKeeper. </br>" +
+                "Login to RunKeeper by clicking the button below and allow us to post new activities on your behalf.").withContentMode(HTML);
+
+        MVerticalLayout layout = new MVerticalLayout(label, popupButton).withSpacing(true).withMargin(true);
+        Panel panel = new MPanel("Time to set-up your RunKeeper connection").withContent(layout);
+        addComponent(panel);
+        tab.setIcon(EXCLAMATION_CIRCLE);
         setMargin(true);
+    }
+
+    //Create the runkeeper auth button
+    private OAuthPopupButton getAuthButton() {
+        //https://developer.mozilla.org/en-US/docs/Web/API/Window/open#Position_and_size_features
+        OAuthPopupButton popupButton = new URLBasedButton(new Concept2OAuthApi(), getOAuthConfig(props.getOauth2ClientId(), props.getOauth2ClientSecret()));
+        popupButton.setPopupWindowFeatures("resizable,width=400,height=650,left=150,top=150");
+        popupButton.setIcon(CONCEPT2_ARROW);
+        popupButton.addStyleName(BUTTON_BORDERLESS);
+
+        popupButton.addOAuthListener(new OAuthListener() {
+            @Override
+            public void authSuccessful(Token token, boolean isOAuth20) {
+                getUI().access(() -> {
+                    Notification notification = new Notification("Great, we can now fetch activities from Concept2 for you");
+                    notification.setStyleName(NOTIFICATION_SUCCESS);
+                    notification.setDelayMsec(2500);
+                    notification.show(Page.getCurrent());
+
+                    OAuth2AccessToken oAuth2AccessToken = (OAuth2AccessToken) token;
+                    //ExternalRunkeeperData externalRunkeeperData = runkeeperService.getAllData(oAuth2AccessToken.getAccessToken()).build();
+                    //InternalRunKeeperData internalRunKeeperData = InternalRunKeeperData.builder().token(oAuth2AccessToken.getAccessToken()).firstConnected(Instant.now()).lastTimeConnected(Instant.now()).defaultComment(DEFAULT_ACTIVITY_COMMENT).build();
+                    //user.setInternalRunKeeperData(internalRunKeeperData);
+                    //user.setExternalRunkeeperData(externalRunkeeperData);
+                    //user = userRepo.save(user);
+                    ui.setUserInSession(user);
+                    applicationEventBus.publish(this, new Concept2AuthArrivedEvent(this, user, oAuth2AccessToken));
+                    setUpWithAuthPresent();
+                });
+            }
+
+            @Override
+            public void authDenied(String s) {
+                Notification notification = new Notification("Access was denied (" + s +")");
+                notification.setStyleName(NOTIFICATION_ERROR);
+                notification.show(Page.getCurrent());
+                setUpWithMissingAuth();
+            }
+        });
+        return popupButton;
+    }
+
+    public static class Concept2PopupConfig extends OAuthPopupConfig {
+
+        protected Concept2PopupConfig(String apiKey, String apiSecret) {
+            super(apiKey, apiSecret);
+        }
+    }
+
+    public static OAuthPopupConfig getOAuthConfig(String apiKey, String apiSecret) {
+        OAuthPopupConfig config = new Concept2PopupConfig(apiKey, apiSecret)
+                .setCallbackParameterName("redirect_uri")
+                //.setVerifierParameterName("code")
+                .setResponseType("code")
+                .setSignatureType(SignatureType.QueryString)
+                .setErrorParameterName("error");
+        //config.setCallbackInjector(new OAuthCallbackInjector.OAuth2StateInjector(config));
+        return config;
     }
 }

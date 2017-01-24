@@ -36,7 +36,7 @@ public class C2RActivity {
 
     private Provider source;
 
-    //Right now one of RunKeeperActivity or CsvActivity (Concept2)
+    //Right now one of RunKeeperActivity or Concept2CsvActivity (Concept2)
     private ExternalActivity sourceActivity;
 
     private Instant imported;

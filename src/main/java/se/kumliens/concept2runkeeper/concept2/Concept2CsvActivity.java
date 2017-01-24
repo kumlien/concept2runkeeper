@@ -23,7 +23,7 @@ import java.util.Date;
         "Description",
         "Work Time (Formatted)",
         "Work Time (Seconds)","Rest Time (Formatted)","Rest Time (Seconds)","Work Distance","Rest Distance","Stroke Rate","Pace","Avg Watts","Cal/Hour","Avg Heart Rate","Age","Weight","Type","Ranked","Comments" })
-public class CsvActivity implements ExternalActivity {
+public class Concept2CsvActivity implements ExternalActivity {
 
     public static final String FIELD_DATE = "date";
     public static final String FIELD_WORK_DISTANCE = "distance";

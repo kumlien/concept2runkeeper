@@ -11,18 +11,16 @@ import com.vaadin.server.StreamVariable;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.DragAndDropWrapper;
 import com.vaadin.ui.Html5File;
-import com.vaadin.ui.Notification;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
-import se.kumliens.concept2runkeeper.concept2.CsvActivity;
+
+import se.kumliens.concept2runkeeper.concept2.Concept2CsvActivity;
 
 import java.io.*;
 import java.nio.charset.Charset;
 import java.util.List;
-import java.util.stream.Collectors;
 
-import static com.vaadin.ui.Notification.Type.ERROR_MESSAGE;
-import static com.vaadin.ui.Notification.Type.WARNING_MESSAGE;
 import static java.util.stream.Collectors.toList;
 
 /**
@@ -88,7 +86,7 @@ class CsvFileDropHandler extends DragAndDropWrapper implements DropHandler {
 
             @Override
             public void streamingFinished(StreamingEndEvent event) {
-                List<CsvActivity> activities;
+                List<Concept2CsvActivity> activities;
                 try {
                     activities = parseFile(bas).stream().filter(csvActivity -> StringUtils.hasText(csvActivity.getDate())).collect(toList());
                     successListener.onSuccess(activities);
@@ -115,14 +113,14 @@ class CsvFileDropHandler extends DragAndDropWrapper implements DropHandler {
         return AcceptAll.get();
     }
 
-    private List<CsvActivity> parseFile(final ByteArrayOutputStream bas) throws IOException {
+    private List<Concept2CsvActivity> parseFile(final ByteArrayOutputStream bas) throws IOException {
         CsvMapper mapper = new CsvMapper();
-        CsvSchema schema = mapper.schemaFor(CsvActivity.class).withUseHeader(true);
+        CsvSchema schema = mapper.schemaFor(Concept2CsvActivity.class).withUseHeader(true);
         ByteArrayInputStream inputStream = new ByteArrayInputStream(bas.toByteArray());
         InputStreamReader inputStreamReader = new InputStreamReader(inputStream, Charset.forName("utf8"));
         BufferedReader reader = new BufferedReader(inputStreamReader);
         try {
-            MappingIterator<CsvActivity> activities = mapper.readerFor(CsvActivity.class).with(schema).readValues(reader);
+            MappingIterator<Concept2CsvActivity> activities = mapper.readerFor(Concept2CsvActivity.class).with(schema).readValues(reader);
             return activities.readAll();
         } finally {
             bas.close();
@@ -134,7 +132,7 @@ class CsvFileDropHandler extends DragAndDropWrapper implements DropHandler {
     }
 
     public interface SuccessListener {
-        void onSuccess(List<CsvActivity> activities);
+        void onSuccess(List<Concept2CsvActivity> activities);
     }
 
     public interface ErrorListener {

@@ -7,8 +7,6 @@ import com.vaadin.data.util.GeneratedPropertyContainer;
 import com.vaadin.data.util.PropertyValueGenerator;
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener;
-import com.vaadin.server.FontAwesome;
-import com.vaadin.server.FontIcon;
 import com.vaadin.server.Resource;
 import com.vaadin.spring.annotation.SpringView;
 import com.vaadin.ui.*;
@@ -31,7 +29,8 @@ import org.vaadin.viritin.layouts.MPanel;
 import org.vaadin.viritin.layouts.MVerticalLayout;
 import org.vaadin.viritin.layouts.MWindow;
 import org.vaadin.viritin.ui.MNotification;
-import se.kumliens.concept2runkeeper.concept2.CsvActivity;
+
+import se.kumliens.concept2runkeeper.concept2.Concept2CsvActivity;
 import se.kumliens.concept2runkeeper.domain.C2RActivity;
 import se.kumliens.concept2runkeeper.domain.Synchronization;
 import se.kumliens.concept2runkeeper.repos.C2RActivityRepo;
@@ -86,7 +85,7 @@ public class SynchronizeView extends MVerticalLayout implements View {
 
     private BeanItemContainer<RunkeeperActivity> rkContainer = new BeanItemContainer<>(RunkeeperActivity.class);
 
-    private BeanItemContainer<CsvActivity> concept2Container = new BeanItemContainer<>(CsvActivity.class);
+    private BeanItemContainer<Concept2CsvActivity> concept2Container = new BeanItemContainer<>(Concept2CsvActivity.class);
 
     private MCheckBox forceSync;
 
@@ -255,7 +254,7 @@ public class SynchronizeView extends MVerticalLayout implements View {
 
         csvTabLayout.add(new MHorizontalLayout(howToBtn, syncButton, forceSync).withAlign(forceSync, Alignment.MIDDLE_LEFT).withSpacing(true));
 
-        MGrid<CsvActivity> grid = new MGrid<>(CsvActivity.class).withFullHeight().withFullWidth();
+        MGrid<Concept2CsvActivity> grid = new MGrid<>(Concept2CsvActivity.class).withFullHeight().withFullWidth();
         grid.setSelectionMode(MULTI);
         grid.setContainerDataSource(concept2Container);
         grid.removeAllColumns();
@@ -282,9 +281,9 @@ public class SynchronizeView extends MVerticalLayout implements View {
 
 
     //Handle the actual sync process to RunKeeper
-    private void setUpSyncClickHandler(MButton syncButton, MGrid<CsvActivity> concept2Grid) {
+    private void setUpSyncClickHandler(MButton syncButton, MGrid<Concept2CsvActivity> concept2Grid) {
         syncButton.addClickListener(evt -> {
-            Collection<CsvActivity> selectedRows = concept2Grid.getSelectedRowsWithType();
+            Collection<Concept2CsvActivity> selectedRows = concept2Grid.getSelectedRowsWithType();
             if (selectedRows.isEmpty()) {
                 log.warn("Sync button clicked without selected rows in the grid!");
                 new MNotification("No selection detected (this is a bug). Try to re-select the row(s)").withStyleName(NOTIFICATION_ERROR).withDelayMsec(5000).display();
@@ -364,12 +363,12 @@ public class SynchronizeView extends MVerticalLayout implements View {
 
     }
 
-    private static RecordActivityRequest createRecordActivityRequest(CsvActivity csvActivity, InternalRunKeeperData internalRunKeeperData, ExternalRunkeeperData externalRunkeeperData) {
+    private static RecordActivityRequest createRecordActivityRequest(Concept2CsvActivity csvActivity, InternalRunKeeperData internalRunKeeperData, ExternalRunkeeperData externalRunkeeperData) {
         Instant start;
         try {
             start = csvActivity.getDateAsInstant();
         } catch (ParseException e) {
-            log.warn("Unable to parse the date from a CsvActivity into an instant. {}", csvActivity, e);
+            log.warn("Unable to parse the date from a Concept2CsvActivity into an instant. {}", csvActivity, e);
             start = Instant.now();
         }
         return RecordActivityRequest.builder()
@@ -384,7 +383,7 @@ public class SynchronizeView extends MVerticalLayout implements View {
                 .type(ActivityType.ROWING).build();
     }
 
-    private DragAndDropWrapper getDropAreaWithGrid(MGrid<CsvActivity> grid) {
+    private DragAndDropWrapper getDropAreaWithGrid(MGrid<Concept2CsvActivity> grid) {
         final CsvFileDropHandler dropBox = new CsvFileDropHandler(grid, activities -> {
             activities.forEach(csvActivity -> {
                 grid.getContainerDataSource().addItem(csvActivity);

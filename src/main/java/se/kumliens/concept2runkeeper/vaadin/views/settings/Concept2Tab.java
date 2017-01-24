@@ -69,7 +69,7 @@ public class Concept2Tab extends AbstractSettingsTab {
         removeAllComponents();
         OAuthPopupButton popupButton = getAuthButton();
         MLabel label = new MLabel("You are not yet connected to Concept2. </br>" +
-                "Login to Concept2 by clicking the button below and allow us to post new activities on your behalf.").withContentMode(HTML);
+                "Click the button below to authorize us to read your Concept2 activities").withContentMode(HTML);
 
         MVerticalLayout layout = new MVerticalLayout(label, popupButton).withSpacing(true).withMargin(true);
         Panel panel = new MPanel("Time to set-up your Concept2 connection").withContent(layout).withFullHeight();

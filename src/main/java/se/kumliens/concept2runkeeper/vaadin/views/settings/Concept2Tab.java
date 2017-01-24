@@ -6,6 +6,7 @@ import com.vaadin.server.Page;
 import com.vaadin.server.VaadinSession;
 import com.vaadin.spring.annotation.SpringComponent;
 import com.vaadin.spring.annotation.ViewScope;
+import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Panel;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,7 @@ import static com.vaadin.ui.themes.ValoTheme.BUTTON_BORDERLESS;
 import static com.vaadin.ui.themes.ValoTheme.NOTIFICATION_ERROR;
 import static com.vaadin.ui.themes.ValoTheme.NOTIFICATION_SUCCESS;
 import static se.kumliens.concept2runkeeper.vaadin.C2RThemeResources.CONCEPT2_ARROW;
+import static se.kumliens.concept2runkeeper.vaadin.C2RThemeResources.CONCEPT2_ARROW_SMALL;
 
 /**
  * Created by svante2 on 2016-12-08.
@@ -48,7 +50,7 @@ public class Concept2Tab extends AbstractSettingsTab {
 
 
     protected void doInit() {
-        if (!StringUtils.hasText(user.getConcept2AccessToken())) { //todo push this check to the User
+        if (!StringUtils.hasText(user.getConcept2AccessToken())) { //todo push this check to the User class
             setUpWithMissingAuth();
         } else {
             setUpWithAuthPresent();
@@ -69,7 +71,7 @@ public class Concept2Tab extends AbstractSettingsTab {
         MLabel label = new MLabel("You are not yet connected to Concept2. </br>" +
                 "Login to Concept2 by clicking the button below and allow us to post new activities on your behalf.").withContentMode(HTML);
 
-        MVerticalLayout layout = new MVerticalLayout(label).expand(popupButton).withSpacing(true).withMargin(true).withFullHeight();
+        MVerticalLayout layout = new MVerticalLayout(label, popupButton).withSpacing(true).withMargin(true);
         Panel panel = new MPanel("Time to set-up your Concept2 connection").withContent(layout).withFullHeight();
         addComponent(panel);
         tab.setIcon(EXCLAMATION_CIRCLE);
@@ -81,8 +83,8 @@ public class Concept2Tab extends AbstractSettingsTab {
         //https://developer.mozilla.org/en-US/docs/Web/API/Window/open#Position_and_size_features
         OAuthPopupButton popupButton = new URLBasedButton(new Concept2OAuthApi(), getOAuthConfig(props.getOauth2ClientId(), props.getOauth2ClientSecret(), ui.getSession()));
         popupButton.setPopupWindowFeatures("resizable,width=400,height=650,left=150,top=150");
-        popupButton.setIcon(CONCEPT2_ARROW);
-        popupButton.addStyleName(BUTTON_BORDERLESS);
+        popupButton.setCaption("Connect to Concept2");
+        popupButton.setIcon(CONCEPT2_ARROW_SMALL);
 
         popupButton.addOAuthListener(new OAuthListener() {
             @Override

@@ -1,6 +1,5 @@
 package se.kumliens.concept2runkeeper;
 
-import com.vaadin.ui.UI;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 

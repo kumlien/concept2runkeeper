@@ -14,6 +14,7 @@ public class C2RThemeResources {
 
     public static final ThemeResource CONCEPT2_LOGO = new ThemeResource("img/concept2-logo.png");
     public static final ThemeResource CONCEPT2_ARROW = new ThemeResource("img/concept2_arrow.png");
+    public static final ThemeResource CONCEPT2_ARROW_SMALL = new ThemeResource("img/concept2_arrow_small.png");
 
     public static final ThemeResource HEART_RATE = new ThemeResource("img/heart_rate.png");
 }

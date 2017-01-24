@@ -4,10 +4,13 @@ applications:
     buildpack: java_buildpack
     path: target/concept2runkeeper-0.0.1-SNAPSHOT.jar
     instances: 1
-    # domain: concept2runkeeper.com
-    # env:
-      #runkeeper.oauth2-client-id:
-      #runkeeper.oauth2-client-secret:
+    domain: concept2runkeeper.com
+    env:
+      runkeeper.oauth2-client-id:
+      runkeeper.oauth2-client-secret:
+      concept2.oauth2-client-id:
+      concept2.oauth2-client-secret:
+      concept2.base-url: https://log-dev.concept2.com
     services:
       - mongo
       - sendgrid

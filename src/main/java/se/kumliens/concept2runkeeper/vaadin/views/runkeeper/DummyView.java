@@ -14,7 +14,7 @@ import javax.annotation.PostConstruct;
  * Created by svante2 on 2016-12-04.
  */
 @SpringView
-public class RunkeeperauthView extends VerticalLayout implements View {
+public class DummyView extends VerticalLayout implements View {
 
     @Override
     public void enter(ViewChangeListener.ViewChangeEvent event) {

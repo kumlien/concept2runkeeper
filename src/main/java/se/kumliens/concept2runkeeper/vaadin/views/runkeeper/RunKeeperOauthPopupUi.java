@@ -56,16 +56,6 @@ public class RunKeeperOauthPopupUi extends OAuthPopupUI {
         goToAuthorizationUrl(requestToken, data);
     }
 
-    @Override
-    public void detach() {
-        super.detach();
-
-        // The session may have been already cleaned up by requestHandler,
-        // not always though.
-        // Doing it again doesn't do harm (?).
-        callbackHandler.cleanUpSession(getSession());
-    }
-
     private void addCallbackHandler(OAuth1RequestToken requestToken, OAuthData data) {
         callbackHandler = new OAuthCallbackRequestHandler(requestToken, data);
         getSession().addRequestHandler(callbackHandler);

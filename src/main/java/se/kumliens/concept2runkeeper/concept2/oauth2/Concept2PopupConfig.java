@@ -30,4 +30,9 @@ public class Concept2PopupConfig extends OAuthPopupConfig {
     public String getState() {
         return null;
     }
+
+    @Override
+    public String getVerifierParameterName() {
+        return "code";
+    }
 }

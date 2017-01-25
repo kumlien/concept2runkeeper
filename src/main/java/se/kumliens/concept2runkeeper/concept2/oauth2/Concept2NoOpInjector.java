@@ -10,6 +10,10 @@ import java.util.Enumeration;
 import java.util.UUID;
 
 /**
+ * Since there is NO way to transport additional data in request to concept2 and get it back in the redirect we simply
+ * keep our fingers crossed and hope for no CSRF attacks... see http://www.twobotechnologies.com/blog/2014/02/importance-of-state-in-oauth2.html
+ * We save the parameterValue in this instance and return in the {@link #extractParameterFromCallbackRequest(VaadinRequest, String)}.
+ *
  * Created by svante2 on 2017-01-23.
  */
 @RequiredArgsConstructor

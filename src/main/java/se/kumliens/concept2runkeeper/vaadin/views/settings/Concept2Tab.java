@@ -60,7 +60,12 @@ public class Concept2Tab extends AbstractSettingsTab {
 
     @Override
     protected void setUpWithAuthPresent() {
+        removeAllComponents();
         tab.setIcon(CHECK_SQUARE_O);
+        MVerticalLayout layout = new MVerticalLayout(new MLabel("You are now connected!"), getAuthButton());
+        Panel panel = new MPanel("Your Concept2 connection ").withContent(layout).withFullHeight();
+        addComponent(panel);
+        setMargin(true);
     }
 
     @Override
@@ -110,11 +115,13 @@ public class Concept2Tab extends AbstractSettingsTab {
 
             @Override
             public void authDenied(String s) {
-                log.info("Access denied: {}", s);
-                Notification notification = new Notification("Access was denied (" + s +")");
-                notification.setStyleName(NOTIFICATION_ERROR);
-                notification.show(Page.getCurrent());
-                setUpWithMissingAuth();
+                getUI().access(() -> {
+                    log.info("Access denied: {} with ui {}", s, getUI());
+                    Notification notification = new Notification("Access was denied (" + s + ")");
+                    notification.setStyleName(NOTIFICATION_ERROR);
+                    notification.show(Page.getCurrent());
+                    setUpWithMissingAuth();
+                });
             }
         });
         return popupButton;

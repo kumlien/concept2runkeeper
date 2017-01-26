@@ -154,7 +154,7 @@ public class RunKeeperTab extends AbstractSettingsTab {
 
     private MButton getRefreshProfileButton(String caption) {
         return new MButton(REFRESH, clk -> {
-            ExternalRunkeeperData.Builder builder = runkeeperService.getAllData(user.getInternalRunKeeperData().getToken());
+            ExternalRunkeeperData.Builder builder = runkeeperService.getUserData(user.getInternalRunKeeperData().getToken());
             user.getInternalRunKeeperData().setLastTimeConnected(Instant.now());
             user.setExternalRunkeeperData(builder.build());
             userRepo.save(user);
@@ -204,7 +204,7 @@ public class RunKeeperTab extends AbstractSettingsTab {
                     notification.show(Page.getCurrent());
 
                     OAuth2AccessToken oAuth2AccessToken = (OAuth2AccessToken) token;
-                    ExternalRunkeeperData externalRunkeeperData = runkeeperService.getAllData(oAuth2AccessToken.getAccessToken()).build();
+                    ExternalRunkeeperData externalRunkeeperData = runkeeperService.getUserData(oAuth2AccessToken.getAccessToken()).build();
                     InternalRunKeeperData internalRunKeeperData = InternalRunKeeperData.builder().token(oAuth2AccessToken.getAccessToken()).firstConnected(Instant.now()).lastTimeConnected(Instant.now()).defaultComment(DEFAULT_ACTIVITY_COMMENT).build();
                     user.setInternalRunKeeperData(internalRunKeeperData);
                     user.setExternalRunkeeperData(externalRunkeeperData);

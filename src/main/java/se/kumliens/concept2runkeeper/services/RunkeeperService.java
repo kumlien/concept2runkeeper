@@ -54,7 +54,7 @@ public class RunkeeperService {
      * @param token
      * @return A RunKeeperDataBuilder to indicate that it's not a complete {@link InternalRunKeeperData} object
      */
-    public ExternalRunkeeperData.Builder getAllData(String token) {
+    public ExternalRunkeeperData.Builder getUserData(String token) {
         RunKeeperUser user = getUser(token);
         RunKeeperProfile profile = getProfile(token);
         RunKeeperSettings settings = getSettings(user, token);

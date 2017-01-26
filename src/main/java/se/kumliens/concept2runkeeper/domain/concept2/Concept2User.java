@@ -1,4 +1,4 @@
-package se.kumliens.concept2runkeeper.concept2;
+package se.kumliens.concept2runkeeper.domain.concept2;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

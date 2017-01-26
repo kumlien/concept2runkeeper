@@ -7,7 +7,7 @@ import lombok.ToString;
 import java.time.Instant;
 
 /**
- * Represents a specific sync action.
+ * Represents a specific sync action of an activity, i.e. sync a concept2 activity with runkeeper.
  *
  * Created by svante2 on 2016-12-22.
  */

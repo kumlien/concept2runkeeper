@@ -15,7 +15,7 @@ import com.vaadin.ui.Html5File;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
 
-import se.kumliens.concept2runkeeper.concept2.Concept2CsvActivity;
+import se.kumliens.concept2runkeeper.domain.concept2.Concept2CsvActivity;
 
 import java.io.*;
 import java.nio.charset.Charset;

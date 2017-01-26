@@ -24,8 +24,12 @@ import org.vaadin.viritin.layouts.MHorizontalLayout;
 import org.vaadin.viritin.layouts.MPanel;
 import org.vaadin.viritin.layouts.MVerticalLayout;
 import org.vaadin.viritin.ui.MNotification;
+
+import se.kumliens.concept2runkeeper.domain.runkeeper.ExternalRunkeeperData;
+import se.kumliens.concept2runkeeper.domain.runkeeper.InternalRunKeeperData;
 import se.kumliens.concept2runkeeper.repos.UserRepo;
 import se.kumliens.concept2runkeeper.runkeeper.*;
+import se.kumliens.concept2runkeeper.services.RunkeeperService;
 import se.kumliens.concept2runkeeper.vaadin.MainUI;
 import se.kumliens.concept2runkeeper.vaadin.events.RunkeeperAuthArrivedEvent;
 

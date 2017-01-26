@@ -1,10 +1,9 @@
-package se.kumliens.concept2runkeeper.runkeeper;
+package se.kumliens.concept2runkeeper.domain.runkeeper;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 import se.kumliens.concept2runkeeper.domain.ExternalActivity;
 
-import java.net.URI;
 import java.util.List;
 
 /**

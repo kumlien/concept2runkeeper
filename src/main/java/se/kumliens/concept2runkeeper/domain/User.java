@@ -1,20 +1,17 @@
 package se.kumliens.concept2runkeeper.domain;
 
-import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import lombok.Data;
 
 import org.hibernate.validator.constraints.Email;
-import org.hibernate.validator.constraints.Length;
-import org.hibernate.validator.constraints.NotBlank;
 import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.util.StringUtils;
-import se.kumliens.concept2runkeeper.runkeeper.ExternalRunkeeperData;
-import se.kumliens.concept2runkeeper.runkeeper.InternalRunKeeperData;
+import se.kumliens.concept2runkeeper.domain.runkeeper.ExternalRunkeeperData;
+import se.kumliens.concept2runkeeper.domain.runkeeper.InternalRunKeeperData;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;

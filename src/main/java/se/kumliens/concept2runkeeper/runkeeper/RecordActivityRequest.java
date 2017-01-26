@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
+import se.kumliens.concept2runkeeper.domain.runkeeper.ActivityType;
+import se.kumliens.concept2runkeeper.domain.runkeeper.Equipment;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;

@@ -31,7 +31,7 @@ public class RunkeeperService {
 
     @PostConstruct
     public void setup() {
-        log.info("Got some props: {}", props);
+        log.debug("Got some props: {}", props);
         restTemplate = new RestTemplate();
     }
 

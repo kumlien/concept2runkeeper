@@ -17,6 +17,8 @@ import org.vaadin.spring.events.EventBus;
 import org.vaadin.viritin.label.MLabel;
 import org.vaadin.viritin.layouts.MPanel;
 import org.vaadin.viritin.layouts.MVerticalLayout;
+import se.kumliens.concept2runkeeper.concept2.Concept2Service;
+import se.kumliens.concept2runkeeper.concept2.Concept2User;
 import se.kumliens.concept2runkeeper.concept2.oauth2.Concept2NoOpInjector;
 import se.kumliens.concept2runkeeper.concept2.oauth2.Concept2OAuthApi;
 import se.kumliens.concept2runkeeper.concept2.Concept2Props;
@@ -42,7 +44,16 @@ import static se.kumliens.concept2runkeeper.vaadin.C2RThemeResources.CONCEPT2_AR
 @RequiredArgsConstructor
 public class Concept2Tab extends AbstractSettingsTab {
 
+    private static final String POPUP_WINDOW_FEATURES = "resizable,width=400,height=650,left=150,top=150";
+    private static final String POPUP_BUTTON_CAPTION = "Connect to Concept2";
+    private static final String SUCCESS_NOTIFICATION_CAPTION = "Great, we can now fetch activities from Concept2 for you";
+    private static final int SUCCESS_NOTIFICATION_DELAY = 2500;
+    private static final String AUTH_MISSING_PANEL_CAPTION = "Time to set-up your Concept2 connection";
+    private static final String AUTH_PRESENT_PANEL_CAPTION = "Your Concept2 connection";
+
     private final Concept2Props props;
+
+    private final Concept2Service concept2Service;
 
     private final MainUI ui;
 
@@ -62,8 +73,8 @@ public class Concept2Tab extends AbstractSettingsTab {
     protected void setUpWithAuthPresent() {
         removeAllComponents();
         tab.setIcon(CHECK_SQUARE_O);
-        MVerticalLayout layout = new MVerticalLayout(new MLabel("You are now connected!"), getAuthButton());
-        Panel panel = new MPanel("Your Concept2 connection ").withContent(layout).withFullHeight();
+        MVerticalLayout layout = new MVerticalLayout(new MLabel("Your Concept2 connection is set up!"), getAuthButton());
+        Panel panel = new MPanel(AUTH_PRESENT_PANEL_CAPTION).withContent(layout).withFullHeight();
         addComponent(panel);
         setMargin(true);
     }
@@ -77,7 +88,7 @@ public class Concept2Tab extends AbstractSettingsTab {
                 "Click the button below to authorize us to read your Concept2 activities").withContentMode(HTML);
 
         MVerticalLayout layout = new MVerticalLayout(label, popupButton).withSpacing(true).withMargin(true);
-        Panel panel = new MPanel("Time to set-up your Concept2 connection").withContent(layout).withFullHeight();
+        Panel panel = new MPanel(AUTH_MISSING_PANEL_CAPTION).withContent(layout).withFullHeight();
         addComponent(panel);
         tab.setIcon(EXCLAMATION_CIRCLE);
         setMargin(true);
@@ -87,8 +98,8 @@ public class Concept2Tab extends AbstractSettingsTab {
     private OAuthPopupButton getAuthButton() {
         //https://developer.mozilla.org/en-US/docs/Web/API/Window/open#Position_and_size_features
         OAuthPopupButton popupButton = new URLBasedButton(new Concept2OAuthApi(), getOAuthConfig(props.getOauth2ClientId(), props.getOauth2ClientSecret(), ui.getSession()));
-        popupButton.setPopupWindowFeatures("resizable,width=400,height=650,left=150,top=150");
-        popupButton.setCaption("Connect to Concept2");
+        popupButton.setPopupWindowFeatures(POPUP_WINDOW_FEATURES);
+        popupButton.setCaption(POPUP_BUTTON_CAPTION);
         popupButton.setIcon(CONCEPT2_ARROW_SMALL);
 
         popupButton.addOAuthListener(new OAuthListener() {
@@ -96,9 +107,9 @@ public class Concept2Tab extends AbstractSettingsTab {
             public void authSuccessful(Token token, boolean isOAuth20) {
                 getUI().access(() -> {
                     log.info("Auth success");
-                    Notification notification = new Notification("Great, we can now fetch activities from Concept2 for you");
+                    Notification notification = new Notification(SUCCESS_NOTIFICATION_CAPTION);
                     notification.setStyleName(NOTIFICATION_SUCCESS);
-                    notification.setDelayMsec(2500);
+                    notification.setDelayMsec(SUCCESS_NOTIFICATION_DELAY);
                     notification.show(Page.getCurrent());
 
                     OAuth2AccessToken oAuth2AccessToken = (OAuth2AccessToken) token;
@@ -107,8 +118,11 @@ public class Concept2Tab extends AbstractSettingsTab {
                     //user.setInternalRunKeeperData(internalRunKeeperData);
                     //user.setExternalRunkeeperData(externalRunkeeperData);
                     //user = userRepo.save(user);
-                    ui.setUserInSession(user);
-                    applicationEventBus.publish(this, new Concept2AuthArrivedEvent(this, user, oAuth2AccessToken));
+
+                    Concept2User user = concept2Service.getUser(oAuth2AccessToken.getAccessToken());
+
+                    ui.setUserInSession(Concept2Tab.this.user);
+                    applicationEventBus.publish(this, new Concept2AuthArrivedEvent(this, Concept2Tab.this.user, oAuth2AccessToken));
                     setUpWithAuthPresent();
                 });
             }

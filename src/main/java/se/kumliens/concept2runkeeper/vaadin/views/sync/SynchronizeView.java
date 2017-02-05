@@ -30,11 +30,17 @@ import org.vaadin.viritin.layouts.MVerticalLayout;
 import org.vaadin.viritin.layouts.MWindow;
 import org.vaadin.viritin.ui.MNotification;
 
-import se.kumliens.concept2runkeeper.concept2.Concept2CsvActivity;
+import se.kumliens.concept2runkeeper.domain.concept2.Concept2CsvActivity;
 import se.kumliens.concept2runkeeper.domain.C2RActivity;
 import se.kumliens.concept2runkeeper.domain.Synchronization;
+import se.kumliens.concept2runkeeper.domain.runkeeper.ActivityType;
+import se.kumliens.concept2runkeeper.domain.runkeeper.Equipment;
+import se.kumliens.concept2runkeeper.domain.runkeeper.ExternalRunkeeperData;
+import se.kumliens.concept2runkeeper.domain.runkeeper.InternalRunKeeperData;
+import se.kumliens.concept2runkeeper.domain.runkeeper.RunkeeperActivity;
 import se.kumliens.concept2runkeeper.repos.C2RActivityRepo;
 import se.kumliens.concept2runkeeper.runkeeper.*;
+import se.kumliens.concept2runkeeper.services.RunkeeperService;
 import se.kumliens.concept2runkeeper.vaadin.MainUI;
 import se.kumliens.concept2runkeeper.vaadin.converters.*;
 import se.kumliens.concept2runkeeper.vaadin.events.ActivitySyncEvent;

@@ -12,7 +12,10 @@
 hs_err_pid*
 
 .idea/
-target/
 *.iml
+target/
+
 styles.css
 addons.scss
+
+\.DS_Store

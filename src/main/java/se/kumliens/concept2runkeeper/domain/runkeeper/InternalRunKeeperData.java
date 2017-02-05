@@ -1,14 +1,13 @@
-package se.kumliens.concept2runkeeper.runkeeper;
+package se.kumliens.concept2runkeeper.domain.runkeeper;
 
 import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
 
-import java.net.URL;
 import java.time.Instant;
 
 /**
- * Collection of data from RunKeeper resources and our own data connected to RunKeeper
+ * Collection of data related to RunKeeper which comes from our own system.
  *
  * Created by svante2 on 2016-12-08.
  */

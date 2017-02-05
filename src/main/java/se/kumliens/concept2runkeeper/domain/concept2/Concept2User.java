@@ -1,17 +1,11 @@
-package se.kumliens.concept2runkeeper.concept2;
+package se.kumliens.concept2runkeeper.domain.concept2;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonRootName;
-import lombok.ToString;
 
 /**
  * Created by svante on 2017-01-24.
  */
-
-
-@JsonRootName(value = "data")
-@ToString
 public class Concept2User {
 
     private final String id;

@@ -1,9 +1,17 @@
-package se.kumliens.concept2runkeeper.runkeeper;
+package se.kumliens.concept2runkeeper.services;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
+import se.kumliens.concept2runkeeper.domain.runkeeper.ExternalRunkeeperData;
+import se.kumliens.concept2runkeeper.domain.runkeeper.InternalRunKeeperData;
+import se.kumliens.concept2runkeeper.domain.runkeeper.RunKeeperProfile;
+import se.kumliens.concept2runkeeper.domain.runkeeper.RunKeeperUser;
+import se.kumliens.concept2runkeeper.domain.runkeeper.RunkeeperActivity;
+import se.kumliens.concept2runkeeper.runkeeper.RecordActivityRequest;
+import se.kumliens.concept2runkeeper.runkeeper.RunKeeperSettings;
+import se.kumliens.concept2runkeeper.runkeeper.RunkeeperProps;
 
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -46,7 +54,7 @@ public class RunkeeperService {
      * @param token
      * @return A RunKeeperDataBuilder to indicate that it's not a complete {@link InternalRunKeeperData} object
      */
-    public ExternalRunkeeperData.Builder getAllData(String token) {
+    public ExternalRunkeeperData.Builder getUserData(String token) {
         RunKeeperUser user = getUser(token);
         RunKeeperProfile profile = getProfile(token);
         RunKeeperSettings settings = getSettings(user, token);

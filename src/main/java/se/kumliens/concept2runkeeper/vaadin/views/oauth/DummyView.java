@@ -1,9 +1,8 @@
-package se.kumliens.concept2runkeeper.vaadin.views.runkeeper;
+package se.kumliens.concept2runkeeper.vaadin.views.oauth;
 
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener;
 import com.vaadin.spring.annotation.SpringView;
-import com.vaadin.ui.Label;
 import com.vaadin.ui.VerticalLayout;
 
 import javax.annotation.PostConstruct;

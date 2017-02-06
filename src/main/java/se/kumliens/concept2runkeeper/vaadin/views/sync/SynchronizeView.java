@@ -219,7 +219,7 @@ public class SynchronizeView extends MVerticalLayout implements View {
 
         MVerticalLayout fromContent = new MVerticalLayout();
         MHorizontalLayout topLayout = new MHorizontalLayout(label).withSpacing(true);
-        ;
+
 
         //Create the tab sheet
         TabSheet concept2TabSheet = new TabSheet();

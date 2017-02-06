@@ -1,4 +1,4 @@
-package se.kumliens.concept2runkeeper.vaadin.views.runkeeper;
+package se.kumliens.concept2runkeeper.vaadin.views.oauth;
 
 import com.github.scribejava.core.model.OAuth1RequestToken;
 import com.vaadin.server.Page;
@@ -26,7 +26,7 @@ import se.kumliens.concept2runkeeper.vaadin.MainUI;
  */
 @SpringUI(path = URLBasedOAuthPopupOpener.UI_URL)
 @RequiredArgsConstructor
-public class RunKeeperOauthPopupUi extends OAuthPopupUI {
+public class Concept2RunKeeperOauthPopupUi extends OAuthPopupUI {
 
     private final SpringNavigator springNavigator;
 
@@ -70,7 +70,15 @@ public class RunKeeperOauthPopupUi extends OAuthPopupUI {
 
     private void goToAuthorizationUrl(OAuth1RequestToken requestToken, OAuthData data) {
         String authUrl = data.getAuthorizationUrl(requestToken);
-        //Logger.getGlobal().log(Level.INFO, "Navigating to authorization URL: " + authUrl);
         Page.getCurrent().setLocation(authUrl);
+    }
+
+    @Override
+    public void detach() {
+        try {
+            super.detach();
+        } catch (NullPointerException npe) {
+            //Happens when the callback handler already is set to null in #removeCallbackHandler
+        }
     }
 }

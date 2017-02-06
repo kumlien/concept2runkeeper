@@ -17,12 +17,12 @@ import org.vaadin.spring.events.EventBus;
 import org.vaadin.viritin.label.MLabel;
 import org.vaadin.viritin.layouts.MPanel;
 import org.vaadin.viritin.layouts.MVerticalLayout;
-import se.kumliens.concept2runkeeper.concept2.Concept2Service;
-import se.kumliens.concept2runkeeper.concept2.Concept2User;
 import se.kumliens.concept2runkeeper.concept2.oauth2.Concept2NoOpInjector;
 import se.kumliens.concept2runkeeper.concept2.oauth2.Concept2OAuthApi;
 import se.kumliens.concept2runkeeper.concept2.Concept2Props;
 import se.kumliens.concept2runkeeper.concept2.oauth2.Concept2PopupConfig;
+import se.kumliens.concept2runkeeper.domain.concept2.Concept2User;
+import se.kumliens.concept2runkeeper.services.Concept2Service;
 import se.kumliens.concept2runkeeper.vaadin.MainUI;
 import se.kumliens.concept2runkeeper.vaadin.events.Concept2AuthArrivedEvent;
 
@@ -120,7 +120,7 @@ public class Concept2Tab extends AbstractSettingsTab {
                     //user = userRepo.save(user);
 
                     Concept2User user = concept2Service.getUser(oAuth2AccessToken.getAccessToken());
-
+                    log.info("Got a concept2 user: {}", user);
                     ui.setUserInSession(Concept2Tab.this.user);
                     applicationEventBus.publish(this, new Concept2AuthArrivedEvent(this, Concept2Tab.this.user, oAuth2AccessToken));
                     setUpWithAuthPresent();

@@ -1,12 +1,10 @@
 package se.kumliens.concept2runkeeper.vaadin.views.settings;
 
 import com.github.scribejava.core.model.*;
-import com.github.scribejava.core.oauth.OAuth20Service;
 import com.vaadin.server.Page;
 import com.vaadin.server.VaadinSession;
 import com.vaadin.spring.annotation.SpringComponent;
 import com.vaadin.spring.annotation.ViewScope;
-import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Panel;
 import lombok.RequiredArgsConstructor;
@@ -22,17 +20,19 @@ import se.kumliens.concept2runkeeper.concept2.oauth2.Concept2OAuthApi;
 import se.kumliens.concept2runkeeper.concept2.Concept2Props;
 import se.kumliens.concept2runkeeper.concept2.oauth2.Concept2PopupConfig;
 import se.kumliens.concept2runkeeper.domain.concept2.Concept2User;
+import se.kumliens.concept2runkeeper.domain.concept2.InternalConcept2Data;
+import se.kumliens.concept2runkeeper.repos.UserRepo;
 import se.kumliens.concept2runkeeper.services.Concept2Service;
 import se.kumliens.concept2runkeeper.vaadin.MainUI;
 import se.kumliens.concept2runkeeper.vaadin.events.Concept2AuthArrivedEvent;
 
+import java.time.Instant;
+
 import static com.vaadin.server.FontAwesome.CHECK_SQUARE_O;
 import static com.vaadin.server.FontAwesome.EXCLAMATION_CIRCLE;
 import static com.vaadin.shared.ui.label.ContentMode.HTML;
-import static com.vaadin.ui.themes.ValoTheme.BUTTON_BORDERLESS;
 import static com.vaadin.ui.themes.ValoTheme.NOTIFICATION_ERROR;
 import static com.vaadin.ui.themes.ValoTheme.NOTIFICATION_SUCCESS;
-import static se.kumliens.concept2runkeeper.vaadin.C2RThemeResources.CONCEPT2_ARROW;
 import static se.kumliens.concept2runkeeper.vaadin.C2RThemeResources.CONCEPT2_ARROW_SMALL;
 
 /**
@@ -58,6 +58,8 @@ public class Concept2Tab extends AbstractSettingsTab {
     private final MainUI ui;
 
     private final EventBus.ApplicationEventBus applicationEventBus;
+
+    private final UserRepo userRepo;
 
 
     protected void doInit() {
@@ -112,17 +114,22 @@ public class Concept2Tab extends AbstractSettingsTab {
                     notification.setDelayMsec(SUCCESS_NOTIFICATION_DELAY);
                     notification.show(Page.getCurrent());
 
-                    OAuth2AccessToken oAuth2AccessToken = (OAuth2AccessToken) token;
+                    OAuth2AccessToken oAuth2Token = (OAuth2AccessToken) token;
+                    InternalConcept2Data internalConcept2Data = InternalConcept2Data.builder()
+                            .accessToken(oAuth2Token.getAccessToken())
+                            .refreshToken(oAuth2Token.getRefreshToken())
+                            .tokenExpiryDate(Instant.now().plusSeconds(oAuth2Token.getExpiresIn()))
+                            .firstConnected(Instant.now()).build();
+                    user.setInternalConcept2Data(internalConcept2Data);
+                    user.setConcept2User(concept2Service.getUser(oAuth2Token.getAccessToken()));
                     //ExternalRunkeeperData externalRunkeeperData = runkeeperService.getAllData(oAuth2AccessToken.getAccessToken()).build();
                     //InternalRunKeeperData internalRunKeeperData = InternalRunKeeperData.builder().token(oAuth2AccessToken.getAccessToken()).firstConnected(Instant.now()).lastTimeConnected(Instant.now()).defaultComment(DEFAULT_ACTIVITY_COMMENT).build();
-                    //user.setInternalRunKeeperData(internalRunKeeperData);
                     //user.setExternalRunkeeperData(externalRunkeeperData);
-                    //user = userRepo.save(user);
+                    user = userRepo.save(user);
 
-                    Concept2User user = concept2Service.getUser(oAuth2AccessToken.getAccessToken());
                     log.info("Got a concept2 user: {}", user);
                     ui.setUserInSession(Concept2Tab.this.user);
-                    applicationEventBus.publish(this, new Concept2AuthArrivedEvent(this, Concept2Tab.this.user, oAuth2AccessToken));
+                    applicationEventBus.publish(this, new Concept2AuthArrivedEvent(this, Concept2Tab.this.user, oAuth2Token));
                     setUpWithAuthPresent();
                 });
             }

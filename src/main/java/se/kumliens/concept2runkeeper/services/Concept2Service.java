@@ -55,7 +55,7 @@ public class Concept2Service {
 
     public Concept2User getUser(String token) {
         HttpHeaders headers = new HttpHeaders();
-        headers.setAccept(Lists.newArrayList(MediaType.APPLICATION_JSON));
+        headers.set("Accept", "application/vnd.c2logbook.v1+json");
         headers.set("Authorization", "Bearer " + token);
         RequestEntity requestEntity = new RequestEntity(headers, GET, props.getUserResource());
         ResponseEntity<Concept2User> response = restTemplate.exchange(requestEntity, Concept2User.class);

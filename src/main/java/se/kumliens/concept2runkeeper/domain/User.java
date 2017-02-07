@@ -10,6 +10,10 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.util.StringUtils;
+
+import lombok.ToString;
+import se.kumliens.concept2runkeeper.domain.concept2.Concept2User;
+import se.kumliens.concept2runkeeper.domain.concept2.InternalConcept2Data;
 import se.kumliens.concept2runkeeper.domain.runkeeper.ExternalRunkeeperData;
 import se.kumliens.concept2runkeeper.domain.runkeeper.InternalRunKeeperData;
 
@@ -27,6 +31,7 @@ import static org.springframework.util.StringUtils.isEmpty;
  */
 @Data
 @Document
+@ToString
 public class User implements UserDetails {
 
     private String id;
@@ -53,25 +58,29 @@ public class User implements UserDetails {
 
     private ExternalRunkeeperData externalRunkeeperData;
 
+    private InternalConcept2Data internalConcept2Data;
+
     private String concept2AccessToken;
 
     private String concept2ConnectDate;
 
     private Collection<GrantedAuthority> authorities = new HashSet<>();
 
+    private Concept2User concept2User;
+
     @PersistenceConstructor
-    public User(String email, String firstName, String lastName, String password, String id, boolean emailConfirmed, Collection<GrantedAuthority> authorities, InternalRunKeeperData internalRunKeeperData, ExternalRunkeeperData externalRunkeeperData, String concept2AccessToken, String concept2ConnectDate) {
+    public User(String email, String firstName, String lastName, String password, String id, boolean emailConfirmed, Collection<GrantedAuthority> authorities, InternalRunKeeperData internalRunKeeperData, ExternalRunkeeperData externalRunkeeperData, InternalConcept2Data internalConcept2Data, Concept2User concept2User) {
         this.email = email;
         this.firstName = firstName;
         this.lastName = lastName;
         this.password = password;
         this.internalRunKeeperData = internalRunKeeperData;
         this.externalRunkeeperData = externalRunkeeperData;
-        this.concept2AccessToken = concept2AccessToken;
-        this.concept2ConnectDate = concept2ConnectDate;
         this.id = id;
         this.authorities = authorities;
         this.emailConfirmed = emailConfirmed;
+        this.internalConcept2Data = internalConcept2Data;
+        this.concept2User = concept2User;
     }
 
     public User() {

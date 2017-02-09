@@ -26,6 +26,7 @@ public class EventService {
 
     private final C2RActivityRepo c2RActivityRepo;
 
+
     public void onUserRegistration(User user) {
         Observable.just(user)
                 .subscribeOn(Schedulers.io())

@@ -2,11 +2,13 @@ package se.kumliens.concept2runkeeper.domain.concept2;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 import se.kumliens.concept2runkeeper.domain.ExternalActivity;
 
+import org.springframework.data.annotation.PersistenceConstructor;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -16,7 +18,8 @@ import java.util.Date;
 /**
  * Created by svante2 on 2016-12-09.
  */
-@Data
+@Getter
+@Setter
 @ToString
 @EqualsAndHashCode(of = {"date"})
 @JsonPropertyOrder({ "Date",
@@ -77,13 +80,36 @@ public class Concept2CsvActivity implements ExternalActivity {
     private String age;
 
     @JsonProperty("Weight")
-    private String weigth;
+    private String weight;
 
     @JsonProperty("Ranked")
     private String ranked;
 
     @JsonProperty("Comments")
     private String comments;
+
+    @PersistenceConstructor
+    public Concept2CsvActivity(String date, String description, String formattedWorkTime, Double workTimeInSeconds, String formattedRestTime, String restTimeSeconds, String workDistance, String restDistance, String strokeRate, String avgWatts,
+            String avgHeartRate, String type, String pace, Double calPerHour, String age, String weight, String ranked, String comments) {
+        this.date = date;
+        this.description = description;
+        this.formattedWorkTime = formattedWorkTime;
+        this.workTimeInSeconds = workTimeInSeconds;
+        this.formattedRestTime = formattedRestTime;
+        this.restTimeSeconds = restTimeSeconds;
+        this.workDistance = workDistance;
+        this.restDistance = restDistance;
+        this.strokeRate = strokeRate;
+        this.avgWatts = avgWatts;
+        this.avgHeartRate = avgHeartRate;
+        this.type = type;
+        this.pace = pace;
+        this.calPerHour = calPerHour;
+        this.age = age;
+        this.weight = weight;
+        this.ranked = ranked;
+        this.comments = comments;
+    }
 
     public Instant getDateAsInstant() throws ParseException {
         if(date == null) return null;

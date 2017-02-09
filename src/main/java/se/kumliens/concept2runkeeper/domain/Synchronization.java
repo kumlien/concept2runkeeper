@@ -22,9 +22,6 @@ public class Synchronization {
 
     private ExternalActivity targetActivity;
 
-    //Redundant since this sync belongs to a C2RActivity containing the source activity but it feels better... Keep it until something breaks.
-    private ExternalActivity sourceActivity;
-
     private Instant date;
 
 }

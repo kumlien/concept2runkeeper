@@ -12,7 +12,7 @@ import java.net.URI;
  * Created by svante2 on 2017-01-16.
  */
 @Component
-@ConfigurationProperties(prefix = "concept2", locations = "file:/data/c2r/config/application.properties", ignoreUnknownFields = false)
+@ConfigurationProperties(prefix = "concept2", ignoreUnknownFields = false)
 @Data
 @ToString
 public class Concept2Props {

@@ -322,12 +322,12 @@ public class SynchronizeView extends MVerticalLayout implements View {
 
                     //Add the sync if not already there
                     if (forceSync.getValue() || c2RActivity.getSynchronizations().stream().filter(synchronization -> synchronization.getTarget() == RUNKEEPER).count() == 0) {
-                        log.info("No sync to RunKeeper found, adding one...");
+                        log.info("No sync to RunKeeper found or force sync, let's do it");
                         RecordActivityRequest request = createRecordActivityRequest(csvActivity, internalRunKeeperData, externalRunkeeperData);
                         URI activityLocation = runkeeperService.recordActivity(request, ui.getUser().getInternalRunKeeperData().getToken());
                         newLocations.add(ui.getUser().getExternalRunkeeperData().getProfile().getProfile() + activityLocation.toString());
                         RunkeeperActivity rkActivity = runkeeperService.getActivity(ui.getUser().getInternalRunKeeperData().getToken(), activityLocation);
-                        c2RActivity.getSynchronizations().add(Synchronization.builder().date(Instant.now()).source(CONCEPT2).target(RUNKEEPER).targetActivity(rkActivity).sourceActivity(csvActivity).build());
+                        c2RActivity.getSynchronizations().add(Synchronization.builder().date(Instant.now()).source(CONCEPT2).target(RUNKEEPER).targetActivity(rkActivity).build());
                         rkContainer.addItem(rkActivity);
                         concept2Grid.getContainerDataSource().removeItem(csvActivity);
                         eventBus.publish(this, new ActivitySyncEvent(ui.getUser(), c2RActivity));
@@ -345,24 +345,24 @@ public class SynchronizeView extends MVerticalLayout implements View {
                 });
 
                 //15 lines to display a message, wtf...
-                String firstPart = "No activities created!";
-                if (newLocations.size() == 1) {
-                    firstPart = "One activity created at RunKeeper, you can find it at<br>";
-                } else if (newLocations.size() > 1) {
-                    firstPart = newLocations.size() + " activities created at RunKeeper. You can find them at <br>";
-                }
-                String locationsWithLineBreak = newLocations.stream().map(s -> "<a href=\"" + s + "\">" + s + "</a>").collect(joining("<br>")).toString().replaceAll("fitnessActivities", "activity");
-                String skippedSyncMessage = "";
-                if (skippedSync.intValue() == 1) {
-                    skippedSyncMessage = "<br>" + "One activity was not sent to RunKeeper since this activity was already synced to RunKeeper";
-                } else if (skippedSync.intValue() > 1) {
-                    skippedSyncMessage = "<br>" + skippedSync.intValue() + " activities was not sent to RunKeeper since they were previously synced";
-                }
-                new MNotification(firstPart + locationsWithLineBreak + skippedSyncMessage).withHtmlContentAllowed(true).withStyleName(NOTIFICATION_SUCCESS).withDelayMsec(10000).display();
                 ui.access(() -> {
+                    String firstPart = "No activities created!";
+                    if (newLocations.size() == 1) {
+                        firstPart = "One activity created at RunKeeper, you can find it at<br>";
+                    } else if (newLocations.size() > 1) {
+                        firstPart = newLocations.size() + " activities created at RunKeeper. You can find them at <br>";
+                    }
+                    String locationsWithLineBreak = newLocations.stream().map(s -> "<a href=\"" + s + "\">" + s + "</a>").collect(joining("<br>")).toString().replaceAll("fitnessActivities", "activity");
+                    String skippedSyncMessage = "";
+                    if (skippedSync.intValue() == 1) {
+                        skippedSyncMessage = "<br>" + "One activity was not sent to RunKeeper since this activity was already synced to RunKeeper";
+                    } else if (skippedSync.intValue() > 1) {
+                        skippedSyncMessage = "<br>" + skippedSync.intValue() + " activities was not sent to RunKeeper since they were previously synced";
+                    }
                     concept2Grid.getSelectionModel().reset();
                     concept2Grid.clearSortOrder();
                     progressWindow.close();
+                    new MNotification(firstPart + locationsWithLineBreak + skippedSyncMessage).withHtmlContentAllowed(true).withStyleName(NOTIFICATION_SUCCESS).withDelayMsec(10000).display();
                 });
             }).start();
         });

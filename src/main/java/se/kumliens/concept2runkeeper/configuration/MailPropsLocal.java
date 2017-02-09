@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
  * Created by svante2 on 2017-01-01.
  */
 @Component
-@ConfigurationProperties(prefix = "smtp", locations = "file:/data/c2r/config/application.properties", ignoreUnknownFields = false)
+@ConfigurationProperties(prefix = "smtp", ignoreUnknownFields = false)
 @Profile("!cloud")
 @Data
 @ToString

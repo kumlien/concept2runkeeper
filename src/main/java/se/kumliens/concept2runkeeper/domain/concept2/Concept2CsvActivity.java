@@ -6,6 +6,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.springframework.data.annotation.TypeAlias;
+import org.springframework.data.mongodb.core.mapping.Document;
 import se.kumliens.concept2runkeeper.domain.ExternalActivity;
 
 import org.springframework.data.annotation.PersistenceConstructor;
@@ -88,9 +90,13 @@ public class Concept2CsvActivity implements ExternalActivity {
     @JsonProperty("Comments")
     private String comments;
 
+    public Concept2CsvActivity() {
+
+    }
+
     @PersistenceConstructor
     public Concept2CsvActivity(String date, String description, String formattedWorkTime, Double workTimeInSeconds, String formattedRestTime, String restTimeSeconds, String workDistance, String restDistance, String strokeRate, String avgWatts,
-            String avgHeartRate, String type, String pace, Double calPerHour, String age, String weight, String ranked, String comments) {
+                               String avgHeartRate, String type, String pace, Double calPerHour, String age, String weight, String ranked, String comments) {
         this.date = date;
         this.description = description;
         this.formattedWorkTime = formattedWorkTime;

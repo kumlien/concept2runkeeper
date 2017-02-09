@@ -13,7 +13,7 @@ import java.net.URL;
  * Created by svante2 on 2016-11-28.
  */
 @Component
-@ConfigurationProperties(prefix = "runkeeper", locations = "file:/data/c2r/config/application.properties", ignoreUnknownFields = false)
+@ConfigurationProperties(prefix = "runkeeper", ignoreUnknownFields = false)
 @Data
 @ToString
 public class RunkeeperProps {

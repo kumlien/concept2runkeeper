@@ -1,7 +1,11 @@
 package se.kumliens.concept2runkeeper.domain.runkeeper;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.github.rjeschke.txtmark.Run;
 import lombok.*;
+import org.springframework.data.annotation.PersistenceConstructor;
+import org.springframework.data.annotation.TypeAlias;
+import org.springframework.data.mongodb.core.mapping.Document;
 import se.kumliens.concept2runkeeper.domain.ExternalActivity;
 
 import java.util.List;
@@ -9,6 +13,7 @@ import java.util.List;
 /**
  * Created by svante2 on 2016-12-17.
  */
+@TypeAlias("se.kumliens.concept2runkeeper.domain.runkeeper.RunkeeperActivity")
 @Getter
 @ToString
 @EqualsAndHashCode(of = {"uri"})
@@ -59,4 +64,19 @@ public class RunkeeperActivity implements ExternalActivity {
 
     @JsonProperty("distance")
     private List<RunKeeperDistance> distances;
+
+    protected RunkeeperActivity() {}
+
+    @PersistenceConstructor
+    public RunkeeperActivity(String uri, Integer userID, ActivityType type, Equipment equipment, String startTime, Double distance, String duration, List<RunKeeperHeartRate> heartRates, List<RunKeeperDistance> distances) {
+        this.uri = uri;
+        this.userID = userID;
+        this.type = type;
+        this.equipment = equipment;
+        this.startTime = startTime;
+        this.distance = distance;
+        this.duration = duration;
+        this.heartRates = heartRates;
+        this.distances = distances;
+    }
 }

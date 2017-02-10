@@ -17,6 +17,7 @@ import com.vaadin.ui.renderers.ImageRenderer;
 import com.vaadin.ui.themes.ValoTheme;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.vaadin.grid.cellrenderers.view.SparklineRenderer;
 import org.vaadin.spring.events.EventBus;
@@ -100,7 +101,7 @@ public class SynchronizeView extends MVerticalLayout implements View {
         if (!ui.getUser().hasConnectionTo(RUNKEEPER)) {
             new MNotification("Since you don't have a connection setup with RunKeeper yet we have disabled the<br>" +
                     "synchronization for now. Head over to the Settings page to fix this!").withHtmlContentAllowed(true).withStyleName(NOTIFICATION_FAILURE).withDelayMsec(3000).display();
-        } else {
+        } else if (!ui.getUser().hasConnectionTo(CONCEPT2)){
             new MNotification("Since you don't have a connection set up with Concept2 yet we can't fetch your data automatically.</br>" +
                     " You can still download your log file from Concept2 " + link("here", "http://log.concept2.com/history") + " and drop the file on the upper table.")
                     .withHtmlContentAllowed(true).withStyleName(NOTIFICATION_CLOSABLE).withDelayMsec(5000).display();
@@ -209,17 +210,16 @@ public class SynchronizeView extends MVerticalLayout implements View {
                 .forEach(rkContainer::addItem);
 
         layout.expand(grid);
-        return new MPanel("Your RunKeeper activities goes here").withContent(layout);
+        return new MPanel("Your synchronized RunKeeper activities goes here").withContent(layout);
     }
 
 
-    //Create the content representing where we synchronize from. Hardwire to concept2 for now
+    //Create the content representing where we synchronize from. Hard wire to concept2 for now
     private Panel createFromContent() {
         Label label = new MLabel("Concept2 activities (for now we only support synchronizing from <a href=\"http://log.concept2.com/\">Concept2</a>)").withContentMode(HTML);
 
         MVerticalLayout fromContent = new MVerticalLayout();
         MHorizontalLayout topLayout = new MHorizontalLayout(label).withSpacing(true);
-
 
         //Create the tab sheet
         TabSheet concept2TabSheet = new TabSheet();
@@ -277,8 +277,7 @@ public class SynchronizeView extends MVerticalLayout implements View {
 
         DragAndDropWrapper dropArea = getDropAreaWithGrid(grid);
         dropArea.setWidth("100%");
-        csvTabLayout.add(dropArea);
-        csvTabLayout.setExpandRatio(dropArea, 1.0f);
+        csvTabLayout.expand(dropArea);
 
         fromContent.expand(concept2TabSheet);
 
@@ -391,13 +390,16 @@ public class SynchronizeView extends MVerticalLayout implements View {
 
     private DragAndDropWrapper getDropAreaWithGrid(MGrid<Concept2CsvActivity> grid) {
         final CsvFileDropHandler dropBox = new CsvFileDropHandler(grid, activities -> {
-            activities.forEach(csvActivity -> {
-                grid.getContainerDataSource().addItem(csvActivity);
-            });
-            new MNotification(activities.size() + " activities found").withDelayMsec(2000).withStyleName(NOTIFICATION_SUCCESS).display();
+            if(!CollectionUtils.isEmpty(activities)) {
+                grid.getContainerDataSource().removeAllItems();
+                activities.forEach(grid.getContainerDataSource()::addItem);
+                new MNotification(activities.size() + (activities.size() > 1 ? " activities found" : " activity found")).withDelayMsec(2000).withStyleName(NOTIFICATION_SUCCESS).display();
+            } else {
+                new MNotification("No activities found!").withDelayMsec(2000).withStyleName(NOTIFICATION_WARNING).display();
+            }
         }, e -> {
             log.warn("Exception when uploading file", e);
-            new MNotification("Unable to upload this file (" + e.getMessage() + ")").withDelayMsec(5000).withStyleName(NOTIFICATION_FAILURE).display();
+            new MNotification("Sorry, but we are unable to parse this file (" + e.getMessage() + ")").withDelayMsec(5000).withStyleName(NOTIFICATION_FAILURE).display();
         });
         dropBox.setSizeUndefined();
         return dropBox;

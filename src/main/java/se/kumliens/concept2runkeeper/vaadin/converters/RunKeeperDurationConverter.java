@@ -12,26 +12,25 @@ import java.util.Locale;
  * Converts runkeeper duration from seconds to our presentation format.
  * Created by svante2 on 2016-12-22.
  */
-public class RunKeeperDurationConverter implements Converter<String, String> {
+public class RunKeeperDurationConverter implements Converter<String, Double> {
 
     @Override
-    public String convertToModel(String value, Class<? extends String> targetType, Locale locale) throws ConversionException {
-        return String.valueOf(Duration.parse(value).getSeconds());
+    public Double convertToModel(String value, Class<? extends Double> targetType, Locale locale) throws ConversionException {
+        return Double.valueOf(Duration.parse(value).getSeconds());
     }
 
     @Override
-    public String convertToPresentation(String value, Class<? extends String> targetType, Locale locale) throws ConversionException {
-        if(value == null || value.isEmpty()) {
-            value = "0";
+    public String convertToPresentation(Double value, Class<? extends String> targetType, Locale locale) throws ConversionException {
+        if(value == null) {
+            value = 0.0;
         }
-        Integer seconds = Integer.valueOf(value.trim());
 
-        return Constants.formatDuration(Duration.ofSeconds(seconds));
+        return Constants.formatDuration(Duration.ofSeconds(value.intValue()));
     }
 
     @Override
-    public Class<String> getModelType() {
-        return String.class;
+    public Class<Double> getModelType() {
+        return Double.class;
     }
 
     @Override

@@ -29,6 +29,7 @@ import java.net.URL;
 
 import static com.vaadin.ui.Alignment.MIDDLE_CENTER;
 import static com.vaadin.ui.themes.ValoTheme.MENU_PART;
+import static com.vaadin.ui.themes.ValoTheme.NOTIFICATION_SUCCESS;
 import static se.kumliens.concept2runkeeper.vaadin.C2RThemeResources.RUNKEEPER_DEFAULT_PROFILE_ICON;
 
 /**
@@ -133,7 +134,7 @@ public class C2RMenu extends com.vaadin.ui.CustomComponent {
             ContactForm form = new ContactForm(ui.getUser());
             form.setSavedHandler(cr -> {
                 form.closePopup();
-                new MNotification("Thanks a lot for your feedback!").withDelayMsec(1000).withStyleName(ValoTheme.NOTIFICATION_SUCCESS).display();
+                new MNotification("Thanks a lot for your feedback!").withDelayMsec(1000).withStyleName(NOTIFICATION_SUCCESS).display();
                 Observable.just("").
                         map(s -> {
                                     SimpleMailMessage msg = new SimpleMailMessage();

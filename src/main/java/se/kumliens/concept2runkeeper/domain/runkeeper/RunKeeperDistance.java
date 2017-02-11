@@ -1,6 +1,7 @@
 package se.kumliens.concept2runkeeper.domain.runkeeper;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Builder;
 import lombok.Data;
 import lombok.ToString;
 
@@ -9,6 +10,7 @@ import lombok.ToString;
  */
 @Data
 @ToString
+@Builder(builderClassName = "builder")
 public class RunKeeperDistance {
 
     /**

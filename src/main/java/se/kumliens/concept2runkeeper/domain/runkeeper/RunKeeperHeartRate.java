@@ -1,14 +1,16 @@
 package se.kumliens.concept2runkeeper.domain.runkeeper;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Data;
-import lombok.ToString;
+import lombok.*;
+import org.springframework.stereotype.Service;
 
 /**
  * Created by svante2 on 2017-01-02.
  */
-@Data
+@Getter
 @ToString
+@Setter
+@Builder(builderClassName = "builder")
 public class RunKeeperHeartRate {
 
     @JsonProperty("timestamp")

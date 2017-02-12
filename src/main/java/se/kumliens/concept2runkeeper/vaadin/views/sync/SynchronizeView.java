@@ -183,14 +183,14 @@ public class SynchronizeView extends MVerticalLayout implements View {
             Upload upload = null;
             try {
                 File tempFile = File.createTempFile("temp", ".csv");
-                upload = new Upload("Choose the correct Concept2 result file", (filename, mimetype) -> {
-                    FileOutputStream fout = null;
+                upload = new Upload("Choose the Concept2 result file matching this activity", (filename, mimetype) -> {
                     try {
-                        fout = new FileOutputStream(tempFile);
+                        return new FileOutputStream(tempFile);
                     } catch (IOException e1) {
-                        throw new RuntimeException(e1);
+                        log.warn("Unable to create local file for stroke data", e1);
+                        new MNotification("Unable to create a local file: " + e1.getMessage()).withStyleName(NOTIFICATION_ERROR).display();
+                        return null;
                     }
-                    return fout;
                 });
                 upload.addFinishedListener(finishedEvent -> {
                     try {
@@ -199,21 +199,21 @@ public class SynchronizeView extends MVerticalLayout implements View {
                         CsvMapper mapper = new CsvMapper();
                         CsvSchema csvSchema = mapper.schemaFor(Concept2CsvStrokeData.class).withUseHeader(true);
                         MappingIterator<Concept2CsvStrokeData> values = mapper.readerFor(Concept2CsvStrokeData.class).with(csvSchema).readValues(bufferedReader);
-                        List<Concept2CsvStrokeData> strokeDatas = values.readAll();
-                        double lastDistance = strokeDatas.get(strokeDatas.size() - 1).getDistance();
+                        List<Concept2CsvStrokeData> strokeData = values.readAll();
+                        double lastDistance = CollectionUtils.isEmpty(strokeData) ? 0.0 : strokeData.get(strokeData.size() - 1).getDistance();
                         if (Math.abs(lastDistance - runkeeperActivity.getDistance()) > 2) {
                             ConfirmDialog.show(getUI(), "Difference in distance",
                                     "This result file has a different distance compared to the activity (the activity is " + runkeeperActivity.getDistance().intValue() + " meters but the result file is " + (int)lastDistance + " meters), are you sure you want to use this file?",
                                     "Yes", "No",
                                     dialog -> {
                                         if (dialog.isConfirmed()) {
-                                            addHeartRates(runkeeperActivity, strokeDatas);
+                                            addHeartRates(runkeeperActivity, strokeData);
                                             updateActivity(runkeeperActivity);
                                             //TODO We don't update our internal representation here yet...
                                         }
                                     });
                         } else {
-                            addHeartRates(runkeeperActivity, strokeDatas);
+                            addHeartRates(runkeeperActivity, strokeData);
                             updateActivity(runkeeperActivity);
                             //TODO We don't update our internal representation here yet...
                         }
@@ -222,8 +222,9 @@ public class SynchronizeView extends MVerticalLayout implements View {
                     }
                 });
                 upload.setButtonCaption("Attach heart rate data");
-            } catch (Exception e1) {
-
+            } catch (IOException e1) {
+                log.warn("Error when adding stroke data to activity", e1);
+                new MNotification("An error occurred: " + e1.getMessage()).withStyleName(NOTIFICATION_ERROR).display();
             }
             MWindow uploadwindow = new MWindow("Add heart rate data")
                     .withContent(
@@ -371,15 +372,21 @@ public class SynchronizeView extends MVerticalLayout implements View {
 
                     //Add the sync if not already there
                     if (forceSync.getValue() || c2RActivity.getSynchronizations().stream().filter(synchronization -> synchronization.getTarget() == RUNKEEPER).count() == 0) {
-                        log.info("No sync to RunKeeper found or force sync, let's do it");
-                        RecordActivityRequest request = createRecordActivityRequest(csvActivity, internalRunKeeperData, externalRunkeeperData);
-                        URI activityLocation = runkeeperService.recordActivity(request, ui.getUser().getInternalRunKeeperData().getToken());
-                        newLocations.add(ui.getUser().getExternalRunkeeperData().getProfile().getProfile() + activityLocation.toString());
-                        RunkeeperActivity rkActivity = runkeeperService.getActivity(ui.getUser().getInternalRunKeeperData().getToken(), activityLocation);
-                        c2RActivity.getSynchronizations().add(Synchronization.builder().date(Instant.now()).source(CONCEPT2).target(RUNKEEPER).targetActivity(rkActivity).build());
-                        rkContainer.addItem(rkActivity);
-                        concept2Grid.getContainerDataSource().removeItem(csvActivity);
-                        eventBus.publish(this, new ActivitySyncEvent(ui.getUser(), c2RActivity));
+                        try {
+                            log.info("No sync to RunKeeper found or force sync, let's do it");
+                            RecordActivityRequest request = createRecordActivityRequest(csvActivity, internalRunKeeperData, externalRunkeeperData);
+                            URI activityLocation = runkeeperService.recordActivity(request, ui.getUser().getInternalRunKeeperData().getToken());
+                            newLocations.add(ui.getUser().getExternalRunkeeperData().getProfile().getProfile() + activityLocation.toString());
+                            RunkeeperActivity rkActivity = runkeeperService.getActivity(ui.getUser().getInternalRunKeeperData().getToken(), activityLocation);
+                            c2RActivity.getSynchronizations().add(Synchronization.builder().date(Instant.now()).source(CONCEPT2).target(RUNKEEPER).targetActivity(rkActivity).build());
+                            rkContainer.addItem(rkActivity);
+                            concept2Grid.getContainerDataSource().removeItem(csvActivity);
+                            eventBus.publish(this, new ActivitySyncEvent(ui.getUser(), c2RActivity));
+                        } catch (Exception e) {
+                            log.warn("Failed to create activity at RunKeeper", e);
+                            progressWindow.close();
+                            new MNotification("Failed to create the activity at RunKeeper: " + e.getMessage()).withStyleName(NOTIFICATION_ERROR).withDelayMsec(6000).display();
+                        }
                     } else {
                         log.info("Already synced to RunKeeper, skip new sync");
                         skippedSync.increment();
@@ -412,6 +419,7 @@ public class SynchronizeView extends MVerticalLayout implements View {
                     concept2Grid.clearSortOrder();
                     progressWindow.close();
                     new MNotification(firstPart + locationsWithLineBreak + skippedSyncMessage).withHtmlContentAllowed(true).withStyleName(NOTIFICATION_SUCCESS).withDelayMsec(10000).display();
+                    ui.push();
                 });
             }).start();
         });
@@ -435,7 +443,9 @@ public class SynchronizeView extends MVerticalLayout implements View {
                 .distance(csvActivity.getWorkDistance())
                 .duration(Double.valueOf(csvActivity.getWorkTimeInSeconds()))
                 .totalCalories(csvActivity.getCalPerHours())
-                .type(ActivityType.ROWING).build();
+                .type(ActivityType.ROWING)
+                .distances(new ArrayList<>())
+                .heartRates(new ArrayList<>()).build();
     }
 
     private DragAndDropWrapper getDropAreaWithGrid(MGrid<Concept2CsvActivity> grid) {

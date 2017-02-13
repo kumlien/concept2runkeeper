@@ -1,5 +1,29 @@
 package se.kumliens.concept2runkeeper.vaadin.views.sync;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import se.kumliens.concept2runkeeper.domain.C2RActivity;
+import se.kumliens.concept2runkeeper.domain.Synchronization;
+import se.kumliens.concept2runkeeper.domain.concept2.Concept2CsvActivity;
+import se.kumliens.concept2runkeeper.domain.concept2.Concept2CsvStrokeData;
+import se.kumliens.concept2runkeeper.domain.runkeeper.ActivityType;
+import se.kumliens.concept2runkeeper.domain.runkeeper.Equipment;
+import se.kumliens.concept2runkeeper.domain.runkeeper.ExternalRunkeeperData;
+import se.kumliens.concept2runkeeper.domain.runkeeper.InternalRunKeeperData;
+import se.kumliens.concept2runkeeper.domain.runkeeper.RunKeeperHeartRate;
+import se.kumliens.concept2runkeeper.domain.runkeeper.RunkeeperActivity;
+import se.kumliens.concept2runkeeper.repos.C2RActivityRepo;
+import se.kumliens.concept2runkeeper.runkeeper.RecordActivityRequest;
+import se.kumliens.concept2runkeeper.services.NoSuchActivityException;
+import se.kumliens.concept2runkeeper.services.RunkeeperService;
+import se.kumliens.concept2runkeeper.vaadin.MainUI;
+import se.kumliens.concept2runkeeper.vaadin.converters.Concept2DistanceConverter;
+import se.kumliens.concept2runkeeper.vaadin.converters.Concept2WorkTimeConverter;
+import se.kumliens.concept2runkeeper.vaadin.converters.RunKeeperDateConverter;
+import se.kumliens.concept2runkeeper.vaadin.converters.RunKeeperDistanceConverter;
+import se.kumliens.concept2runkeeper.vaadin.converters.RunKeeperDurationConverter;
+import se.kumliens.concept2runkeeper.vaadin.events.ActivitySyncEvent;
+
 import com.fasterxml.jackson.databind.MappingIterator;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
@@ -12,15 +36,19 @@ import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener;
 import com.vaadin.server.Resource;
 import com.vaadin.spring.annotation.SpringView;
-import com.vaadin.ui.*;
+import com.vaadin.ui.Alignment;
+import com.vaadin.ui.CheckBox;
+import com.vaadin.ui.DragAndDropWrapper;
+import com.vaadin.ui.Grid;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Panel;
-import com.vaadin.ui.renderers.ClickableRenderer;
+import com.vaadin.ui.ProgressBar;
+import com.vaadin.ui.TabSheet;
+import com.vaadin.ui.Upload;
+import com.vaadin.ui.VerticalSplitPanel;
 import com.vaadin.ui.renderers.ClickableRenderer.RendererClickListener;
 import com.vaadin.ui.renderers.ImageRenderer;
 import com.vaadin.ui.themes.ValoTheme;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.vaadin.dialogs.ConfirmDialog;
@@ -35,39 +63,40 @@ import org.vaadin.viritin.layouts.MPanel;
 import org.vaadin.viritin.layouts.MVerticalLayout;
 import org.vaadin.viritin.layouts.MWindow;
 import org.vaadin.viritin.ui.MNotification;
-
-import se.kumliens.concept2runkeeper.domain.concept2.Concept2CsvActivity;
-import se.kumliens.concept2runkeeper.domain.C2RActivity;
-import se.kumliens.concept2runkeeper.domain.Synchronization;
-import se.kumliens.concept2runkeeper.domain.concept2.Concept2CsvStrokeData;
-import se.kumliens.concept2runkeeper.domain.runkeeper.*;
-import se.kumliens.concept2runkeeper.repos.C2RActivityRepo;
-import se.kumliens.concept2runkeeper.runkeeper.*;
-import se.kumliens.concept2runkeeper.services.NoSuchActivityException;
-import se.kumliens.concept2runkeeper.services.RunkeeperService;
-import se.kumliens.concept2runkeeper.vaadin.MainUI;
-import se.kumliens.concept2runkeeper.vaadin.converters.*;
-import se.kumliens.concept2runkeeper.vaadin.events.ActivitySyncEvent;
-
 import javax.annotation.PostConstruct;
-
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
 import java.net.URI;
 import java.text.ParseException;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.LongAdder;
 
 import static com.google.common.base.MoreObjects.firstNonNull;
-import static com.vaadin.server.FontAwesome.*;
+import static com.vaadin.server.FontAwesome.CHAIN;
+import static com.vaadin.server.FontAwesome.FILE_TEXT_O;
+import static com.vaadin.server.FontAwesome.LONG_ARROW_RIGHT;
+import static com.vaadin.server.FontAwesome.QUESTION_CIRCLE;
 import static com.vaadin.server.Sizeable.Unit.EM;
 import static com.vaadin.shared.ui.label.ContentMode.HTML;
 import static com.vaadin.ui.Grid.SelectionMode.MULTI;
 import static com.vaadin.ui.Grid.SelectionMode.SINGLE;
-import static com.vaadin.ui.themes.ValoTheme.*;
+import static com.vaadin.ui.themes.ValoTheme.BUTTON_BORDERLESS;
+import static com.vaadin.ui.themes.ValoTheme.NOTIFICATION_CLOSABLE;
+import static com.vaadin.ui.themes.ValoTheme.NOTIFICATION_ERROR;
+import static com.vaadin.ui.themes.ValoTheme.NOTIFICATION_FAILURE;
+import static com.vaadin.ui.themes.ValoTheme.NOTIFICATION_SMALL;
+import static com.vaadin.ui.themes.ValoTheme.NOTIFICATION_SUCCESS;
+import static com.vaadin.ui.themes.ValoTheme.NOTIFICATION_WARNING;
+import static com.vaadin.ui.themes.ValoTheme.TABSHEET_FRAMED;
+import static com.vaadin.ui.themes.ValoTheme.TABSHEET_PADDED_TABBAR;
 import static java.util.stream.Collectors.joining;
-import static java.util.stream.Collectors.summarizingDouble;
 import static se.kumliens.concept2runkeeper.domain.Provider.CONCEPT2;
 import static se.kumliens.concept2runkeeper.domain.Provider.RUNKEEPER;
 import static se.kumliens.concept2runkeeper.vaadin.C2RThemeResources.HEART_RATE;
@@ -112,7 +141,7 @@ public class SynchronizeView extends MVerticalLayout implements View {
 
     @PostConstruct
     public void init() {
-        Label label = new MLabel("For now we only support synchronizing from <a href=\"http://log.concept2.com/\">Concept2</a> to " +
+        Label label = new MLabel("Synchronize your activities from <a href=\"http://log.concept2.com/\">Concept2</a> to " +
                 "<a href=\"http://www.runkeeper.com/\">RunKeeper</a>.");
         label.setContentMode(HTML);
         label.setSizeUndefined();
@@ -177,64 +206,6 @@ public class SynchronizeView extends MVerticalLayout implements View {
         grid.addColumn(RunkeeperActivity.DURATION).setHeaderCaption("Time").setConverter(new RunKeeperDurationConverter()).setExpandRatio(1);
         grid.addColumn(RunkeeperActivity.TYPE).setHeaderCaption("(RunKeeper-) Type").setExpandRatio(1);
         grid.addColumn(RunkeeperActivity.HEART_RATE).setRenderer(new SparklineRenderer()).setExpandRatio(2);
-
-        grid.addColumn("addStrokeData").setRenderer(new ImageRenderer((RendererClickListener) e -> {
-            RunkeeperActivity runkeeperActivity = (RunkeeperActivity) e.getItemId();
-            Upload upload = null;
-            try {
-                File tempFile = File.createTempFile("temp", ".csv");
-                upload = new Upload("Choose the Concept2 result file matching this activity", (filename, mimetype) -> {
-                    try {
-                        return new FileOutputStream(tempFile);
-                    } catch (IOException e1) {
-                        log.warn("Unable to create local file for stroke data", e1);
-                        new MNotification("Unable to create a local file: " + e1.getMessage()).withStyleName(NOTIFICATION_ERROR).display();
-                        return null;
-                    }
-                });
-                upload.addFinishedListener(finishedEvent -> {
-                    try {
-                        FileReader fileReader = new FileReader(tempFile);
-                        BufferedReader bufferedReader = new BufferedReader(fileReader);
-                        CsvMapper mapper = new CsvMapper();
-                        CsvSchema csvSchema = mapper.schemaFor(Concept2CsvStrokeData.class).withUseHeader(true);
-                        MappingIterator<Concept2CsvStrokeData> values = mapper.readerFor(Concept2CsvStrokeData.class).with(csvSchema).readValues(bufferedReader);
-                        List<Concept2CsvStrokeData> strokeData = values.readAll();
-                        double lastDistance = CollectionUtils.isEmpty(strokeData) ? 0.0 : strokeData.get(strokeData.size() - 1).getDistance();
-                        if (Math.abs(lastDistance - runkeeperActivity.getDistance()) > 2) {
-                            ConfirmDialog.show(getUI(), "Difference in distance",
-                                    "This result file has a different distance compared to the activity (the activity is " + runkeeperActivity.getDistance().intValue() + " meters but the result file is " + (int)lastDistance + " meters), are you sure you want to use this file?",
-                                    "Yes", "No",
-                                    dialog -> {
-                                        if (dialog.isConfirmed()) {
-                                            addHeartRates(runkeeperActivity, strokeData);
-                                            updateActivity(runkeeperActivity);
-                                            //TODO We don't update our internal representation here yet...
-                                        }
-                                    });
-                        } else {
-                            addHeartRates(runkeeperActivity, strokeData);
-                            updateActivity(runkeeperActivity);
-                            //TODO We don't update our internal representation here yet...
-                        }
-                    } catch (Exception e1) {
-                        log.warn("Error reading file which should contain concept2 stroke data", e1);
-                    }
-                });
-                upload.setButtonCaption("Attach heart rate data");
-            } catch (IOException e1) {
-                log.warn("Error when adding stroke data to activity", e1);
-                new MNotification("An error occurred: " + e1.getMessage()).withStyleName(NOTIFICATION_ERROR).display();
-            }
-            MWindow uploadwindow = new MWindow("Add heart rate data")
-                    .withContent(
-                            new MPanel(
-                                    new MHorizontalLayout(upload).withMargin(true).withSpacing(true).space()))
-                    .withModal(true)
-                    .withResizable(false);
-
-            ui.addWindow(uploadwindow);
-        }));
 
 
         c2RActivityRepo.findByUserIdAndSource(ui.getUser().getEmail(), CONCEPT2).stream()
@@ -320,6 +291,63 @@ public class SynchronizeView extends MVerticalLayout implements View {
         grid.addColumn("workTimeInSeconds").setHeaderCaption("Time").setConverter(new Concept2WorkTimeConverter());
         grid.addColumn("pace").setHeaderCaption("Pace");
         grid.addColumn("type").setHeaderCaption("(Concept2-) Type");
+        grid.addColumn("addStrokeData").setRenderer(new ImageRenderer((RendererClickListener) e -> {
+            Concept2CsvActivity concept2CsvActivity = (Concept2CsvActivity) e.getItemId();
+            Upload upload = null;
+            try {
+                File tempFile = File.createTempFile("temp", ".csv");
+                upload = new Upload("Choose the Concept2 result file matching this activity", (filename, mimetype) -> {
+                    try {
+                        return new FileOutputStream(tempFile);
+                    } catch (IOException e1) {
+                        log.warn("Unable to create local file for stroke data", e1);
+                        new MNotification("Unable to create a local file: " + e1.getMessage()).withStyleName(NOTIFICATION_ERROR).display();
+                        return null;
+                    }
+                });
+                upload.addFinishedListener(finishedEvent -> {
+                    try {
+                        FileReader fileReader = new FileReader(tempFile);
+                        BufferedReader bufferedReader = new BufferedReader(fileReader);
+                        CsvMapper mapper = new CsvMapper();
+                        CsvSchema csvSchema = mapper.schemaFor(Concept2CsvStrokeData.class).withUseHeader(true);
+                        MappingIterator<Concept2CsvStrokeData> values = mapper.readerFor(Concept2CsvStrokeData.class).with(csvSchema).readValues(bufferedReader);
+                        List<Concept2CsvStrokeData> strokeData = values.readAll();
+                        double lastDistance = CollectionUtils.isEmpty(strokeData) ? 0.0 : strokeData.get(strokeData.size() - 1).getDistance();
+                        if (Math.abs(lastDistance - concept2CsvActivity.getWorkDistance()) > 2) {
+                            ConfirmDialog.show(getUI(), "Difference in distance",
+                                    "This result file has a different distance compared to the activity (the activity is " + concept2CsvActivity.getWorkDistance() + " meters but the result file is " + (int)lastDistance + " meters), are you sure you want to use this file?",
+                                    "Yes", "No",
+                                    dialog -> {
+                                        if (dialog.isConfirmed()) {
+                                            addHeartRates(concept2CsvActivity, strokeData);
+                                            //updateActivity(runkeeperActivity);
+                                            //TODO We don't update our internal representation here yet...
+                                        }
+                                    });
+                        } else {
+                            addHeartRates(concept2CsvActivity, strokeData);
+                            //updateActivity(runkeeperActivity);
+                            //TODO We don't update our internal representation here yet...
+                        }
+                    } catch (Exception e1) {
+                        log.warn("Error reading file which should contain concept2 stroke data", e1);
+                    }
+                });
+                upload.setButtonCaption("Attach heart rate data");
+            } catch (IOException e1) {
+                log.warn("Error when adding stroke data to activity", e1);
+                new MNotification("An error occurred: " + e1.getMessage()).withStyleName(NOTIFICATION_ERROR).display();
+            }
+            MWindow uploadwindow = new MWindow("Add heart rate data")
+                    .withContent(
+                            new MPanel(
+                                    new MHorizontalLayout(upload).withMargin(true).withSpacing(true).space()))
+                    .withModal(true)
+                    .withResizable(false);
+
+            ui.addWindow(uploadwindow);
+        }));
         grid.addSelectionListener(evt -> {
             syncButton.setEnabled(!grid.getSelectedRows().isEmpty());
         });

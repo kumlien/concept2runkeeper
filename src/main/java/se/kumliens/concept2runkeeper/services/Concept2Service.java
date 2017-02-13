@@ -1,30 +1,24 @@
 package se.kumliens.concept2runkeeper.services;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.Lists;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.converter.HttpMessageConverter;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import se.kumliens.concept2runkeeper.concept2.Concept2Props;
 import se.kumliens.concept2runkeeper.domain.concept2.Concept2ApiActivity;
 import se.kumliens.concept2runkeeper.domain.concept2.Concept2User;
-import se.kumliens.concept2runkeeper.domain.runkeeper.RunKeeperUser;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import javax.annotation.PostConstruct;
-
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
 import static com.fasterxml.jackson.databind.DeserializationFeature.UNWRAP_ROOT_VALUE;
-import static com.google.common.collect.Lists.newArrayList;
 import static org.springframework.http.HttpMethod.GET;
 
 /**

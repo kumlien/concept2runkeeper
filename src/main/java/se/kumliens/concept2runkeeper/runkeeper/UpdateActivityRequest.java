@@ -47,7 +47,7 @@ public class UpdateActivityRequest {
     @JsonProperty("notes")
     private String notes;
 
-    @JsonProperty("heart_rate")
+    @JsonProperty("heartRate")
     private List<RunKeeperHeartRate> heartRates;
 
     public String getStartTime() {

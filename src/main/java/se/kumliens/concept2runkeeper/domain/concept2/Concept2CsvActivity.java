@@ -1,5 +1,6 @@
 package se.kumliens.concept2runkeeper.domain.concept2;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.EqualsAndHashCode;
@@ -11,11 +12,15 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import se.kumliens.concept2runkeeper.domain.ExternalActivity;
 
 import org.springframework.data.annotation.PersistenceConstructor;
+import se.kumliens.concept2runkeeper.domain.runkeeper.RunKeeperDistance;
+import se.kumliens.concept2runkeeper.domain.runkeeper.RunKeeperHeartRate;
+
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Created by svante2 on 2016-12-09.
@@ -55,7 +60,7 @@ public class Concept2CsvActivity implements ExternalActivity {
     private String restTimeSeconds;
 
     @JsonProperty("Work Distance")
-    private String workDistance;
+    private Double workDistance;
 
     @JsonProperty("Rest Distance")
     private String restDistance;
@@ -90,12 +95,15 @@ public class Concept2CsvActivity implements ExternalActivity {
     @JsonProperty("Comments")
     private String comments;
 
+    @JsonIgnore
+    private List<Concept2CsvStrokeData> strokeData;
+    
     public Concept2CsvActivity() {
 
     }
 
     @PersistenceConstructor
-    public Concept2CsvActivity(String date, String description, String formattedWorkTime, Double workTimeInSeconds, String formattedRestTime, String restTimeSeconds, String workDistance, String restDistance, String strokeRate, String avgWatts,
+    public Concept2CsvActivity(String date, String description, String formattedWorkTime, Double workTimeInSeconds, String formattedRestTime, String restTimeSeconds, Double workDistance, String restDistance, String strokeRate, String avgWatts,
                                String avgHeartRate, String type, String pace, Double calPerHour, String age, String weight, String ranked, String comments) {
         this.date = date;
         this.description = description;

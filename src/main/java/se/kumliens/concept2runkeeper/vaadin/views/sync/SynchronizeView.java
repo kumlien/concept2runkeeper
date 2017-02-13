@@ -1,29 +1,5 @@
 package se.kumliens.concept2runkeeper.vaadin.views.sync;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import se.kumliens.concept2runkeeper.domain.C2RActivity;
-import se.kumliens.concept2runkeeper.domain.Synchronization;
-import se.kumliens.concept2runkeeper.domain.concept2.Concept2CsvActivity;
-import se.kumliens.concept2runkeeper.domain.concept2.Concept2CsvStrokeData;
-import se.kumliens.concept2runkeeper.domain.runkeeper.ActivityType;
-import se.kumliens.concept2runkeeper.domain.runkeeper.Equipment;
-import se.kumliens.concept2runkeeper.domain.runkeeper.ExternalRunkeeperData;
-import se.kumliens.concept2runkeeper.domain.runkeeper.InternalRunKeeperData;
-import se.kumliens.concept2runkeeper.domain.runkeeper.RunKeeperHeartRate;
-import se.kumliens.concept2runkeeper.domain.runkeeper.RunkeeperActivity;
-import se.kumliens.concept2runkeeper.repos.C2RActivityRepo;
-import se.kumliens.concept2runkeeper.runkeeper.RecordActivityRequest;
-import se.kumliens.concept2runkeeper.services.NoSuchActivityException;
-import se.kumliens.concept2runkeeper.services.RunkeeperService;
-import se.kumliens.concept2runkeeper.vaadin.MainUI;
-import se.kumliens.concept2runkeeper.vaadin.converters.Concept2DistanceConverter;
-import se.kumliens.concept2runkeeper.vaadin.converters.Concept2WorkTimeConverter;
-import se.kumliens.concept2runkeeper.vaadin.converters.RunKeeperDateConverter;
-import se.kumliens.concept2runkeeper.vaadin.converters.RunKeeperDistanceConverter;
-import se.kumliens.concept2runkeeper.vaadin.converters.RunKeeperDurationConverter;
-import se.kumliens.concept2runkeeper.vaadin.events.ActivitySyncEvent;
-
 import com.fasterxml.jackson.databind.MappingIterator;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
@@ -36,19 +12,12 @@ import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener;
 import com.vaadin.server.Resource;
 import com.vaadin.spring.annotation.SpringView;
-import com.vaadin.ui.Alignment;
-import com.vaadin.ui.CheckBox;
-import com.vaadin.ui.DragAndDropWrapper;
-import com.vaadin.ui.Grid;
-import com.vaadin.ui.Label;
-import com.vaadin.ui.Panel;
-import com.vaadin.ui.ProgressBar;
-import com.vaadin.ui.TabSheet;
-import com.vaadin.ui.Upload;
-import com.vaadin.ui.VerticalSplitPanel;
+import com.vaadin.ui.*;
 import com.vaadin.ui.renderers.ClickableRenderer.RendererClickListener;
 import com.vaadin.ui.renderers.ImageRenderer;
 import com.vaadin.ui.themes.ValoTheme;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.vaadin.dialogs.ConfirmDialog;
@@ -63,12 +32,22 @@ import org.vaadin.viritin.layouts.MPanel;
 import org.vaadin.viritin.layouts.MVerticalLayout;
 import org.vaadin.viritin.layouts.MWindow;
 import org.vaadin.viritin.ui.MNotification;
+import se.kumliens.concept2runkeeper.domain.C2RActivity;
+import se.kumliens.concept2runkeeper.domain.ExternalActivity;
+import se.kumliens.concept2runkeeper.domain.Synchronization;
+import se.kumliens.concept2runkeeper.domain.concept2.Concept2CsvActivity;
+import se.kumliens.concept2runkeeper.domain.concept2.Concept2CsvStrokeData;
+import se.kumliens.concept2runkeeper.domain.runkeeper.*;
+import se.kumliens.concept2runkeeper.repos.C2RActivityRepo;
+import se.kumliens.concept2runkeeper.runkeeper.RecordActivityRequest;
+import se.kumliens.concept2runkeeper.services.NoSuchActivityException;
+import se.kumliens.concept2runkeeper.services.RunkeeperService;
+import se.kumliens.concept2runkeeper.vaadin.MainUI;
+import se.kumliens.concept2runkeeper.vaadin.converters.*;
+import se.kumliens.concept2runkeeper.vaadin.events.ActivitySyncEvent;
+
 import javax.annotation.PostConstruct;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.net.URI;
 import java.text.ParseException;
 import java.time.Instant;
@@ -79,23 +58,12 @@ import java.util.Optional;
 import java.util.concurrent.atomic.LongAdder;
 
 import static com.google.common.base.MoreObjects.firstNonNull;
-import static com.vaadin.server.FontAwesome.CHAIN;
-import static com.vaadin.server.FontAwesome.FILE_TEXT_O;
-import static com.vaadin.server.FontAwesome.LONG_ARROW_RIGHT;
-import static com.vaadin.server.FontAwesome.QUESTION_CIRCLE;
+import static com.vaadin.server.FontAwesome.*;
 import static com.vaadin.server.Sizeable.Unit.EM;
 import static com.vaadin.shared.ui.label.ContentMode.HTML;
 import static com.vaadin.ui.Grid.SelectionMode.MULTI;
 import static com.vaadin.ui.Grid.SelectionMode.SINGLE;
-import static com.vaadin.ui.themes.ValoTheme.BUTTON_BORDERLESS;
-import static com.vaadin.ui.themes.ValoTheme.NOTIFICATION_CLOSABLE;
-import static com.vaadin.ui.themes.ValoTheme.NOTIFICATION_ERROR;
-import static com.vaadin.ui.themes.ValoTheme.NOTIFICATION_FAILURE;
-import static com.vaadin.ui.themes.ValoTheme.NOTIFICATION_SMALL;
-import static com.vaadin.ui.themes.ValoTheme.NOTIFICATION_SUCCESS;
-import static com.vaadin.ui.themes.ValoTheme.NOTIFICATION_WARNING;
-import static com.vaadin.ui.themes.ValoTheme.TABSHEET_FRAMED;
-import static com.vaadin.ui.themes.ValoTheme.TABSHEET_PADDED_TABBAR;
+import static com.vaadin.ui.themes.ValoTheme.*;
 import static java.util.stream.Collectors.joining;
 import static se.kumliens.concept2runkeeper.domain.Provider.CONCEPT2;
 import static se.kumliens.concept2runkeeper.domain.Provider.RUNKEEPER;
@@ -207,7 +175,6 @@ public class SynchronizeView extends MVerticalLayout implements View {
         grid.addColumn(RunkeeperActivity.TYPE).setHeaderCaption("(RunKeeper-) Type").setExpandRatio(1);
         grid.addColumn(RunkeeperActivity.HEART_RATE).setRenderer(new SparklineRenderer()).setExpandRatio(2);
 
-
         c2RActivityRepo.findByUserIdAndSource(ui.getUser().getEmail(), CONCEPT2).stream()
                 .map(c2rActivity -> c2rActivity.getSynchronizations().stream().filter(synchronization -> synchronization.getTarget() == RUNKEEPER).findFirst())
                 .filter(Optional::isPresent)
@@ -228,11 +195,12 @@ public class SynchronizeView extends MVerticalLayout implements View {
         return null;
     }
 
-    private static void addHeartRates(RunkeeperActivity runkeeperActivity, List<Concept2CsvStrokeData> strokeDatas) {
-        runkeeperActivity.getHeartRates().clear();
+    private static void addHeartRates(Concept2CsvActivity concept2CsvActivity, List<Concept2CsvStrokeData> strokeData) {
+        concept2CsvActivity.setStrokeData(strokeData);
+        /*runkeeperActivity.getHeartRates().clear();
         strokeDatas.forEach(strokeData -> {
             runkeeperActivity.getHeartRates().add(RunKeeperHeartRate.builder().heartRate((int) strokeData.getHeartRate()).timestamp(strokeData.getSeconds()).build());
-        });
+        });*/
     }
 
 
@@ -266,7 +234,7 @@ public class SynchronizeView extends MVerticalLayout implements View {
                         "Here you can sync your Concept2 activities using the file export functionality from Concept2.<br>" +
                                 "<ol>" +
                                 "<li>Export your activities as a .csv file from the Concept2 <a href=\"http://log.concept2.com/history\">history tab</a></li>" +
-                                "<li>Drop the file on the table below, select some activities and push the button.</li>" +
+                                "<li>Drop the file on the table below, select some activities and push the green button.</li>" +
                                 "<li>Any activities not already synced with RunKeeper will be sent to RunKeeper.</li>" +
                                 "<li>Use the check-box to the right if you want to force sync of already synced activities.</li></ol>")
                         .withDelayMsec(15000).withStyleName(NOTIFICATION_SMALL).withStyleName(NOTIFICATION_CLOSABLE).withHtmlContentAllowed(true).display());
@@ -282,16 +250,47 @@ public class SynchronizeView extends MVerticalLayout implements View {
 
         csvTabLayout.add(new MHorizontalLayout(howToBtn, syncButton, forceSync).withAlign(forceSync, Alignment.MIDDLE_LEFT).withSpacing(true));
 
-        MGrid<Concept2CsvActivity> grid = new MGrid<>(Concept2CsvActivity.class).withFullHeight().withFullWidth();
-        grid.setSelectionMode(MULTI);
-        grid.setContainerDataSource(concept2Container);
+        GeneratedPropertyContainer generatedPropertyContainer = new GeneratedPropertyContainer(concept2Container);
+
+        //Add a generated column for the heart rate
+        generatedPropertyContainer.addGeneratedProperty(RunkeeperActivity.HEART_RATE, new PropertyValueGenerator<Number[]>() {
+            @Override
+            public Number[] getValue(Item item, Object itemId, Object propertyId) {
+                return new Number[]{1, 2, 3, 2, 2, 4, 5, 4, 2, 1, 2, 5, 4, 5, 5, 2, 3, 2, 3, 4, 5};
+            }
+
+            @Override
+            public Class<Number[]> getType() {
+                return Number[].class;
+            }
+        });
+
+        //Add a generated column with the button to add stroke data
+        generatedPropertyContainer.addGeneratedProperty("addStrokeData", new PropertyValueGenerator<Resource>() {
+            @Override
+            public Resource getValue(Item item, Object itemId, Object propertyId) {
+                return HEART_RATE;
+            }
+
+            @Override
+            public Class<Resource> getType() {
+                return Resource.class;
+            }
+        });
+
+        Grid grid = new Grid(generatedPropertyContainer);
+        grid.setSelectionMode(SINGLE);
+        grid.setWidth("100%");
+        grid.setHeight("100%");
+        grid.setContainerDataSource(generatedPropertyContainer);
         grid.removeAllColumns();
         grid.addColumn("date").setHeaderCaption("Date");
         grid.addColumn("workDistance").setHeaderCaption("Distance").setConverter(new Concept2DistanceConverter());
         grid.addColumn("workTimeInSeconds").setHeaderCaption("Time").setConverter(new Concept2WorkTimeConverter());
         grid.addColumn("pace").setHeaderCaption("Pace");
         grid.addColumn("type").setHeaderCaption("(Concept2-) Type");
-        grid.addColumn("addStrokeData").setRenderer(new ImageRenderer((RendererClickListener) e -> {
+        grid.addColumn(RunkeeperActivity.HEART_RATE).setRenderer(new SparklineRenderer());
+        grid.addColumn("addStrokeData").setWidth(140).setRenderer(new ImageRenderer((RendererClickListener) e -> {
             Concept2CsvActivity concept2CsvActivity = (Concept2CsvActivity) e.getItemId();
             Upload upload = null;
             try {
@@ -316,30 +315,30 @@ public class SynchronizeView extends MVerticalLayout implements View {
                         double lastDistance = CollectionUtils.isEmpty(strokeData) ? 0.0 : strokeData.get(strokeData.size() - 1).getDistance();
                         if (Math.abs(lastDistance - concept2CsvActivity.getWorkDistance()) > 2) {
                             ConfirmDialog.show(getUI(), "Difference in distance",
-                                    "This result file has a different distance compared to the activity (the activity is " + concept2CsvActivity.getWorkDistance() + " meters but the result file is " + (int)lastDistance + " meters), are you sure you want to use this file?",
+                                    "This result file has a different distance compared to the activity (the activity is " + concept2CsvActivity.getWorkDistance() + " meters but the result file is " + (int) lastDistance + " meters), are you sure you want to use this file?",
                                     "Yes", "No",
                                     dialog -> {
                                         if (dialog.isConfirmed()) {
-                                            addHeartRates(concept2CsvActivity, strokeData);
-                                            //updateActivity(runkeeperActivity);
-                                            //TODO We don't update our internal representation here yet...
+                                            concept2CsvActivity.setStrokeData(strokeData);
                                         }
                                     });
                         } else {
-                            addHeartRates(concept2CsvActivity, strokeData);
-                            //updateActivity(runkeeperActivity);
-                            //TODO We don't update our internal representation here yet...
+                            concept2CsvActivity.setStrokeData(strokeData);
                         }
+                        ui.access(() -> {
+                            grid.markAsDirtyRecursive();
+                            ui.push();
+                        });
                     } catch (Exception e1) {
                         log.warn("Error reading file which should contain concept2 stroke data", e1);
                     }
                 });
-                upload.setButtonCaption("Attach heart rate data");
+                upload.setButtonCaption("Attach stroke data");
             } catch (IOException e1) {
                 log.warn("Error when adding stroke data to activity", e1);
                 new MNotification("An error occurred: " + e1.getMessage()).withStyleName(NOTIFICATION_ERROR).display();
             }
-            MWindow uploadwindow = new MWindow("Add heart rate data")
+            MWindow uploadwindow = new MWindow("Add stroke data")
                     .withContent(
                             new MPanel(
                                     new MHorizontalLayout(upload).withMargin(true).withSpacing(true).space()))
@@ -360,14 +359,14 @@ public class SynchronizeView extends MVerticalLayout implements View {
 
         fromContent.expand(concept2TabSheet);
 
-        return new MPanel("Your Concept2 activities goes here").withContent(fromContent);
+        return new MPanel("Your Concept2 activities").withContent(fromContent);
     }
 
 
     //Handle the actual sync process to RunKeeper
-    private void setUpSyncClickHandler(MButton syncButton, MGrid<Concept2CsvActivity> concept2Grid) {
+    private void setUpSyncClickHandler(MButton syncButton, Grid concept2Grid) {
         syncButton.addClickListener(evt -> {
-            Collection<Concept2CsvActivity> selectedRows = concept2Grid.getSelectedRowsWithType();
+            Collection<Object> selectedRows = concept2Grid.getSelectedRows();
             if (selectedRows.isEmpty()) {
                 log.warn("Sync button clicked without selected rows in the grid!");
                 new MNotification("No selection detected (this is a bug). Try to re-select the row(s)").withStyleName(NOTIFICATION_ERROR).withDelayMsec(5000).display();
@@ -379,7 +378,7 @@ public class SynchronizeView extends MVerticalLayout implements View {
             float percentPerActivity = (float) 1 / selectedRows.size();
 
             MWindow progressWindow = new MWindow("Synchronizing with RunKeeper")
-                    .withModal(true).withCenter().withContent(new MVerticalLayout().expand(progressBar).withWidth("100%")).withClosable(false).withWidth(40, EM).withHeight(4, EM);
+                    .withModal(true).withCenter().withContent(new MVerticalLayout().expand(progressBar).withWidth("100%")).withClosable(false).withResizable(false).withWidth(40, EM).withHeight(4, EM);
             ui.addWindow(progressWindow);
 
             new Thread(() -> { //new Thread(), really...? or Flowable from the rows. would also allow for nice cancel-button in mid-process
@@ -390,19 +389,19 @@ public class SynchronizeView extends MVerticalLayout implements View {
 
                 selectedRows.forEach(csvActivity -> {
                     //If there is a stored activity then pick that one, otherwise create a new one.
-                    C2RActivity c2RActivity = MoreObjects.firstNonNull(c2RActivityRepo.findBySourceId(csvActivity.getDate()), C2RActivity.builder()
+                    C2RActivity c2RActivity = MoreObjects.firstNonNull(c2RActivityRepo.findBySourceId(((Concept2CsvActivity)csvActivity).getDate()), C2RActivity.builder()
                             .userId(ui.getUser().getEmail())
                             .imported(Instant.now())
                             .source(CONCEPT2)
-                            .sourceActivity(csvActivity)
-                            .sourceId(csvActivity.getDate())
+                            .sourceActivity((ExternalActivity) csvActivity)
+                            .sourceId(((Concept2CsvActivity)csvActivity).getDate())
                             .build());
 
                     //Add the sync if not already there
                     if (forceSync.getValue() || c2RActivity.getSynchronizations().stream().filter(synchronization -> synchronization.getTarget() == RUNKEEPER).count() == 0) {
                         try {
                             log.info("No sync to RunKeeper found or force sync, let's do it");
-                            RecordActivityRequest request = createRecordActivityRequest(csvActivity, internalRunKeeperData, externalRunkeeperData);
+                            RecordActivityRequest request = createRecordActivityRequest((Concept2CsvActivity) csvActivity, internalRunKeeperData, externalRunkeeperData);
                             URI activityLocation = runkeeperService.recordActivity(request, ui.getUser().getInternalRunKeeperData().getToken());
                             newLocations.add(ui.getUser().getExternalRunkeeperData().getProfile().getProfile() + activityLocation.toString());
                             RunkeeperActivity rkActivity = runkeeperService.getActivity(ui.getUser().getInternalRunKeeperData().getToken(), activityLocation);
@@ -476,7 +475,7 @@ public class SynchronizeView extends MVerticalLayout implements View {
                 .heartRates(new ArrayList<>()).build();
     }
 
-    private DragAndDropWrapper getDropAreaWithGrid(MGrid<Concept2CsvActivity> grid) {
+    private DragAndDropWrapper getDropAreaWithGrid(Grid grid) {
         final CsvFileDropHandler dropBox = new CsvFileDropHandler(grid, activities -> {
             if (!CollectionUtils.isEmpty(activities)) {
                 grid.getContainerDataSource().removeAllItems();

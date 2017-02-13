@@ -6,7 +6,9 @@ import com.github.rjeschke.txtmark.Run;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.springframework.http.client.BufferingClientHttpRequestFactory;
 import org.springframework.http.client.ClientHttpResponse;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.ResponseErrorHandler;
 import se.kumliens.concept2runkeeper.domain.runkeeper.ExternalRunkeeperData;
@@ -25,6 +27,7 @@ import se.kumliens.concept2runkeeper.runkeeper.UpdateActivityRequest;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.text.ParseException;
 
@@ -50,6 +53,13 @@ public class RunkeeperService {
     public void setup() {
         log.debug("Got some props: {}", props);
         restTemplate = new RestTemplate();
+
+        // set up a buffering request factory, so response body is always buffered
+        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+        BufferingClientHttpRequestFactory bufferingClientHttpRequestFactory = new BufferingClientHttpRequestFactory(requestFactory);
+        requestFactory.setOutputStreaming(false);
+        restTemplate.setRequestFactory(bufferingClientHttpRequestFactory);
+
         restTemplate.setErrorHandler(new DefaultResponseErrorHandler() {
             @Override
             public boolean hasError(ClientHttpResponse clientHttpResponse) throws IOException {
@@ -58,6 +68,10 @@ public class RunkeeperService {
 
             @Override
             public void handleError(ClientHttpResponse clientHttpResponse) throws IOException {
+                InputStream is = clientHttpResponse.getBody();
+                java.util.Scanner s = new java.util.Scanner(is).useDelimiter("\\A");
+                String body = s.hasNext() ? s.next() : "";
+                log.info("{}", body);
                 int statusCode = clientHttpResponse.getStatusCode().value();
                 if(statusCode == 404) {
                     throw new NoSuchActivityException();
@@ -154,6 +168,7 @@ public class RunkeeperService {
             throw new RuntimeException(e);
         }
         RequestEntity requestEntity = new RequestEntity(request, headers, PUT, URI.create(props.getBaseUrl().toString().concat(runkeeperActivity.getUri())));
+
         ResponseEntity<RunkeeperActivity> response = restTemplate.exchange(requestEntity, RunkeeperActivity.class);
         log.info("got an updated activity: {}", response.getBody());
         return response.getBody();

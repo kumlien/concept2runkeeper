@@ -255,7 +255,7 @@ public class MainUI extends UI {
     }
 
     public User getUser() {
-        return (User) getSession().getAttribute(SESSION_ATTR_USER);
+        return getSession() != null ? (User) getSession().getAttribute(SESSION_ATTR_USER) : null;
     }
 
 

@@ -37,7 +37,7 @@ public class RecordActivityRequest {
 
     //The total distance traveled, in meters
     @JsonProperty("total_distance")
-    private String distance;
+    private Double distance;
 
     @JsonProperty("total_calories")
     private Double totalCalories;
@@ -68,7 +68,7 @@ public class RecordActivityRequest {
                 .type(runkeeperActivity.getType())
                 //.startTime(runkeeperActivity.getStartTime()) Not needed right now.
                 .totalCalories(runkeeperActivity.getTotalCalories())
-                .distance(runkeeperActivity.getDistance().toString())
+                .distance(runkeeperActivity.getDistance())
                 .distances(runkeeperActivity.getDistances())
                 .duration(runkeeperActivity.getDuration())
                 .equipment(runkeeperActivity.getEquipment())

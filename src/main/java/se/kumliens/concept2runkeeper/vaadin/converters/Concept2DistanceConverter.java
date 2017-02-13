@@ -12,28 +12,29 @@ import java.util.Locale;
  * Created by svante2 on 2016-12-25.
  */
 @Slf4j
-public class Concept2DistanceConverter implements Converter<String, String> {
+public class Concept2DistanceConverter implements Converter<String, Double> {
 
     @Override
-    public String convertToModel(String value, Class<? extends String> targetType, Locale locale) throws ConversionException {
-        return value.replace("m","").replace(" ","").trim();
+    public String convertToPresentation(Double value, Class<? extends String> targetType, Locale locale) throws ConversionException {
+        return value.toString();
     }
 
     @Override
-    public String convertToPresentation(String value, Class<? extends String> targetType, Locale locale) throws ConversionException {
-        try {
+    public Double convertToModel(String value, Class<? extends Double> targetType, Locale locale) throws ConversionException {
+        /*try {
             value = MoreObjects.firstNonNull(value, "0");
             DecimalFormat decimalFormat = new DecimalFormat(Constants.DISTANCE_PATTERN);
             return decimalFormat.format(Double.valueOf(value.replace(" ","").trim())) + " m";
         } catch (Exception e) {
             log.warn("Unable to parse {} to a number", value, e);
             return "n/a";
-        }
+        }*/
+        return Double.valueOf(value);
     }
 
     @Override
-    public Class<String> getModelType() {
-        return String.class;
+    public Class<Double> getModelType() {
+        return Double.class;
     }
 
     @Override

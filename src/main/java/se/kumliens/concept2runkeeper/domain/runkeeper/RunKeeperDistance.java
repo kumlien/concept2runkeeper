@@ -1,14 +1,14 @@
 package se.kumliens.concept2runkeeper.domain.runkeeper;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Builder;
-import lombok.Data;
-import lombok.ToString;
+import lombok.*;
 
 /**
  * Created by svante2 on 2017-01-02.
  */
-@Data
+@Getter
+@Setter
+@AllArgsConstructor
 @ToString
 @Builder(builderClassName = "builder")
 public class RunKeeperDistance {

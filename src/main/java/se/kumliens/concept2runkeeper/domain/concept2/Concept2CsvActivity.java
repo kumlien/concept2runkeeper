@@ -19,6 +19,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -96,8 +97,8 @@ public class Concept2CsvActivity implements ExternalActivity {
     private String comments;
 
     @JsonIgnore
-    private List<Concept2CsvStrokeData> strokeData;
-    
+    private List<Concept2CsvStrokeData> strokeData = new ArrayList<>();
+
     public Concept2CsvActivity() {
 
     }

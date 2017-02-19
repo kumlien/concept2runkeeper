@@ -236,7 +236,21 @@ public class SynchronizeView extends MVerticalLayout implements View {
             public Number[] getValue(Item item, Object itemId, Object propertyId) {
                 Concept2CsvActivity activity = ((BeanItem<Concept2CsvActivity>) item).getBean();
                 List<Double> heartRates = activity.getStrokeData().stream().map(Concept2CsvStrokeData::getHeartRate).collect(toList());
-                log.info("Adding heart rates: {}", heartRates);
+                return heartRates.toArray(new Double[]{});
+            }
+
+            @Override
+            public Class<Number[]> getType() {
+                return Number[].class;
+            }
+        });
+
+        //Add a generated column for the pace
+        generatedPropertyContainer.addGeneratedProperty("Pace", new PropertyValueGenerator<Number[]>() {
+            @Override
+            public Number[] getValue(Item item, Object itemId, Object propertyId) {
+                Concept2CsvActivity activity = ((BeanItem<Concept2CsvActivity>) item).getBean();
+                List<Double> heartRates = activity.getStrokeData().stream().map(Concept2CsvStrokeData::getPace).collect(toList());
                 return heartRates.toArray(new Double[]{});
             }
 
@@ -259,6 +273,7 @@ public class SynchronizeView extends MVerticalLayout implements View {
             }
         });
 
+
         Grid grid = new Grid(generatedPropertyContainer);
         grid.setImmediate(true);
         grid.setSelectionMode(SINGLE);
@@ -268,14 +283,15 @@ public class SynchronizeView extends MVerticalLayout implements View {
         grid.removeAllColumns();
         grid.addColumn("date").setHeaderCaption("Date");
         grid.addColumn("workDistance").setHeaderCaption("Distance").setConverter(new Concept2DistanceConverter());
-        grid.addColumn("workTimeInSeconds").setHeaderCaption("Time").setConverter(new Concept2WorkTimeConverter());
-        grid.addColumn("pace").setHeaderCaption("Pace");
+        grid.addColumn("workTimeInSeconds").setHeaderCaption("Time").setConverter(new Concept2WorkTimeConverter()).setWidth(180);
+        grid.addColumn("pace").setHeaderCaption("Average pace (s/500 m)").setWidth(200);
         grid.addColumn("type").setHeaderCaption("(Concept2-) Type");
         grid.addColumn(RunkeeperActivity.HEART_RATE).setRenderer(new SparklineRenderer());
+        grid.addColumn("Pace").setRenderer(new SparklineRenderer());
         grid.addColumn("addStrokeData").setWidth(140).setRenderer(new ImageRenderer((RendererClickListener) e -> {
             Concept2CsvActivity concept2CsvActivity = (Concept2CsvActivity) e.getItemId();
             Upload upload = null;
-            MWindow uploadwindow = new MWindow("Add stroke data");
+            MWindow uploadWindow = new MWindow("Add stroke data");
             try {
                 File tempFile = File.createTempFile("temp", ".csv");
                 upload = new Upload("Choose the Concept2 result file matching this activity", (filename, mimetype) -> {
@@ -302,17 +318,11 @@ public class SynchronizeView extends MVerticalLayout implements View {
                                     "Yes", "No",
                                     dialog -> {
                                         if (dialog.isConfirmed()) {
-                                            concept2CsvActivity.setStrokeData(strokeData);
-                                            uploadwindow.close();
-                                            grid.refreshRows(concept2CsvActivity);
-                                            new MNotification("Stroke data added").withDelayMsec(1500).withStyleName(NOTIFICATION_SUCCESS).display();
+                                            afterAddedVerifiedStrokeData(grid, concept2CsvActivity, uploadWindow, strokeData);
                                         }
                                     });
                         } else {
-                            concept2CsvActivity.setStrokeData(strokeData);
-                            uploadwindow.close();
-                            grid.refreshRows(concept2CsvActivity);
-                            new MNotification("Stroke data added").withDelayMsec(1500).withStyleName(NOTIFICATION_SUCCESS).display();
+                            afterAddedVerifiedStrokeData(grid, concept2CsvActivity, uploadWindow, strokeData);
                         }
 
                     } catch (Exception e1) {
@@ -324,11 +334,11 @@ public class SynchronizeView extends MVerticalLayout implements View {
                 log.warn("Error when adding stroke data to activity", e1);
                 new MNotification("An error occurred: " + e1.getMessage()).withStyleName(NOTIFICATION_ERROR).display();
             }
-            uploadwindow.withContent(new MPanel(new MHorizontalLayout(upload).withMargin(true).withSpacing(true).space()))
+            uploadWindow.withContent(new MPanel(new MHorizontalLayout(upload).withMargin(true).withSpacing(true).space()))
                     .withModal(true)
                     .withResizable(false);
 
-            ui.addWindow(uploadwindow);
+            ui.addWindow(uploadWindow);
         }));
         grid.addSelectionListener(evt -> {
             syncButton.setEnabled(!grid.getSelectedRows().isEmpty());
@@ -343,6 +353,13 @@ public class SynchronizeView extends MVerticalLayout implements View {
         fromContent.expand(concept2TabSheet);
 
         return new MPanel("Your Concept2 activities").withContent(fromContent);
+    }
+
+    private void afterAddedVerifiedStrokeData(Grid grid, Concept2CsvActivity concept2CsvActivity, MWindow uploadwindow, List<Concept2CsvStrokeData> strokeData) {
+        concept2CsvActivity.setStrokeData(strokeData);
+        uploadwindow.close();
+        grid.refreshRows(concept2CsvActivity);
+        new MNotification("Stroke data added").withDelayMsec(1500).withStyleName(NOTIFICATION_SUCCESS).display();
     }
 
 

@@ -16,7 +16,7 @@ public class Concept2DistanceConverter implements Converter<String, Double> {
 
     @Override
     public String convertToPresentation(Double value, Class<? extends String> targetType, Locale locale) throws ConversionException {
-        return value.toString();
+        return value != null ? value.toString() : "0.0";
     }
 
     @Override

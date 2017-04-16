@@ -13,30 +13,41 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>1.5.1.RELEASE</version>
+		<version>1.5.2.RELEASE</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		<java.version>1.8</java.version>
-		<vaadin.spring.boot.starter.version>1.2.0</vaadin.spring.boot.starter.version>
-		<vaadin.viritin.version>1.61</vaadin.viritin.version>
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
+
+		<vaadin.bom.version>8.0.5</vaadin.bom.version>
+		<vaadin.viritin.version>2.0.alpha1</vaadin.viritin.version>
 		<vaadin.spring.extensions.version>0.0.8-SNAPSHOT</vaadin.spring.extensions.version>
 		<vaadin.confirmdialog.version>2.1.3</vaadin.confirmdialog.version>
 		<vaadin.gridrenderers.addon.version>0.94</vaadin.gridrenderers.addon.version>
-		<guava.version>20.0</guava.version>
+		<guava.version>21.0</guava.version>
 		<jackson.csv.version>2.7.0</jackson.csv.version>
 		<cf.maven-plugin.version>1.1.2</cf.maven-plugin.version>
 		<rxjava.version>2.0.3</rxjava.version>
+		<!-- If there are no local customisations, this can also be "fetch" or "cdn" -->
+		<vaadin.widgetset.mode>fetch</vaadin.widgetset.mode>
 	</properties>
 
 	<dependencies>
 		<dependency>
 			<groupId>com.vaadin</groupId>
 			<artifactId>vaadin-spring-boot-starter</artifactId>
-			<version>${vaadin.spring.boot.starter.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.vaadin</groupId>
+			<artifactId>vaadin-compatibility-server</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.vaadin</groupId>
+			<artifactId>vaadin-compatibility-client</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -91,11 +102,11 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
-		<dependency>
+		<!--dependency>
 			<groupId>org.vaadin.addon</groupId>
 			<artifactId>confirmdialog</artifactId>
 			<version>${vaadin.confirmdialog.version}</version>
-		</dependency>
+		</dependency-->
 
 		<dependency>
 			<groupId>com.google.guava</groupId>
@@ -133,10 +144,15 @@
 			<version>0.7.4</version>
 		</dependency-->
 
-		<dependency>
+		<!--dependency>
 			<groupId>com.vaadin</groupId>
 			<artifactId>grid-renderers-collection-addon</artifactId>
 			<version>${vaadin.gridrenderers.addon.version}</version>
+		</dependency-->
+
+		<dependency>
+			<groupId>com.vaadin</groupId>
+			<artifactId>vaadin-client-compiled</artifactId>
 		</dependency>
 
 		<dependency>
@@ -144,6 +160,8 @@
 			<artifactId>rxjava</artifactId>
 			<version>${rxjava.version}</version>
 		</dependency>
+
+
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -157,7 +175,7 @@
 			<dependency>
 				<groupId>com.vaadin</groupId>
 				<artifactId>vaadin-bom</artifactId>
-				<version>7.7.5</version>
+				<version>${vaadin.bom.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
@@ -169,7 +187,7 @@
 			<plugin>
 			<groupId>com.vaadin</groupId>
 			<artifactId>vaadin-maven-plugin</artifactId>
-				<version>7.7.5</version>
+				<version>8.0.5</version>
 				<executions>
 				<execution>
 					<goals>

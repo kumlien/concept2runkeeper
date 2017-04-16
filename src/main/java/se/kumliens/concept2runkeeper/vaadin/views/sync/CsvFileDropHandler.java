@@ -61,6 +61,11 @@ class CsvFileDropHandler extends DragAndDropWrapper implements DropHandler {
             return;
         }
 
+        if(file.getFileName().startsWith("concept2-result-")) {
+            errorListener.onError(new IllegalArgumentException("You have specified a result file. This kind of file contains info for a specific workout. Please specify a file with workouts."));
+            return;
+        }
+
         final ByteArrayOutputStream bas = new ByteArrayOutputStream();
         final StreamVariable streamVariable = new StreamVariable() {
 
@@ -115,7 +120,7 @@ class CsvFileDropHandler extends DragAndDropWrapper implements DropHandler {
 
     private List<Concept2CsvActivity> parseFile(final ByteArrayOutputStream bas) throws IOException {
         CsvMapper mapper = new CsvMapper();
-        CsvSchema schema = mapper.schemaFor(Concept2CsvActivity.class).withUseHeader(true);
+        CsvSchema schema = mapper.typedSchemaFor(Concept2CsvActivity.class).withUseHeader(true);
         ByteArrayInputStream inputStream = new ByteArrayInputStream(bas.toByteArray());
         InputStreamReader inputStreamReader = new InputStreamReader(inputStream, Charset.forName("utf8"));
         BufferedReader reader = new BufferedReader(inputStreamReader);
@@ -127,18 +132,22 @@ class CsvFileDropHandler extends DragAndDropWrapper implements DropHandler {
         }
     }
 
+    @FunctionalInterface
     public interface StartListener {
         void start(StreamVariable.StreamingStartEvent evt);
     }
 
+    @FunctionalInterface
     public interface SuccessListener {
         void onSuccess(List<Concept2CsvActivity> activities);
     }
 
+    @FunctionalInterface
     public interface ErrorListener {
         void onError(Exception e);
     }
 
+    @FunctionalInterface
     public interface ProgressListener {
         void onProgress(StreamVariable.StreamingProgressEvent event);
     }

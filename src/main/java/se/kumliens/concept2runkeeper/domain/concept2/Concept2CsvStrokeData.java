@@ -25,7 +25,7 @@ import lombok.ToString;
  */
 @Getter
 @ToString
-@JsonPropertyOrder({"Stroke Number", "Time (seconds)", "Distance (meters)", "Pace (seconds per 500m)","Stroke Rate","Heart Rate"})
+@JsonPropertyOrder({"Stroke Number", "Time (seconds)", "Distance (meters)", "Pace (seconds per 500m)","Watts", "Cal/Hr", "Stroke Rate","Heart Rate"})
 public class Concept2CsvStrokeData {
 
     @JsonProperty("Stroke Number")
@@ -39,6 +39,12 @@ public class Concept2CsvStrokeData {
 
     @JsonProperty("Pace (seconds per 500m)")
     private double pace;
+
+    @JsonProperty("Watts")
+    private int watts;
+
+    @JsonProperty("Cal/Hr")
+    private int calPerHour;
 
     @JsonProperty("Stroke Rate")
     private int strokeRate;

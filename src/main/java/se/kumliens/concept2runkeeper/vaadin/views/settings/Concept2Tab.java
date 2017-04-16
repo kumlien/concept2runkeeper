@@ -19,7 +19,6 @@ import se.kumliens.concept2runkeeper.concept2.oauth2.Concept2NoOpInjector;
 import se.kumliens.concept2runkeeper.concept2.oauth2.Concept2OAuthApi;
 import se.kumliens.concept2runkeeper.concept2.Concept2Props;
 import se.kumliens.concept2runkeeper.concept2.oauth2.Concept2PopupConfig;
-import se.kumliens.concept2runkeeper.domain.concept2.Concept2User;
 import se.kumliens.concept2runkeeper.domain.concept2.InternalConcept2Data;
 import se.kumliens.concept2runkeeper.repos.UserRepo;
 import se.kumliens.concept2runkeeper.services.Concept2Service;
@@ -30,7 +29,7 @@ import java.time.Instant;
 
 import static com.vaadin.server.FontAwesome.CHECK_SQUARE_O;
 import static com.vaadin.server.FontAwesome.EXCLAMATION_CIRCLE;
-import static com.vaadin.shared.ui.label.ContentMode.HTML;
+import static com.vaadin.shared.ui.ContentMode.HTML;
 import static com.vaadin.ui.themes.ValoTheme.NOTIFICATION_ERROR;
 import static com.vaadin.ui.themes.ValoTheme.NOTIFICATION_SUCCESS;
 import static se.kumliens.concept2runkeeper.vaadin.C2RThemeResources.CONCEPT2_ARROW_SMALL;

@@ -4,29 +4,30 @@ import com.fasterxml.jackson.databind.MappingIterator;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import com.google.common.base.MoreObjects;
-import com.vaadin.data.Item;
-import com.vaadin.data.util.BeanItem;
-import com.vaadin.data.util.BeanItemContainer;
-import com.vaadin.data.util.GeneratedPropertyContainer;
-import com.vaadin.data.util.PropertyValueGenerator;
+import com.vaadin.v7.data.Item;
+import com.vaadin.v7.data.util.BeanItem;
+import com.vaadin.v7.data.util.BeanItemContainer;
+import com.vaadin.v7.data.util.GeneratedPropertyContainer;
+import com.vaadin.v7.data.util.PropertyValueGenerator;
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener;
 import com.vaadin.server.Resource;
 import com.vaadin.spring.annotation.SpringView;
 import com.vaadin.ui.*;
-import com.vaadin.ui.renderers.ClickableRenderer.RendererClickListener;
-import com.vaadin.ui.renderers.ImageRenderer;
+import com.vaadin.v7.shared.ui.label.ContentMode;
+import com.vaadin.v7.ui.renderers.ClickableRenderer.RendererClickListener;
+import com.vaadin.v7.ui.renderers.ImageRenderer;
 import com.vaadin.ui.themes.ValoTheme;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.vaadin.dialogs.ConfirmDialog;
-import org.vaadin.grid.cellrenderers.view.SparklineRenderer;
+import com.vaadin.v7.ui.Grid;
 import org.vaadin.spring.events.EventBus;
 import org.vaadin.viritin.button.MButton;
-import org.vaadin.viritin.fields.MCheckBox;
-import org.vaadin.viritin.label.MLabel;
+import org.vaadin.viritin.v7.fields.MCheckBox;
+import org.vaadin.viritin.v7.label.MLabel;
 import org.vaadin.viritin.layouts.MHorizontalLayout;
 import org.vaadin.viritin.layouts.MPanel;
 import org.vaadin.viritin.layouts.MVerticalLayout;
@@ -58,7 +59,7 @@ import java.util.concurrent.atomic.LongAdder;
 import static com.google.common.base.MoreObjects.firstNonNull;
 import static com.vaadin.server.FontAwesome.*;
 import static com.vaadin.server.Sizeable.Unit.EM;
-import static com.vaadin.shared.ui.label.ContentMode.HTML;
+import static com.vaadin.shared.ui.ContentMode.HTML;
 import static com.vaadin.ui.Grid.SelectionMode.SINGLE;
 import static com.vaadin.ui.themes.ValoTheme.*;
 import static java.util.stream.Collectors.joining;
@@ -107,9 +108,9 @@ public class SynchronizeView extends MVerticalLayout implements View {
 
     @PostConstruct
     public void init() {
-        Label label = new MLabel("Synchronize your activities from <a href=\"http://log.concept2.com/\">Concept2</a> to " +
+        MLabel label = new MLabel("Synchronize your activities from <a href=\"http://log.concept2.com/\">Concept2</a> to " +
                 "<a href=\"http://www.runkeeper.com/\">RunKeeper</a>.");
-        label.setContentMode(HTML);
+        label.setContentMode(ContentMode.HTML);
         label.setSizeUndefined();
 
         Panel fromContent = createFromContent();
@@ -151,14 +152,14 @@ public class SynchronizeView extends MVerticalLayout implements View {
         Grid grid = new Grid(generatedPropertyContainer);
         grid.setWidth("100%");
         grid.setHeight("100%");
-        grid.setSelectionMode(SINGLE);
+        grid.setSelectionMode(Grid.SelectionMode.SINGLE);
         grid.setContainerDataSource(generatedPropertyContainer);
         grid.removeAllColumns();
         grid.addColumn(RunkeeperActivity.START_TIME).setHeaderCaption("Date").setConverter(new RunKeeperDateConverter()).setExpandRatio(1);
         grid.addColumn(RunkeeperActivity.DISTANCE).setHeaderCaption("Distance").setConverter(new RunKeeperDistanceConverter()).setExpandRatio(1);
         grid.addColumn(RunkeeperActivity.DURATION).setHeaderCaption("Time").setConverter(new RunKeeperDurationConverter()).setExpandRatio(1);
         grid.addColumn(RunkeeperActivity.TYPE).setHeaderCaption("(RunKeeper-) Type").setExpandRatio(1);
-        grid.addColumn(RunkeeperActivity.HEART_RATE).setRenderer(new SparklineRenderer()).setExpandRatio(2);
+        //grid.addColumn(RunkeeperActivity.HEART_RATE).setRenderer(new SparklineRenderer()).setExpandRatio(2);
 
         layout.expand(grid);
         return new MPanel("Your synchronized RunKeeper activities goes here").withContent(layout);
@@ -184,7 +185,7 @@ public class SynchronizeView extends MVerticalLayout implements View {
 
     //Create the content representing where we synchronize from. Hard wire to concept2 for now
     private Panel createFromContent() {
-        Label label = new MLabel("Concept2 activities (for now we only support synchronizing from <a href=\"http://log.concept2.com/\">Concept2</a>)").withContentMode(HTML);
+        MLabel label = new MLabel("Concept2 activities (for now we only support synchronizing from <a href=\"http://log.concept2.com/\">Concept2</a>)").withContentMode(ContentMode.HTML);
 
         MVerticalLayout fromContent = new MVerticalLayout();
         MHorizontalLayout topLayout = new MHorizontalLayout(label).withSpacing(true);
@@ -275,8 +276,8 @@ public class SynchronizeView extends MVerticalLayout implements View {
 
 
         Grid grid = new Grid(generatedPropertyContainer);
-        grid.setImmediate(true);
-        grid.setSelectionMode(SINGLE);
+        //grid.setImmediate(true);
+        grid.setSelectionMode(Grid.SelectionMode.SINGLE);
         grid.setWidth("100%");
         grid.setHeight("100%");
         grid.setContainerDataSource(generatedPropertyContainer);
@@ -286,8 +287,8 @@ public class SynchronizeView extends MVerticalLayout implements View {
         grid.addColumn("workTimeInSeconds").setHeaderCaption("Time").setConverter(new Concept2WorkTimeConverter()).setWidth(180);
         grid.addColumn("pace").setHeaderCaption("Average pace (s/500 m)").setWidth(200);
         grid.addColumn("type").setHeaderCaption("(Concept2-) Type");
-        grid.addColumn(RunkeeperActivity.HEART_RATE).setRenderer(new SparklineRenderer());
-        grid.addColumn("Pace").setRenderer(new SparklineRenderer());
+        //grid.addColumn(RunkeeperActivity.HEART_RATE).setRenderer(new SparklineRenderer());
+        //an grid.addColumn("Pace").setRenderer(new SparklineRenderer());
         grid.addColumn("addStrokeData").setWidth(140).setRenderer(new ImageRenderer((RendererClickListener) e -> {
             Concept2CsvActivity concept2CsvActivity = (Concept2CsvActivity) e.getItemId();
             Upload upload = null;
@@ -312,7 +313,7 @@ public class SynchronizeView extends MVerticalLayout implements View {
                         MappingIterator<Concept2CsvStrokeData> values = mapper.readerFor(Concept2CsvStrokeData.class).with(csvSchema).readValues(bufferedReader);
                         List<Concept2CsvStrokeData> strokeData = values.readAll();
                         double lastDistance = CollectionUtils.isEmpty(strokeData) ? 0.0 : strokeData.get(strokeData.size() - 1).getDistance();
-                        if (Math.abs(lastDistance - concept2CsvActivity.getWorkDistance()) > 10) {
+                        if (Math.abs(lastDistance - concept2CsvActivity.getWorkDistance()) > 25) {
                             ConfirmDialog.show(getUI(), "Difference in distance",
                                     "The result file and the activity differ somewhat in distance (the activity is " + concept2CsvActivity.getWorkDistance().intValue() + " meters but the result file is " + (int) lastDistance + " meters), are you sure you want to use this file?",
                                     "Yes", "No",
@@ -327,6 +328,8 @@ public class SynchronizeView extends MVerticalLayout implements View {
 
                     } catch (Exception e1) {
                         log.warn("Error reading file which should contain concept2 stroke data", e1);
+                        uploadWindow.close();
+                        new MNotification("Error", "Unable to read that file: " + e1.getMessage()).display();
                     }
                 });
                 upload.setButtonCaption("Attach stroke data");
@@ -482,7 +485,7 @@ public class SynchronizeView extends MVerticalLayout implements View {
                 new MNotification("No activities found!").withDelayMsec(1000).withStyleName(NOTIFICATION_WARNING).display();
             }
         }, e -> {
-            log.warn("Exception when uploading file", e);
+            log.warn("Exception when uploading file: {}", e.getMessage());
             new MNotification("Sorry, but we are unable to parse this file (" + e.getMessage() + ")").withDelayMsec(5000).withStyleName(NOTIFICATION_FAILURE).display();
         });
         dropBox.setSizeUndefined();

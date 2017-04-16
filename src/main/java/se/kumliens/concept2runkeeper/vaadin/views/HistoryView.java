@@ -2,20 +2,14 @@ package se.kumliens.concept2runkeeper.vaadin.views;
 
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener;
-import com.vaadin.server.ExternalResource;
-import com.vaadin.shared.ui.BorderStyle;
 import com.vaadin.spring.annotation.SpringView;
 import com.vaadin.spring.annotation.UIScope;
-import com.vaadin.ui.Link;
 import com.vaadin.ui.Panel;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.vaadin.viritin.LazyList;
-import org.vaadin.viritin.grid.MGrid;
-import org.vaadin.viritin.label.Header;
-import org.vaadin.viritin.label.MLabel;
-import org.vaadin.viritin.layouts.MHorizontalLayout;
+import org.vaadin.viritin.v7.grid.MGrid;
 import org.vaadin.viritin.layouts.MPanel;
 import org.vaadin.viritin.layouts.MVerticalLayout;
 import se.kumliens.concept2runkeeper.domain.events.AbstractApplicationEvent;
@@ -23,12 +17,9 @@ import se.kumliens.concept2runkeeper.repos.EventRepo;
 import se.kumliens.concept2runkeeper.vaadin.MainUI;
 
 import javax.annotation.PostConstruct;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.vaadin.shared.ui.label.ContentMode.HTML;
 import static com.vaadin.ui.Alignment.*;
 import static com.vaadin.ui.themes.ValoTheme.TEXTFIELD_HUGE;
 import static se.kumliens.concept2runkeeper.vaadin.C2RThemeResources.CONCEPT2_LOGO;

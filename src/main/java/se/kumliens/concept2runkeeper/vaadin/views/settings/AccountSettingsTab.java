@@ -1,7 +1,7 @@
 package se.kumliens.concept2runkeeper.vaadin.views.settings;
 
 import com.vaadin.server.FontAwesome;
-import com.vaadin.shared.ui.label.ContentMode;
+import com.vaadin.v7.shared.ui.label.ContentMode;
 import com.vaadin.spring.annotation.SpringComponent;
 import com.vaadin.spring.annotation.ViewScope;
 import com.vaadin.ui.Notification;
@@ -19,10 +19,8 @@ import org.vaadin.viritin.layouts.MVerticalLayout;
 import org.vaadin.viritin.ui.MNotification;
 import se.kumliens.concept2runkeeper.vaadin.MainUI;
 import se.kumliens.concept2runkeeper.vaadin.events.UserAccountDeletedEvent;
-import se.kumliens.concept2runkeeper.vaadin.events.UserLoggedOutEvent;
 
-import static com.vaadin.shared.ui.label.ContentMode.HTML;
-import static com.vaadin.ui.Notification.Type.WARNING_MESSAGE;
+import static com.vaadin.shared.ui.ContentMode.HTML;
 import static com.vaadin.ui.themes.ValoTheme.NOTIFICATION_SUCCESS;
 
 /**

@@ -1,29 +1,19 @@
 package se.kumliens.concept2runkeeper.vaadin.views.login;
 
-import com.vaadin.data.Validator;
-import com.vaadin.data.validator.BeanValidator;
-import com.vaadin.data.validator.EmailValidator;
-import com.vaadin.data.validator.StringLengthValidator;
-import com.vaadin.event.FieldEvents;
-import com.vaadin.event.FieldEvents.BlurEvent;
-import com.vaadin.event.ShortcutAction;
+
+import com.vaadin.v7.event.FieldEvents;
 import com.vaadin.server.FontAwesome;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.TabSheet;
-import com.vaadin.ui.themes.ValoTheme;
-import javafx.scene.input.KeyCode;
-import org.vaadin.viritin.MBeanFieldGroup;
-import org.vaadin.viritin.fields.EmailField;
-import org.vaadin.viritin.fields.MPasswordField;
-import org.vaadin.viritin.fields.MTextField;
-import org.vaadin.viritin.form.AbstractForm;
+import org.vaadin.viritin.v7.fields.EmailField;
+import org.vaadin.viritin.v7.fields.MPasswordField;
+import org.vaadin.viritin.v7.fields.MTextField;
+import org.vaadin.viritin.v7.form.AbstractForm;
 import org.vaadin.viritin.layouts.MFormLayout;
 import org.vaadin.viritin.layouts.MVerticalLayout;
 
 import lombok.extern.slf4j.Slf4j;
 import se.kumliens.concept2runkeeper.domain.User;
-
-import java.util.function.Consumer;
 
 import static com.vaadin.event.ShortcutAction.KeyCode.*;
 import static com.vaadin.server.FontAwesome.*;
@@ -44,7 +34,7 @@ public class RegistrationForm extends AbstractForm<User> {
     private MPasswordField password = new MPasswordField("Password").withWidth(DEFAULT_FORM_FIELD_WIDTH);//.withValidator(new BeanValidator(User.class, "password"));
     private MPasswordField password2 = new MPasswordField("Password").withWidth(DEFAULT_FORM_FIELD_WIDTH);//.withValidator(new BeanValidator(User.class, "password"));
 
-    private FieldEvents.BlurListener pwdChecker = blurEvent -> {
+    private com.vaadin.event.FieldEvents.BlurListener pwdChecker = blurEvent -> {
         String pwd1 = password.getValue();
         String pwd2 = password2.getValue();
         if (!getFieldGroup().isValid()) {

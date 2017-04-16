@@ -1,7 +1,7 @@
 package se.kumliens.concept2runkeeper.domain;
 
 import com.google.common.base.MoreObjects;
-import com.vaadin.ui.ProgressBar;
+import com.vaadin.v7.ui.ProgressBar;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

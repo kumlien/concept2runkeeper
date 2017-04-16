@@ -1,6 +1,6 @@
 package se.kumliens.concept2runkeeper.vaadin.converters;
 
-import com.vaadin.data.util.converter.Converter;
+import com.vaadin.v7.data.util.converter.Converter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.text.DateFormat;

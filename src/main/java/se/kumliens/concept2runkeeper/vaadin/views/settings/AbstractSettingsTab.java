@@ -1,7 +1,7 @@
 package se.kumliens.concept2runkeeper.vaadin.views.settings;
 
 import com.vaadin.ui.TabSheet;
-import com.vaadin.ui.VerticalLayout;
+import com.vaadin.v7.ui.VerticalLayout;
 import se.kumliens.concept2runkeeper.domain.User;
 import se.kumliens.concept2runkeeper.vaadin.MainUI;
 

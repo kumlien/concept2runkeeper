@@ -57,7 +57,7 @@ import static se.kumliens.concept2runkeeper.vaadin.C2RThemeResources.CONNECT_TO_
 @Slf4j
 public class RunKeeperTab extends AbstractSettingsTab {
 
-    private static final String DEFAULT_ACTIVITY_COMMENT = "This activity was synchronized from Concept2 using the concept2runkeeper app";
+    private static final String DEFAULT_ACTIVITY_COMMENT = "This activity was synchronized from Concept2 using the www.concept2runkeeper.com app";
 
     private final RunkeeperService runkeeperService;
 

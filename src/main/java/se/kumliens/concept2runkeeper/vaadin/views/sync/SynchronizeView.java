@@ -59,8 +59,6 @@ import java.util.concurrent.atomic.LongAdder;
 import static com.google.common.base.MoreObjects.firstNonNull;
 import static com.vaadin.server.FontAwesome.*;
 import static com.vaadin.server.Sizeable.Unit.EM;
-import static com.vaadin.shared.ui.ContentMode.HTML;
-import static com.vaadin.ui.Grid.SelectionMode.SINGLE;
 import static com.vaadin.ui.themes.ValoTheme.*;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
@@ -471,7 +469,7 @@ public class SynchronizeView extends MVerticalLayout implements View {
                 .totalCalories(csvActivity.getCalPerHours())
                 .type(ActivityType.ROWING)
                 .distances(csvActivity.getStrokeData().stream().map(sd -> RunKeeperDistance.builder().distance(sd.getDistance()).timestamp(sd.getSeconds()).build()).collect(toList()))
-                .heartRates(csvActivity.getStrokeData().stream().map(sd -> RunKeeperHeartRate.builder().heartRate((int) sd.getHeartRate()).timestamp(sd.getSeconds()).build()).collect(toList()))
+                .heartRates(csvActivity.getStrokeData().stream().filter(sd -> sd.getHeartRate() > 0).map(sd -> RunKeeperHeartRate.builder().heartRate((int) sd.getHeartRate()).timestamp(sd.getSeconds()).build()).collect(toList()))
                 .build();
     }
 

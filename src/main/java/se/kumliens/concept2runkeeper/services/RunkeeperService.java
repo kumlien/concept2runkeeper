@@ -145,11 +145,6 @@ public class RunkeeperService {
         headers.set("Accept", "application/vnd.com.runkeeper.FitnessActivity+json");
         headers.set("Authorization", "Bearer " + token);
         RequestEntity requestEntity = new RequestEntity(headers, GET, URI.create(props.getBaseUrl().toString().concat(activityLocation.toString())));
-        try {
-            log.info("{}",objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(requestEntity));
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
         ResponseEntity<RunkeeperActivity> response = restTemplate.exchange(requestEntity, RunkeeperActivity.class);
         log.info("got an activity: {}", response.getBody());
         return response.getBody();

@@ -1,70 +1,53 @@
 package se.kumliens.concept2runkeeper.vaadin.views.sync;
 
-import com.fasterxml.jackson.databind.MappingIterator;
-import com.fasterxml.jackson.dataformat.csv.CsvMapper;
-import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import com.google.common.base.MoreObjects;
+import com.vaadin.navigator.View;
+import com.vaadin.navigator.ViewChangeListener;
+import com.vaadin.spring.annotation.SpringView;
+import com.vaadin.ui.Panel;
+import com.vaadin.ui.VerticalSplitPanel;
 import com.vaadin.v7.data.Item;
-import com.vaadin.v7.data.util.BeanItem;
 import com.vaadin.v7.data.util.BeanItemContainer;
 import com.vaadin.v7.data.util.GeneratedPropertyContainer;
 import com.vaadin.v7.data.util.PropertyValueGenerator;
-import com.vaadin.navigator.View;
-import com.vaadin.navigator.ViewChangeListener;
-import com.vaadin.server.Resource;
-import com.vaadin.spring.annotation.SpringView;
-import com.vaadin.ui.*;
 import com.vaadin.v7.shared.ui.label.ContentMode;
-import com.vaadin.v7.ui.renderers.ClickableRenderer.RendererClickListener;
-import com.vaadin.v7.ui.renderers.ImageRenderer;
-import com.vaadin.ui.themes.ValoTheme;
+import com.vaadin.v7.ui.Grid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
-import org.vaadin.dialogs.ConfirmDialog;
-import com.vaadin.v7.ui.Grid;
 import org.vaadin.spring.events.EventBus;
-import org.vaadin.viritin.button.MButton;
-import org.vaadin.viritin.v7.fields.MCheckBox;
-import org.vaadin.viritin.v7.label.MLabel;
 import org.vaadin.viritin.layouts.MHorizontalLayout;
 import org.vaadin.viritin.layouts.MPanel;
 import org.vaadin.viritin.layouts.MVerticalLayout;
 import org.vaadin.viritin.layouts.MWindow;
 import org.vaadin.viritin.ui.MNotification;
+import org.vaadin.viritin.v7.label.MLabel;
 import se.kumliens.concept2runkeeper.domain.C2RActivity;
 import se.kumliens.concept2runkeeper.domain.Synchronization;
 import se.kumliens.concept2runkeeper.domain.concept2.Concept2CsvActivity;
-import se.kumliens.concept2runkeeper.domain.concept2.Concept2CsvStrokeData;
 import se.kumliens.concept2runkeeper.domain.runkeeper.*;
 import se.kumliens.concept2runkeeper.repos.C2RActivityRepo;
 import se.kumliens.concept2runkeeper.runkeeper.RecordActivityRequest;
 import se.kumliens.concept2runkeeper.services.NoSuchActivityException;
 import se.kumliens.concept2runkeeper.services.RunkeeperService;
 import se.kumliens.concept2runkeeper.vaadin.MainUI;
-import se.kumliens.concept2runkeeper.vaadin.converters.*;
+import se.kumliens.concept2runkeeper.vaadin.converters.RunKeeperDateConverter;
+import se.kumliens.concept2runkeeper.vaadin.converters.RunKeeperDistanceConverter;
+import se.kumliens.concept2runkeeper.vaadin.converters.RunKeeperDurationConverter;
 import se.kumliens.concept2runkeeper.vaadin.events.ActivitySyncEvent;
 
 import javax.annotation.PostConstruct;
-import java.io.*;
 import java.net.URI;
 import java.text.ParseException;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.concurrent.atomic.LongAdder;
+import java.util.Optional;
 
 import static com.google.common.base.MoreObjects.firstNonNull;
-import static com.vaadin.server.FontAwesome.*;
 import static com.vaadin.server.Sizeable.Unit.EM;
 import static com.vaadin.ui.themes.ValoTheme.*;
-import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static se.kumliens.concept2runkeeper.domain.Provider.CONCEPT2;
 import static se.kumliens.concept2runkeeper.domain.Provider.RUNKEEPER;
-import static se.kumliens.concept2runkeeper.vaadin.C2RThemeResources.HEART_RATE;
 import static se.kumliens.concept2runkeeper.vaadin.MainUI.link;
 
 /**
@@ -84,13 +67,11 @@ public class SynchronizeView extends MVerticalLayout implements View {
 
     private final C2RActivityRepo c2RActivityRepo;
 
+    private final Concept2Panel concept2Panel;
+
     private final EventBus.ApplicationEventBus eventBus;
 
     private BeanItemContainer<RunkeeperActivity> rkContainer = new BeanItemContainer<>(RunkeeperActivity.class);
-
-    private BeanItemContainer<Concept2CsvActivity> concept2Container = new BeanItemContainer<>(Concept2CsvActivity.class);
-
-    private MCheckBox forceSync;
 
     @Override
     public void enter(ViewChangeListener.ViewChangeEvent event) {
@@ -111,7 +92,8 @@ public class SynchronizeView extends MVerticalLayout implements View {
         label.setContentMode(ContentMode.HTML);
         label.setSizeUndefined();
 
-        Panel fromContent = createFromContent();
+        concept2Panel.createContent();
+        Panel fromContent = concept2Panel;
         fromContent.setSizeFull();
 
         Panel toContent = createToContent();
@@ -125,6 +107,8 @@ public class SynchronizeView extends MVerticalLayout implements View {
         expand(allContent);
         withMargin(false);
         withSpacing(true);
+
+        concept2Panel.setSynchronizeView(this);
     }
 
 
@@ -163,293 +147,61 @@ public class SynchronizeView extends MVerticalLayout implements View {
         return new MPanel("Your synchronized RunKeeper activities goes here").withContent(layout);
     }
 
-    private RunkeeperActivity updateActivity(RunkeeperActivity runkeeperActivity) {
+    private Optional<RunkeeperActivity> updateActivity(RunkeeperActivity runkeeperActivity) {
         try {
-            return runkeeperService.updateActivity(runkeeperActivity, ui.getUser().getInternalRunKeeperData().getToken());
+            return Optional.of(runkeeperService.updateActivity(runkeeperActivity, ui.getUser().getInternalRunKeeperData().getToken()));
         } catch (NoSuchActivityException e) {
             new MNotification("No corresponding activity found at RunKeeper, please synchronize the activity and try again").withStyleName(NOTIFICATION_WARNING).withDelayMsec(3000).display();
         }
-        return null;
+        return Optional.empty();
     }
 
-    private static void addHeartRates(Concept2CsvActivity concept2CsvActivity, List<Concept2CsvStrokeData> strokeData) {
-        concept2CsvActivity.setStrokeData(strokeData);
-        /*runkeeperActivity.getHeartRates().clear();
-        strokeDatas.forEach(strokeData -> {
-            runkeeperActivity.getHeartRates().add(RunKeeperHeartRate.builder().heartRate((int) strokeData.getHeartRate()).timestamp(strokeData.getSeconds()).build());
-        });*/
-    }
+    boolean doSync(Concept2CsvActivity csvActivity, boolean forced) {
+        MWindow progressWindow = new MWindow("Creating the activity at RunKeeper")
+                .withModal(true).withCenter().withContent(new MVerticalLayout().withWidth("100%")).withClosable(false).withResizable(false).withWidth(40, EM).withHeight(4, EM);
+        ui.addWindow(progressWindow);
 
+        InternalRunKeeperData internalRunKeeperData = ui.getUser().getInternalRunKeeperData();
+        ExternalRunkeeperData externalRunkeeperData = ui.getUser().getExternalRunkeeperData();
+        String newLocation = null;
+        //If there is a stored activity then pick that one, otherwise create a new one.
+        C2RActivity c2RActivity = MoreObjects.firstNonNull(c2RActivityRepo.findBySourceId(csvActivity.getDate()), C2RActivity.builder()
+                .userId(ui.getUser().getEmail())
+                .imported(Instant.now())
+                .source(CONCEPT2)
+                .sourceActivity(csvActivity)
+                .sourceId(csvActivity.getDate())
+                .build());
 
-    //Create the content representing where we synchronize from. Hard wire to concept2 for now
-    private Panel createFromContent() {
-        MLabel label = new MLabel("Concept2 activities (for now we only support synchronizing from <a href=\"http://log.concept2.com/\">Concept2</a>)").withContentMode(ContentMode.HTML);
-
-        MVerticalLayout fromContent = new MVerticalLayout();
-        MHorizontalLayout topLayout = new MHorizontalLayout(label).withSpacing(true);
-
-        //Create the tab sheet
-        TabSheet concept2TabSheet = new TabSheet();
-        concept2TabSheet.addStyleName(TABSHEET_FRAMED);
-        concept2TabSheet.addStyleName(TABSHEET_PADDED_TABBAR);
-
-        //Add the api tab
-        concept2TabSheet.addTab(new MVerticalLayout(new Label("Sorry, currently we have no access to the Concept2 API, please use the file based import for now.")), "API-Based import", CHAIN);
-
-        //Add the csv tab
-        MVerticalLayout csvTabLayout = new MVerticalLayout().withHeightUndefined();
-        concept2TabSheet.addTab(csvTabLayout, "CSV-File import", FILE_TEXT_O);
-
-        MButton syncButton = new MButton("Send to RunKeeper").withIcon(LONG_ARROW_RIGHT).withStyleName("friendly");
-        syncButton.setEnabled(ui.getUser().hasConnectionTo(RUNKEEPER));
-        syncButton.setSizeUndefined();
-        syncButton.setEnabled(false);
-
-        MButton howToBtn = new MButton().withStyleName(BUTTON_BORDERLESS).withIcon(QUESTION_CIRCLE);
-        howToBtn.addClickListener(evt ->
-                new MNotification(
-                        "Here you can sync your Concept2 activities using the file export functionality from Concept2.<br>" +
-                                "<ol>" +
-                                "<li>Export your activities as a .csv file from the Concept2 <a href=\"http://log.concept2.com/history\">history tab</a></li>" +
-                                "<li>Drop the file on the table below, select some activities and push the green button.</li>" +
-                                "<li>Any activities not already synced with RunKeeper will be sent to RunKeeper.</li>" +
-                                "<li>Use the check-box to the right if you want to force sync of already synced activities.</li></ol>")
-                        .withDelayMsec(15000).withStyleName(NOTIFICATION_SMALL).withStyleName(NOTIFICATION_CLOSABLE).withHtmlContentAllowed(true).display());
-
-        forceSync = new MCheckBox("Force sync of activities already synced").withValueChangeListener(evt -> {
-            if (((CheckBox) evt.getProperty()).getValue()) {
-                new MNotification("We try to make sure a given activity in only synced once.<br>" +
-                        "By using 'Force' you bypass this check and every activity will be synced.<br>" +
-                        "This might lead to duplicate activities at your RunKeeper account.<br>" +
-                        "Just saying...").withDelayMsec(7500).withHtmlContentAllowed(true).withStyleName(ValoTheme.NOTIFICATION_WARNING).display();
-            }
-        });
-
-        csvTabLayout.add(new MHorizontalLayout(howToBtn, syncButton, forceSync).withAlign(forceSync, Alignment.MIDDLE_LEFT).withSpacing(true));
-
-        GeneratedPropertyContainer generatedPropertyContainer = new GeneratedPropertyContainer(concept2Container);
-
-        //Add a generated column for the heart rate
-        generatedPropertyContainer.addGeneratedProperty(RunkeeperActivity.HEART_RATE, new PropertyValueGenerator<Number[]>() {
-            @Override
-            public Number[] getValue(Item item, Object itemId, Object propertyId) {
-                Concept2CsvActivity activity = ((BeanItem<Concept2CsvActivity>) item).getBean();
-                List<Double> heartRates = activity.getStrokeData().stream().map(Concept2CsvStrokeData::getHeartRate).collect(toList());
-                return heartRates.toArray(new Double[]{});
-            }
-
-            @Override
-            public Class<Number[]> getType() {
-                return Number[].class;
-            }
-        });
-
-        //Add a generated column for the pace
-        generatedPropertyContainer.addGeneratedProperty("Pace", new PropertyValueGenerator<Number[]>() {
-            @Override
-            public Number[] getValue(Item item, Object itemId, Object propertyId) {
-                Concept2CsvActivity activity = ((BeanItem<Concept2CsvActivity>) item).getBean();
-                List<Double> heartRates = activity.getStrokeData().stream().map(Concept2CsvStrokeData::getPace).collect(toList());
-                return heartRates.toArray(new Double[]{});
-            }
-
-            @Override
-            public Class<Number[]> getType() {
-                return Number[].class;
-            }
-        });
-
-        //Add a generated column with the button to add stroke data
-        generatedPropertyContainer.addGeneratedProperty("addStrokeData", new PropertyValueGenerator<Resource>() {
-            @Override
-            public Resource getValue(Item item, Object itemId, Object propertyId) {
-                return HEART_RATE;
-            }
-
-            @Override
-            public Class<Resource> getType() {
-                return Resource.class;
-            }
-        });
-
-
-        Grid grid = new Grid(generatedPropertyContainer);
-        //grid.setImmediate(true);
-        grid.setSelectionMode(Grid.SelectionMode.SINGLE);
-        grid.setWidth("100%");
-        grid.setHeight("100%");
-        grid.setContainerDataSource(generatedPropertyContainer);
-        grid.removeAllColumns();
-        grid.addColumn("date").setHeaderCaption("Date");
-        grid.addColumn("workDistance").setHeaderCaption("Distance").setConverter(new Concept2DistanceConverter());
-        grid.addColumn("workTimeInSeconds").setHeaderCaption("Time").setConverter(new Concept2WorkTimeConverter()).setWidth(180);
-        grid.addColumn("pace").setHeaderCaption("Average pace (s/500 m)").setWidth(200);
-        grid.addColumn("type").setHeaderCaption("(Concept2-) Type");
-        //grid.addColumn(RunkeeperActivity.HEART_RATE).setRenderer(new SparklineRenderer());
-        //an grid.addColumn("Pace").setRenderer(new SparklineRenderer());
-        grid.addColumn("addStrokeData").setWidth(140).setRenderer(new ImageRenderer((RendererClickListener) e -> {
-            Concept2CsvActivity concept2CsvActivity = (Concept2CsvActivity) e.getItemId();
-            Upload upload = null;
-            MWindow uploadWindow = new MWindow("Add stroke data");
+        //Add the sync if not already there or if forced
+        if (forced || c2RActivity.getSynchronizations().stream().filter(synchronization -> synchronization.getTarget() == RUNKEEPER).count() == 0) {
             try {
-                File tempFile = File.createTempFile("temp", ".csv");
-                upload = new Upload("Choose the Concept2 result file matching this activity", (filename, mimetype) -> {
-                    try {
-                        return new FileOutputStream(tempFile);
-                    } catch (IOException e1) {
-                        log.warn("Unable to create local file for stroke data", e1);
-                        new MNotification("Unable to create a local file: " + e1.getMessage()).withStyleName(NOTIFICATION_ERROR).display();
-                        return null;
-                    }
-                });
-                upload.addFinishedListener(finishedEvent -> {
-                    try {
-                        FileReader fileReader = new FileReader(tempFile);
-                        BufferedReader bufferedReader = new BufferedReader(fileReader);
-                        CsvMapper mapper = new CsvMapper();
-                        CsvSchema csvSchema = mapper.schemaFor(Concept2CsvStrokeData.class).withUseHeader(true);
-                        MappingIterator<Concept2CsvStrokeData> values = mapper.readerFor(Concept2CsvStrokeData.class).with(csvSchema).readValues(bufferedReader);
-                        List<Concept2CsvStrokeData> strokeData = values.readAll();
-                        double lastDistance = CollectionUtils.isEmpty(strokeData) ? 0.0 : strokeData.get(strokeData.size() - 1).getDistance();
-                        if (Math.abs(lastDistance - concept2CsvActivity.getWorkDistance()) > 25) {
-                            ConfirmDialog.show(getUI(), "Difference in distance",
-                                    "The result file and the activity differ somewhat in distance (the activity is " + concept2CsvActivity.getWorkDistance().intValue() + " meters but the result file is " + (int) lastDistance + " meters), are you sure you want to use this file?",
-                                    "Yes", "No",
-                                    dialog -> {
-                                        if (dialog.isConfirmed()) {
-                                            afterAddedVerifiedStrokeData(grid, concept2CsvActivity, uploadWindow, strokeData);
-                                        }
-                                    });
-                        } else {
-                            afterAddedVerifiedStrokeData(grid, concept2CsvActivity, uploadWindow, strokeData);
-                        }
-
-                    } catch (Exception e1) {
-                        log.warn("Error reading file which should contain concept2 stroke data", e1);
-                        uploadWindow.close();
-                        new MNotification("Error", "Unable to read that file: " + e1.getMessage()).display();
-                    }
-                });
-                upload.setButtonCaption("Attach stroke data");
-            } catch (IOException e1) {
-                log.warn("Error when adding stroke data to activity", e1);
-                new MNotification("An error occurred: " + e1.getMessage()).withStyleName(NOTIFICATION_ERROR).display();
-            }
-            uploadWindow.withContent(new MPanel(new MHorizontalLayout(upload).withMargin(true).withSpacing(true).space()))
-                    .withModal(true)
-                    .withResizable(false);
-
-            ui.addWindow(uploadWindow);
-        }));
-        grid.addSelectionListener(evt -> {
-            syncButton.setEnabled(!grid.getSelectedRows().isEmpty());
-        });
-
-        setUpSyncClickHandler(syncButton, grid);
-
-        DragAndDropWrapper dropArea = getDropAreaWithGrid(grid);
-        dropArea.setWidth("100%");
-        csvTabLayout.expand(dropArea);
-
-        fromContent.expand(concept2TabSheet);
-
-        return new MPanel("Your Concept2 activities").withContent(fromContent);
-    }
-
-    private void afterAddedVerifiedStrokeData(Grid grid, Concept2CsvActivity concept2CsvActivity, MWindow uploadwindow, List<Concept2CsvStrokeData> strokeData) {
-        concept2CsvActivity.setStrokeData(strokeData);
-        uploadwindow.close();
-        grid.refreshRows(concept2CsvActivity);
-        new MNotification("Stroke data added").withDelayMsec(1500).withStyleName(NOTIFICATION_SUCCESS).display();
-    }
-
-
-    //Handle the actual sync process to RunKeeper
-    private void setUpSyncClickHandler(MButton syncButton, Grid concept2Grid) {
-        syncButton.addClickListener(evt -> {
-            Collection<Object> selectedRows = concept2Grid.getSelectedRows();
-            if (selectedRows.isEmpty() || selectedRows.size() > 1) {
-                log.warn("Sync button clicked without selected rows in the grid!");
-                new MNotification("No selection detected (this is a bug). Try to re-select the row(s)").withStyleName(NOTIFICATION_ERROR).withDelayMsec(5000).display();
-                return;
-            }
-
-            ProgressBar progressBar = new ProgressBar(0.0f);
-            progressBar.setSizeFull();
-            float percentPerActivity = (float) 1 / selectedRows.size();
-
-            MWindow progressWindow = new MWindow("Creating the activity at RunKeeper")
-                    .withModal(true).withCenter().withContent(new MVerticalLayout().expand(progressBar).withWidth("100%")).withClosable(false).withResizable(false).withWidth(40, EM).withHeight(4, EM);
-            ui.addWindow(progressWindow);
-
-            new Thread(() -> { //new Thread(), really...? or Flowable from the rows. would also allow for nice cancel-button in mid-process
-                InternalRunKeeperData internalRunKeeperData = ui.getUser().getInternalRunKeeperData();
-                ExternalRunkeeperData externalRunkeeperData = ui.getUser().getExternalRunkeeperData();
-                List<String> newLocations = new ArrayList<>();
-                final LongAdder skippedSync = new LongAdder();
-                Concept2CsvActivity csvActivity = (Concept2CsvActivity) selectedRows.iterator().next();
-                //If there is a stored activity then pick that one, otherwise create a new one.
-                C2RActivity c2RActivity = MoreObjects.firstNonNull(c2RActivityRepo.findBySourceId(((Concept2CsvActivity) csvActivity).getDate()), C2RActivity.builder()
-                        .userId(ui.getUser().getEmail())
-                        .imported(Instant.now())
-                        .source(CONCEPT2)
-                        .sourceActivity(csvActivity)
-                        .sourceId(csvActivity.getDate())
-                        .build());
-
-                //Add the sync if not already there
-                if (forceSync.getValue() || c2RActivity.getSynchronizations().stream().filter(synchronization -> synchronization.getTarget() == RUNKEEPER).count() == 0) {
-                    try {
-                        log.info("No sync to RunKeeper found or force sync, let's do it");
-                        RecordActivityRequest request = createRecordActivityRequest(csvActivity, internalRunKeeperData, externalRunkeeperData);
-                        URI activityLocation = runkeeperService.recordActivity(request, ui.getUser().getInternalRunKeeperData().getToken());
-                        newLocations.add(ui.getUser().getExternalRunkeeperData().getProfile().getProfile() + activityLocation.toString());
-                        RunkeeperActivity rkActivity = runkeeperService.getActivity(ui.getUser().getInternalRunKeeperData().getToken(), activityLocation);
-                        c2RActivity.getSynchronizations().add(Synchronization.builder().date(Instant.now()).source(CONCEPT2).target(RUNKEEPER).targetActivity(rkActivity).build());
-                        rkContainer.addItem(rkActivity);
-                        concept2Grid.getContainerDataSource().removeItem(csvActivity);
-                        eventBus.publish(this, new ActivitySyncEvent(ui.getUser(), c2RActivity));
-                    } catch (Exception e) {
-                        log.warn("Failed to create activity at RunKeeper", e);
-                        progressWindow.close();
-                        new MNotification("Failed to create the activity at RunKeeper: " + e.getMessage()).withStyleName(NOTIFICATION_ERROR).withDelayMsec(6000).display();
-                    }
-                } else {
-                    log.info("Already synced to RunKeeper, skip new sync");
-                    skippedSync.increment();
-                }
-
+                log.debug("No sync to RunKeeper found or forced sync, let's do it");
+                RecordActivityRequest request = createRecordActivityRequest(csvActivity, internalRunKeeperData, externalRunkeeperData);
+                URI activityLocation = runkeeperService.recordActivity(request, ui.getUser().getInternalRunKeeperData().getToken());
+                newLocation = (ui.getUser().getExternalRunkeeperData().getProfile().getProfile() + activityLocation.toString()).replaceAll("fitnessActivities", "activity");
+                RunkeeperActivity rkActivity = runkeeperService.getActivity(ui.getUser().getInternalRunKeeperData().getToken(), activityLocation);
+                c2RActivity.getSynchronizations().add(Synchronization.builder().date(Instant.now()).source(CONCEPT2).target(RUNKEEPER).targetActivity(rkActivity).build());
+                rkContainer.addItem(rkActivity);
                 c2RActivity = c2RActivityRepo.save(c2RActivity);
                 log.info("Saved a new C2RActivity: {}", c2RActivity);
-                ui.access(() -> {
-                    progressBar.setValue(progressBar.getValue() + percentPerActivity);
-                    ui.push();
-                });
-
-                //15 lines to display a message, wtf...
-                ui.access(() -> {
-                    String firstPart = "No activities created!";
-                    if (newLocations.size() == 1) {
-                        firstPart = "One activity created at RunKeeper, you can find it at<br>";
-                    }
-                    String locationsWithLineBreak = newLocations.stream().map(s -> "<a href=\"" + s + "\">" + s + "</a>").collect(joining("<br>")).toString().replaceAll("fitnessActivities", "activity");
-                    String skippedSyncMessage = "";
-                    if (skippedSync.intValue() == 1) {
-                        skippedSyncMessage = "<br>" + "The activity was not sent to RunKeeper since this activity was already synced to RunKeeper";
-                    } else if (skippedSync.intValue() > 1) {
-                        skippedSyncMessage = "<br>" + skippedSync.intValue() + " activities was not sent to RunKeeper since they were previously synced";
-                    }
-                    concept2Grid.getSelectionModel().reset();
-                    concept2Grid.clearSortOrder();
-                    progressWindow.close();
-                    new MNotification(firstPart + locationsWithLineBreak + skippedSyncMessage).withHtmlContentAllowed(true).withStyleName(NOTIFICATION_SUCCESS).withDelayMsec(10000).display();
-                    ui.push();
-                });
-            }).start();
-        });
-
+                eventBus.publish(this, new ActivitySyncEvent(ui.getUser(), c2RActivity));
+                String locationsWithLineBreak = "<a href=\"" + newLocation + "\">" + newLocation + "</a>";
+                new MNotification("Activity created at RunKeeper, you can find it at " + locationsWithLineBreak).withHtmlContentAllowed(true).withStyleName(NOTIFICATION_SUCCESS).withDelayMsec(10000).display();
+            } catch (Exception e) {
+                log.warn("Failed to create activity at RunKeeper", e);
+                new MNotification("Failed to create the activity at RunKeeper: " + e.getMessage()).withStyleName(NOTIFICATION_ERROR).withDelayMsec(6000).display();
+            }
+        } else {
+            log.debug("Already synced to RunKeeper, skip new sync");
+            new MNotification("The activity was not sent since this activity was already synced. Use the 'Force' checkbox to force a re-sync").withDelayMsec(2500).withStyleName(NOTIFICATION_WARNING).display();
+        }
+        progressWindow.close();
+        return newLocation != null;
     }
 
+
+    //Create a request to record an activity
     private static RecordActivityRequest createRecordActivityRequest(Concept2CsvActivity csvActivity, InternalRunKeeperData internalRunKeeperData, ExternalRunkeeperData externalRunkeeperData) {
         Instant start;
         try {
@@ -471,22 +223,5 @@ public class SynchronizeView extends MVerticalLayout implements View {
                 .distances(csvActivity.getStrokeData().stream().map(sd -> RunKeeperDistance.builder().distance(sd.getDistance()).timestamp(sd.getSeconds()).build()).collect(toList()))
                 .heartRates(csvActivity.getStrokeData().stream().filter(sd -> sd.getHeartRate() > 0).map(sd -> RunKeeperHeartRate.builder().heartRate((int) sd.getHeartRate()).timestamp(sd.getSeconds()).build()).collect(toList()))
                 .build();
-    }
-
-    private DragAndDropWrapper getDropAreaWithGrid(Grid grid) {
-        final CsvFileDropHandler dropBox = new CsvFileDropHandler(grid, activities -> {
-            if (!CollectionUtils.isEmpty(activities)) {
-                grid.getContainerDataSource().removeAllItems();
-                activities.forEach(grid.getContainerDataSource()::addItem);
-                new MNotification(activities.size() + (activities.size() > 1 ? " activities found" : " activity found")).withDelayMsec(1000).withStyleName(NOTIFICATION_SUCCESS).display();
-            } else {
-                new MNotification("No activities found!").withDelayMsec(1000).withStyleName(NOTIFICATION_WARNING).display();
-            }
-        }, e -> {
-            log.warn("Exception when uploading file: {}", e.getMessage());
-            new MNotification("Sorry, but we are unable to parse this file (" + e.getMessage() + ")").withDelayMsec(5000).withStyleName(NOTIFICATION_FAILURE).display();
-        });
-        dropBox.setSizeUndefined();
-        return dropBox;
     }
 }

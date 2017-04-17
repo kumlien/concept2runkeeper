@@ -36,6 +36,7 @@ import se.kumliens.concept2runkeeper.vaadin.MainUI;
 import se.kumliens.concept2runkeeper.vaadin.converters.Concept2DistanceConverter;
 import se.kumliens.concept2runkeeper.vaadin.converters.Concept2WorkTimeConverter;
 
+import javax.annotation.PostConstruct;
 import java.io.*;
 import java.util.List;
 
@@ -67,7 +68,8 @@ public class Concept2Panel extends Panel {
     private BeanItemContainer<Concept2CsvActivity> concept2Container = new BeanItemContainer<>(Concept2CsvActivity.class);
 
     //Create the content representing where we synchronize from. Hard wire to concept2 for now
-    void createContent() {
+    @PostConstruct
+    public void createContent() {
         MVerticalLayout root = new MVerticalLayout();
 
         //Create the tab sheet
@@ -236,7 +238,6 @@ public class Concept2Panel extends Panel {
         root.expand(concept2TabSheet);
         setContent(root);
         setCaption("Your Concept2 activities");
-        //return new MPanel("Your Concept2 activities").withContent(root);
     }
 
     //Handle the actual sync process to RunKeeper

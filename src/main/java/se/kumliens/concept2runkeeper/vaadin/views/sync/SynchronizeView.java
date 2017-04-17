@@ -69,9 +69,9 @@ public class SynchronizeView extends MVerticalLayout implements View {
 
     private final Concept2Panel concept2Panel;
 
-    private final EventBus.ApplicationEventBus eventBus;
+    private final RunKeeeperPanel runKeeeperPanel;
 
-    private BeanItemContainer<RunkeeperActivity> rkContainer = new BeanItemContainer<>(RunkeeperActivity.class);
+    private final EventBus.ApplicationEventBus eventBus;
 
     @Override
     public void enter(ViewChangeListener.ViewChangeEvent event) {
@@ -92,14 +92,10 @@ public class SynchronizeView extends MVerticalLayout implements View {
         label.setContentMode(ContentMode.HTML);
         label.setSizeUndefined();
 
-        concept2Panel.createContent();
-        Panel fromContent = concept2Panel;
-        fromContent.setSizeFull();
+        concept2Panel.setSizeFull();
+        runKeeeperPanel.setSizeFull();
 
-        Panel toContent = createToContent();
-        toContent.setSizeFull();
-
-        VerticalSplitPanel splitPanel = new VerticalSplitPanel(fromContent, toContent);
+        VerticalSplitPanel splitPanel = new VerticalSplitPanel(concept2Panel, runKeeeperPanel);
         splitPanel.setSizeFull();
 
         MHorizontalLayout allContent = new MHorizontalLayout(splitPanel).withMargin(true).withSpacing(true);
@@ -109,42 +105,6 @@ public class SynchronizeView extends MVerticalLayout implements View {
         withSpacing(true);
 
         concept2Panel.setSynchronizeView(this);
-    }
-
-
-    //Create the content representing where we synchronize to
-    private Panel createToContent() {
-        MVerticalLayout layout = new MVerticalLayout().withSpacing(true).withMargin(true);
-
-        GeneratedPropertyContainer generatedPropertyContainer = new GeneratedPropertyContainer(rkContainer);
-
-        //Add a generated column for the heart rate
-        generatedPropertyContainer.addGeneratedProperty(RunkeeperActivity.HEART_RATE, new PropertyValueGenerator<Number[]>() {
-            @Override
-            public Number[] getValue(Item item, Object itemId, Object propertyId) {
-                return new Number[]{1, 2, 3, 2, 2, 4, 5, 4, 2, 1, 2, 5, 4, 5, 5, 2, 3, 2, 3, 4, 5};
-            }
-
-            @Override
-            public Class<Number[]> getType() {
-                return Number[].class;
-            }
-        });
-
-        Grid grid = new Grid(generatedPropertyContainer);
-        grid.setWidth("100%");
-        grid.setHeight("100%");
-        grid.setSelectionMode(Grid.SelectionMode.SINGLE);
-        grid.setContainerDataSource(generatedPropertyContainer);
-        grid.removeAllColumns();
-        grid.addColumn(RunkeeperActivity.START_TIME).setHeaderCaption("Date").setConverter(new RunKeeperDateConverter()).setExpandRatio(1);
-        grid.addColumn(RunkeeperActivity.DISTANCE).setHeaderCaption("Distance").setConverter(new RunKeeperDistanceConverter()).setExpandRatio(1);
-        grid.addColumn(RunkeeperActivity.DURATION).setHeaderCaption("Time").setConverter(new RunKeeperDurationConverter()).setExpandRatio(1);
-        grid.addColumn(RunkeeperActivity.TYPE).setHeaderCaption("(RunKeeper-) Type").setExpandRatio(1);
-        //grid.addColumn(RunkeeperActivity.HEART_RATE).setRenderer(new SparklineRenderer()).setExpandRatio(2);
-
-        layout.expand(grid);
-        return new MPanel("Your synchronized RunKeeper activities goes here").withContent(layout);
     }
 
     private Optional<RunkeeperActivity> updateActivity(RunkeeperActivity runkeeperActivity) {
@@ -182,7 +142,7 @@ public class SynchronizeView extends MVerticalLayout implements View {
                 newLocation = (ui.getUser().getExternalRunkeeperData().getProfile().getProfile() + activityLocation.toString()).replaceAll("fitnessActivities", "activity");
                 RunkeeperActivity rkActivity = runkeeperService.getActivity(ui.getUser().getInternalRunKeeperData().getToken(), activityLocation);
                 c2RActivity.getSynchronizations().add(Synchronization.builder().date(Instant.now()).source(CONCEPT2).target(RUNKEEPER).targetActivity(rkActivity).build());
-                rkContainer.addItem(rkActivity);
+                runKeeeperPanel.newActivity(rkActivity);
                 c2RActivity = c2RActivityRepo.save(c2RActivity);
                 log.info("Saved a new C2RActivity: {}", c2RActivity);
                 eventBus.publish(this, new ActivitySyncEvent(ui.getUser(), c2RActivity));

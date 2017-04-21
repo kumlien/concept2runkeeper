@@ -1,6 +1,5 @@
 package se.kumliens.concept2runkeeper.vaadin.converters;
 
-import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.util.Date;

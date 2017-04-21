@@ -1,11 +1,9 @@
-package se.kumliens.concept2runkeeper.vaadin.converters;
+package se.kumliens.concept2runkeeper.vaadin.converters.v7;
 
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.Locale;
-
-import static org.junit.Assert.*;
 
 /**
  * Created by svante2 on 2016-12-25.
@@ -25,7 +23,7 @@ public class RunKeeperDateConverterTest {
     public void convertToPresentation() throws Exception {
         String dateString = "Mon, 12 Dec 2016 19:32:00";
         String expectedConverted = "2016-12-12 19:32:00";
-        String converted = converter.convertToPresentation(dateString, String.class, Locale.getDefault());
+        String converted = converter.convertToPresentation(dateString, String.class, Locale.ENGLISH);
         System.out.println(converted);
         Assert.assertEquals(expectedConverted, converted);
 

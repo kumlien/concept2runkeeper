@@ -1,4 +1,4 @@
-package se.kumliens.concept2runkeeper.vaadin.converters;
+package se.kumliens.concept2runkeeper.vaadin.converters.v7;
 
 import com.google.common.base.MoreObjects;
 import com.vaadin.v7.data.util.converter.Converter;
@@ -12,6 +12,7 @@ import java.util.Locale;
  * Created by svante2 on 2016-12-25.
  */
 @Slf4j
+@Deprecated
 public class Concept2DistanceConverter implements Converter<String, Double> {
 
     @Override

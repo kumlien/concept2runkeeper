@@ -5,13 +5,20 @@ import com.github.rjeschke.txtmark.Run;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import lombok.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.mongodb.core.mapping.Document;
 import se.kumliens.concept2runkeeper.domain.ExternalActivity;
+import se.kumliens.concept2runkeeper.vaadin.converters.Constants;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Created by svante2 on 2016-12-17.
@@ -19,7 +26,10 @@ import java.util.List;
 @Getter
 @ToString
 @EqualsAndHashCode(of = {"uri"})
+@Slf4j
 public class RunkeeperActivity implements ExternalActivity {
+
+    public static final String DATE_PATTERN = "EEE, dd MMM yyyy hh:mm:ss";
 
     //The fields. Used from the ui when creating the table
     public static final String URI = "uri";
@@ -54,6 +64,16 @@ public class RunkeeperActivity implements ExternalActivity {
 
     @JsonProperty("start_time")
     private String startTime;
+
+    public Date getStartTimeAsDate() {
+        DateFormat df = new SimpleDateFormat(DATE_PATTERN, Locale.ENGLISH);
+        try {
+            return df.parse(getStartTime());
+        } catch (ParseException e) {
+            log.warn("Unable to parse string value '{}' to a date", getStartTime(), e);
+            return null;
+        }
+    }
 
     @JsonProperty("total_distance")
     private Double distance;

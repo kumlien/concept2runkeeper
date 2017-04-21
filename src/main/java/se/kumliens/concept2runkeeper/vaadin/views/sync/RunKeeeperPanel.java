@@ -1,25 +1,29 @@
 package se.kumliens.concept2runkeeper.vaadin.views.sync;
 
+import com.vaadin.data.Binder;
+import com.vaadin.data.provider.DataProvider;
+import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.spring.annotation.SpringComponent;
 import com.vaadin.spring.annotation.VaadinSessionScope;
 import com.vaadin.ui.*;
-import com.vaadin.ui.Grid;
-import com.vaadin.v7.data.Item;
-import com.vaadin.v7.data.util.BeanItemContainer;
-import com.vaadin.v7.data.util.GeneratedPropertyContainer;
-import com.vaadin.v7.data.util.PropertyValueGenerator;
-import com.vaadin.v7.ui.*;
-import lombok.RequiredArgsConstructor;
+import com.vaadin.ui.renderers.DateRenderer;
 import lombok.extern.slf4j.Slf4j;
-import org.atmosphere.config.service.Post;
-import org.vaadin.viritin.layouts.MPanel;
 import org.vaadin.viritin.layouts.MVerticalLayout;
 import se.kumliens.concept2runkeeper.domain.runkeeper.RunkeeperActivity;
-import se.kumliens.concept2runkeeper.vaadin.converters.RunKeeperDateConverter;
-import se.kumliens.concept2runkeeper.vaadin.converters.RunKeeperDistanceConverter;
-import se.kumliens.concept2runkeeper.vaadin.converters.RunKeeperDurationConverter;
+import se.kumliens.concept2runkeeper.vaadin.converters.Constants;
 
 import javax.annotation.PostConstruct;
+import java.text.DateFormat;
+import java.text.DecimalFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+
+import static com.vaadin.ui.Grid.SelectionMode.SINGLE;
 
 /**
  * Created by svante2 on 2017-04-17.
@@ -27,48 +31,36 @@ import javax.annotation.PostConstruct;
 @SpringComponent
 @VaadinSessionScope
 @Slf4j
-@RequiredArgsConstructor
 public class RunKeeeperPanel extends Panel {
 
-    private BeanItemContainer<RunkeeperActivity> rkContainer = new BeanItemContainer<>(RunkeeperActivity.class);
+    private final List<RunkeeperActivity> activities = new ArrayList<>();
+
+    ListDataProvider<RunkeeperActivity> dataProvider = DataProvider.ofCollection(activities);
 
     @PostConstruct
     public void createToContent() {
         MVerticalLayout root = new MVerticalLayout().withSpacing(true).withMargin(true);
 
-        GeneratedPropertyContainer generatedPropertyContainer = new GeneratedPropertyContainer(rkContainer);
+        Grid<RunkeeperActivity> grid = new Grid<>(dataProvider);
+        DecimalFormat decimalFormat = new DecimalFormat(Constants.DISTANCE_PATTERN);
 
-        //Add a generated column for the heart rate
-        generatedPropertyContainer.addGeneratedProperty(RunkeeperActivity.HEART_RATE, new PropertyValueGenerator<Number[]>() {
-            @Override
-            public Number[] getValue(Item item, Object itemId, Object propertyId) {
-                return new Number[]{1, 2, 3, 2, 2, 4, 5, 4, 2, 1, 2, 5, 4, 5, 5, 2, 3, 2, 3, 4, 5};
-            }
-
-            @Override
-            public Class<Number[]> getType() {
-                return Number[].class;
-            }
-        });
-
-        com.vaadin.v7.ui.Grid grid = new com.vaadin.v7.ui.Grid(generatedPropertyContainer);
         grid.setWidth("100%");
         grid.setHeight("100%");
-        grid.setSelectionMode(com.vaadin.v7.ui.Grid.SelectionMode.SINGLE);
-        grid.setContainerDataSource(generatedPropertyContainer);
-        grid.removeAllColumns();
-        grid.addColumn(RunkeeperActivity.START_TIME).setHeaderCaption("Date").setConverter(new RunKeeperDateConverter()).setExpandRatio(1);
-        grid.addColumn(RunkeeperActivity.DISTANCE).setHeaderCaption("Distance").setConverter(new RunKeeperDistanceConverter()).setExpandRatio(1);
-        grid.addColumn(RunkeeperActivity.DURATION).setHeaderCaption("Time").setConverter(new RunKeeperDurationConverter()).setExpandRatio(1);
-        grid.addColumn(RunkeeperActivity.TYPE).setHeaderCaption("(RunKeeper-) Type").setExpandRatio(1);
-        //grid.addColumn(RunkeeperActivity.HEART_RATE).setRenderer(new SparklineRenderer()).setExpandRatio(2);
+        grid.setSelectionMode(SINGLE);
+        grid.addColumn(RunkeeperActivity::getStartTimeAsDate).setRenderer(new DateRenderer()).setCaption("Start time").setWidthUndefined();
+        grid.addColumn(activity -> decimalFormat.format(activity.getDistance()) + " m").setCaption("Distance").setWidthUndefined();
 
+        grid.addColumn(activity -> Constants.formatDuration(Duration.ofSeconds(activity.getDuration().intValue()))).setCaption("Time");
+        grid.addColumn(RunkeeperActivity::getType).setCaption("(RunKeeper-) Type");
+        //grid.addColumn(RunkeeperActivity.HEART_RATE).setRenderer(new SparkLine()).setExpandRatio(2);
+        
         root.expand(grid);
         setContent(root);
         setCaption("Your synchronized RunKeeper activities goes here");
     }
 
     public void newActivity(RunkeeperActivity rkActivity) {
-        rkContainer.addItem(rkActivity);
+        activities.add(rkActivity);
+        dataProvider.refreshAll();
     }
 }

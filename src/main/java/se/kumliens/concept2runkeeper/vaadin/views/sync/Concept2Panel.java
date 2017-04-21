@@ -13,7 +13,6 @@ import com.vaadin.v7.data.util.BeanItem;
 import com.vaadin.v7.data.util.BeanItemContainer;
 import com.vaadin.v7.data.util.GeneratedPropertyContainer;
 import com.vaadin.v7.data.util.PropertyValueGenerator;
-import com.vaadin.v7.shared.ui.label.ContentMode;
 import com.vaadin.v7.ui.Grid;
 import com.vaadin.v7.ui.renderers.ClickableRenderer;
 import com.vaadin.v7.ui.renderers.ImageRenderer;
@@ -28,13 +27,12 @@ import org.vaadin.viritin.layouts.MVerticalLayout;
 import org.vaadin.viritin.layouts.MWindow;
 import org.vaadin.viritin.ui.MNotification;
 import org.vaadin.viritin.v7.fields.MCheckBox;
-import org.vaadin.viritin.v7.label.MLabel;
 import se.kumliens.concept2runkeeper.domain.concept2.Concept2CsvActivity;
 import se.kumliens.concept2runkeeper.domain.concept2.Concept2CsvStrokeData;
 import se.kumliens.concept2runkeeper.domain.runkeeper.RunkeeperActivity;
 import se.kumliens.concept2runkeeper.vaadin.MainUI;
-import se.kumliens.concept2runkeeper.vaadin.converters.Concept2DistanceConverter;
-import se.kumliens.concept2runkeeper.vaadin.converters.Concept2WorkTimeConverter;
+import se.kumliens.concept2runkeeper.vaadin.converters.v7.Concept2DistanceConverter;
+import se.kumliens.concept2runkeeper.vaadin.converters.v7.Concept2WorkTimeConverter;
 
 import javax.annotation.PostConstruct;
 import java.io.*;
@@ -101,7 +99,7 @@ public class Concept2Panel extends Panel {
                         .withDelayMsec(15000).withStyleName(NOTIFICATION_SMALL).withStyleName(NOTIFICATION_CLOSABLE).withHtmlContentAllowed(true).display());
 
         forceSync = new MCheckBox("Force sync of activities already synced").withValueChangeListener(evt -> {
-            if (((CheckBox) evt.getProperty()).getValue()) {
+            if (((MCheckBox) evt.getProperty()).getValue()) {
                 new MNotification("We try to make sure a given activity in only synced once.<br>" +
                         "By using 'Force' you bypass this check and the activity will be synced anyway.<br>" +
                         "This might lead to duplicate activities at your RunKeeper account.<br>" +

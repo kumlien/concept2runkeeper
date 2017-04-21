@@ -1,4 +1,4 @@
-package se.kumliens.concept2runkeeper.vaadin.converters;
+package se.kumliens.concept2runkeeper.vaadin.converters.v7;
 
 import org.junit.Assert;
 import org.junit.Test;
